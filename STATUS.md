@@ -4,144 +4,122 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **84%**
+- Overall project completion: **88%**
 - Milestone 01 — First Playable Vertical Slice: **100%**
 - Milestone 02 — Combat, Arabic presentation, boss, and upgrades: **100%**
 - Milestone 02.5 — UI/UX and anime presentation: **100%**
 - Milestone 02.6 — Stabilization and balance: **100%**
-- Milestone 03A — Visual Identity Overhaul: **100% implemented**
-- Milestone 03B — Persistent Progression: **100% implemented**
-- Current milestone: **Milestone 03C — Replayability Expansion**
-- Milestone 03C implementation: **100%**
-- State: **Pull Request #9 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser and balance review are required before milestone acceptance**
+- Milestone 03A — Visual Identity Overhaul: **100%**
+- Milestone 03B — Persistent Progression: **100%**
+- Milestone 03C — Replayability Expansion: **100%**
+- Current milestone: **Milestone 03D — UI, Feedback & Balance Polish**
+- Milestone 03D implementation: **100%**
+- State: **Pull Request #10 implementation complete; automated verification passed; final verification on this status commit and live browser review are required before acceptance**
 
-## Milestone 03C implemented
+## Milestone 03D implemented
 
-### Upgrade rarity and build systems
+### Main menu and navigation
 
-- Added four upgrade rarity tiers: Common, Rare, Epic, and Legendary.
-- Rarity probability scales with wave progression and receives a small bonus during Daily Challenges.
-- Rare and Epic selections strengthen supported numerical upgrade effects.
-- Added six one-stack Legendary upgrades:
-  - Ghost Round.
-  - Vengeful Return.
-  - Final Detonation.
-  - Time Core.
-  - Chain Lightning.
-  - Nuclear Gamble.
-- Added four named core/upgrade synergies:
-  - Angle Master.
-  - Storm Loop.
-  - Recall Hunter.
-  - Siege Core.
-- Added an in-run Build Inspector available from the pause menu or the `B` key.
-- Build Inspector shows the selected core, upgrades, rarity, stack levels, active synergies, and current challenge progress.
+- Rebuilt the main menu into a balanced three-column layout.
+- Added a compact Daily Challenge card with completion, attempts, best score, and reward information.
+- Added a fighter-profile card with selected core, daily streak, completed challenges, Elite kills, and unlocked cosmetics.
+- Kept direct access to Core Hub, run history, achievements, cosmetics, settings, and how-to screens.
+- Advanced the browser package to **v0.6.1**.
 
-### Elite enemy modifiers
+### HUD and combat readability
 
-- Elite enemies now receive deterministic functional modifiers rather than health-only scaling.
-- Added six Elite modifiers:
-  - Explosive: damages nearby units and the player on death.
-  - Regenerator: restores health after avoiding damage.
-  - Armored: requires a ricochet before direct bullet damage is accepted.
-  - Summoner: periodically creates mini Scouts.
-  - Bullet Hunter: moves toward the released bullet.
-  - Accelerator: increases the movement speed of nearby enemies.
-- Added modifier icons, colored auras, score rewards, and Elite kill tracking.
+- Rebuilt the combat HUD to prevent overlap between the selected core and combo counter.
+- Separated bullet state, dash state, wave progress, score, health, core identity, combo, and challenge status.
+- Added explicit score and wave labels.
+- Added immediate challenge states: active, completed, and failed.
+- Added short success/failure challenge toasts.
+- Replaced the large center wave banner with a compact upper-center banner.
+- Added a short enemy movement grace period during each wave introduction.
+- Added Elite spawn alerts and an animated danger ring around Explosive Elites.
+- Rebuilt the pause screen with visible challenge state and direct Build Inspector access.
 
-### Run challenges and Daily Challenge
+### Statistics and ranking semantics
 
-- Added six optional run challenges:
-  - Complete a run without taking damage.
-  - Kill three enemies with one shot.
-  - Reach eight ricochets in one shot.
-  - Win without dashing.
-  - Win with 30 shots or fewer.
-  - Kill three Elite enemies.
-- Successful challenges grant bonus Core Shards.
-- Added a deterministic Daily Challenge generated from the local calendar date.
-- Each Daily Challenge fixes:
-  - challenge objective;
-  - bullet core;
-  - upgrade sequence seed;
-  - Elite modifier sequence;
-  - daily mutator.
-- Added four daily mutators: Elite Rush, Fragile Core, Ricochet Storm, and Overclocked.
-- Added daily attempts, best score, best time, completion state, and consecutive-day streak tracking.
+- Separated:
+  - total shots;
+  - shots that connected at least once;
+  - direct bullet impacts;
+  - accuracy percentage.
+- Accuracy now uses successful shots divided by total shots instead of total impacts divided by total shots.
+- Multi-hit ricochets can increase direct impacts without producing impossible accuracy above 100%.
+- Indirect damage from arena nodes, explosions, chained effects, and other non-bullet sources is excluded from direct-impact statistics.
+- Progression recording, rank calculation, precision achievements, and run history now receive the corrected successful-shot value.
 
-### Cosmetic inventory
+### Achievements, Daily Challenge, and results
 
-- Added cosmetic slots for player aura, bullet, trail, dash, and HUD theme.
-- Added eleven cosmetic items with unlock requirements based on:
-  - completed challenges;
-  - Daily Challenge wins;
-  - consecutive daily streak;
-  - Legendary upgrade selections;
-  - Elite kills.
-- Cosmetics are presentation-only and do not change combat power.
-- Added a dedicated Arabic Cosmetics screen and persistent cosmetic selection.
+- Fixed Arabic RTL progress order from reversed values such as `6 / 0` to `0 / 6`.
+- Rebuilt achievement cards with explicit LTR progress values and clearer reward labels.
+- Rebuilt the Daily Challenge screen with:
+  - forced core;
+  - daily mutator;
+  - objective;
+  - total first-completion reward;
+  - attempts;
+  - best score;
+  - best time;
+  - daily streak;
+  - completion state.
+- Rebuilt the result screen to show corrected accuracy statistics.
+- Integrated challenge status, bonus shards, and cosmetic unlocks inside the main result panel.
+- Removed the detached challenge panel that previously extended below the result layout.
 
-### Persistence and presentation
+### Browser layout
 
-- Progression save schema advanced from version 1 to version 2.
-- Replayability data now participates in save export, import, malformed-data repair, and full reset.
-- Added final settlement logic so challenge bonuses, Daily forced cores, Elite kills, Legendary selections, history details, and cosmetic unlocks are recorded exactly once.
-- Result screens now show challenge completion, bonus shards, Daily status, and newly unlocked cosmetics.
-- Combat HUD now shows the current run challenge and live progress.
-- Main menu now provides direct access to Daily Challenge and Cosmetics.
-- Browser package advanced to **v0.6.0**.
+- Added short-screen spacing refinements.
+- Reduced top-page clipping risk for headings and supporting text.
+- Improved fullscreen canvas sizing so the toolbar no longer permanently consumes game height.
+- Hid the external footer on narrow screens to protect the playable viewport.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, UI, visual, progression, replayability, and persistence modules.
-- Automated tests: **42/42 passed**.
+- JavaScript syntax checks: **passed** for all runtime, UI, progression, replayability, feedback, and accuracy modules.
+- Automated tests: **50/50 passed** on the latest implementation commit.
 - New tests cover:
-  - deterministic seeded random generation;
-  - rarity thresholds and deterministic upgrade decoration;
-  - Legendary upgrade catalogue integrity;
-  - synergy activation;
-  - deterministic Elite modifier assignment;
-  - all six challenge objectives;
-  - stable Daily Challenge generation by date;
-  - cosmetic unlock rules;
-  - version-two save migration and replayability export/import;
-  - malformed replayability data repair;
-  - challenge reward settlement;
-  - Daily forced-core history;
-  - idempotent reward processing;
-  - cosmetic unlock settlement.
-- Pull Request #9: **squash-merged to main**.
-- Merge commit: `d69b4134b42a71c5465e168e179d933bb313959a`.
-- GitHub Actions Verify: **passed** on the final Pull Request #9 commit.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live gameplay, layout, and balance review: pending.
+  - Arabic RTL progress order;
+  - separation of successful shots and direct impacts;
+  - accuracy clamping;
+  - immediate irreversible challenge failures;
+  - live challenge completion;
+  - victory-only challenge completion;
+  - strict direct-impact accounting;
+  - exclusion of indirect damage from direct impacts;
+  - strict run-settlement hit semantics.
+- Pull Request #10: **open**.
+- GitHub Actions Verify: **passed** on the latest implementation commit.
+- Final verification on this status commit: pending.
+- GitHub Pages deployment: pending merge to `main`.
+- Live desktop, fullscreen, and mobile-landscape review: pending.
 
 ## Acceptance gate
 
-Do not close Milestone 03C until:
+Do not close Milestone 03D until:
 
-1. Upgrade cards display the correct rarity and Legendary cards remain visually readable.
-2. Each Legendary upgrade produces its documented gameplay effect.
-3. All four synergies activate only after the required core and upgrades are present.
-4. Every Elite modifier is identifiable and behaves correctly without breaking collision readability.
-5. Challenge progress updates during the run and bonus shards are granted exactly once.
-6. Daily Challenge content remains identical after reload on the same date.
-7. Daily attempts, best score, completion, and streak persist correctly.
-8. Daily forced cores work even when the core is not permanently unlocked and are recorded correctly in history.
-9. Build Inspector opens and closes correctly from keyboard and pause controls.
-10. Cosmetic unlocks and selections persist through reload, export, and import.
-11. Desktop, fullscreen, and mobile landscape layouts remain usable.
-12. Existing combat, visual identity, progression, boss, defeat stabilization, and Arabic RTL behavior remain intact.
-13. The project owner approves rarity rates, challenge rewards, Elite difficulty, and Daily pacing.
+1. Achievement progress reads current value first on Arabic screens.
+2. Result statistics clearly separate shots, successful shots, direct impacts, and accuracy.
+3. Accuracy never exceeds 100% because of ricochets, shock effects, or chained hits.
+4. The core badge and combo counter never overlap.
+5. Challenge failure appears immediately after an irreversible mistake.
+6. Challenge completion appears immediately when a skill target is reached.
+7. Wave banners do not hide the middle of active combat.
+8. Enemies do not attack during the short wave-introduction grace period.
+9. Daily details and rewards are understandable without entering a run.
+10. Result content remains inside the canvas at desktop, fullscreen, and mobile landscape sizes.
+11. Explosive Elite warning remains visible without obscuring collision readability.
+12. Existing combat, progression, rarity, Daily, cosmetics, boss flow, stabilization, and Arabic RTL behavior remain intact.
+13. The project owner approves the refined layout and corrected ranking behavior.
 
 ## Known limitations
 
-- Progression remains local to the current browser/device; cloud accounts and cross-device synchronization are not implemented.
-- Daily Challenges are deterministic and local; global leaderboards are not implemented.
-- Rarity probabilities, Elite frequency, challenge rewards, and Legendary power require live balance testing.
-- Real-browser automated gameplay and screenshot regression testing is still pending.
+- Real-browser automated gameplay and screenshot regression tests are still pending.
+- Progression remains local to the current browser/device.
+- Daily Challenges remain local and do not have global leaderboards.
+- Region expansion, additional bosses, Endless Mode, and Boss Rush are not implemented.
 - Final illustrated backgrounds, portraits, and bespoke audio assets are not integrated.
-- Additional regions, enemies, bosses, Endless Mode, and Boss Rush are not implemented yet.
 
 ## Next milestone after acceptance
 
@@ -150,7 +128,7 @@ Do not close Milestone 03C until:
 Planned scope:
 
 - Three larger themed regions with distinct arena mechanics.
-- New region-specific enemy types.
+- Region-specific enemy types.
 - Three additional bosses.
 - Region and difficulty selection.
 - Longer run structure.

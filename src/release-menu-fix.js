@@ -1,0 +1,26 @@
+import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './content.js';
+
+const FONT='Changa, "Segoe UI", Tahoma, sans-serif';
+const C={text:'#f8f9ff',muted:'#aeb7da',cyan:'#62f3ff',yellow:'#ffe66d',green:'#53f2a1',purple:'#b983ff',red:'#ff526a',border:'#33406f'};
+function rr(ctx,x,y,w,h,r=16){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);}
+function panel(ctx,x,y,w,h,c=C.border,fill='rgba(8,13,29,.98)',blur=8){ctx.save();ctx.fillStyle=fill;ctx.strokeStyle=c;ctx.lineWidth=2;ctx.shadowColor=c;ctx.shadowBlur=blur;rr(ctx,x,y,w,h,18);ctx.fill();ctx.shadowBlur=0;ctx.stroke();ctx.restore();}
+function label(ctx,t,x,y,s,c=C.text,w=700,a='center'){ctx.save();ctx.direction='rtl';ctx.textAlign=a;ctx.fillStyle=c;ctx.font=`${w} ${s}px ${FONT}`;ctx.fillText(String(t),x,y);ctx.restore();}
+function button(ctx,x,y,w,h,text,accent,primary=false){panel(ctx,x,y,w,h,accent,primary?`${accent}2f`:'rgba(13,18,39,.98)',primary?13:4);label(ctx,text,x+w/2,y+h/2+7,15,primary?C.text:accent,900);}
+function inside(x,y,r){return x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;}
+const MAIN_COMMAND={x:960,y:525,w:250,h:52};const MAIN_PROTOCOL={x:960,y:595,w:250,h:52};
+const HUB_ITEMS=[
+ {id:'protocol',name:'بروتوكول الكسر',desc:'الخريطة المتفرعة الكاملة',color:C.cyan},
+ {id:'modes',name:'أنماط اللعب',desc:'Endless وBoss Rush والعقود',color:C.red},
+ {id:'enemies',name:'سجل الأعداء',desc:'المواجهات ونقاط الضعف',color:C.yellow},
+ {id:'guardians',name:'سجل الحراس',desc:'Mastery وأفضل الأوقات',color:C.purple},
+ {id:'builds',name:'موسوعة الـBuild',desc:'Relics وSynergies',color:C.green},
+ {id:'tutorial',name:'التدريب',desc:'تعليم تفاعلي داخل الحلبة',color:C.cyan},
+ {id:'gamepad',name:'تحكم Gamepad',desc:'ربط الأزرار والحساسية',color:C.yellow},
+ {id:'backup',name:'النسخة الاحتياطية',desc:'تصدير واستيراد كل البيانات',color:C.green},
+];
+function hubRect(index){const col=index%2,row=Math.floor(index/2);return{x:120+col*540,y:130+row*125,w:500,h:100};}
+function startTutorial(game){game.resetRun();game.tutorialMode=true;game.tutorialStep=0;game.tutorialStart={x:game.player.x,y:game.player.y};game.tutorialDashUsed=false;game.runTargetWaves=99;game.state='playing';game.audio.setScene('combat');game.spawnEnemy('scout',{point:{x:900,y:360}});game.banner={title:'غرفة التدريب',subtitle:'أكمل الخطوات لتعلم قاعدة الطلقة الواحدة',time:2};}
+function activate(game,id){game.audio.play('click');if(id==='protocol')game.startProtocolRun?.();else if(id==='modes')game.state='modeHub';else if(id==='enemies'){game.codexRegion='forge';game.state='enemyCodex';}else if(id==='guardians')game.state='bossMastery';else if(id==='builds'){game.buildCodexPage=0;game.state='buildCodex';}else if(id==='tutorial')startTutorial(game);else if(id==='gamepad')game.state='gamepadSettings';else if(id==='backup')game.state='backupHub';}
+function drawMainCommand(game){const ctx=game.ctx;ctx.save();ctx.fillStyle='rgba(4,7,17,.99)';ctx.fillRect(910,215,370,505);panel(ctx,930,235,330,450,C.cyan);label(ctx,'ملف المقاتل',1095,280,24,C.text,900);const save=game.progressionSave||{};label(ctx,`النواة: ${game.activeCore?.name||'القياسية'}`,1095,318,14,C.cyan,800);label(ctx,`شظايا النواة: ${save.shards||0}`,1095,350,13,C.yellow,700);label(ctx,`انتصارات: ${save.stats?.victories||0}`,1095,382,13,C.green,700);label(ctx,'كل الأنظمة الإضافية موجودة داخل مركز واحد.',1095,440,12,C.muted,500);button(ctx,MAIN_COMMAND.x,MAIN_COMMAND.y,MAIN_COMMAND.w,MAIN_COMMAND.h,'مركز القيادة',C.cyan,true);button(ctx,MAIN_PROTOCOL.x,MAIN_PROTOCOL.y,MAIN_PROTOCOL.w,MAIN_PROTOCOL.h,'ابدأ بروتوكول الكسر',C.yellow,false);ctx.restore();}
+function drawHub(game){const ctx=game.ctx;ctx.fillStyle='rgba(2,4,12,.95)';ctx.fillRect(0,0,WIDTH,HEIGHT);label(ctx,'مركز القيادة',WIDTH/2,68,42,C.text,900);label(ctx,'كل أنظمة Corebreak Protocol في شاشة واحدة',WIDTH/2,102,15,C.muted,600);HUB_ITEMS.forEach((item,index)=>{const r=hubRect(index);panel(ctx,r.x,r.y,r.w,r.h,item.color);label(ctx,item.name,r.x+r.w-30,r.y+38,18,item.color,900,'right');label(ctx,item.desc,r.x+r.w-30,r.y+70,12,C.muted,500,'right');label(ctx,'←',r.x+32,r.y+62,22,item.color,900);});button(ctx,490,640,300,48,'العودة',C.cyan,true);}
+export function installReleaseMenuFix(GameClass){const p=GameClass.prototype;if(p.__releaseMenuFixInstalled)return;p.__releaseMenuFixInstalled=true;const menu=p.drawMenu;p.drawMenu=function(...a){menu.apply(this,a);drawMainCommand(this);};const click=p.handleUiClick;p.handleUiClick=function(x,y){if(this.state==='menu'){if(inside(x,y,MAIN_COMMAND)){this.state='releaseHub';this.audio.play('click');return true;}if(inside(x,y,MAIN_PROTOCOL)){this.startProtocolRun?.();return true;}if(x>=900&&y>=210)return true;}if(this.state==='releaseHub'){for(let i=0;i<HUB_ITEMS.length;i++)if(inside(x,y,hubRect(i))){activate(this,HUB_ITEMS[i].id);return true;}if(inside(x,y,{x:490,y:640,w:300,h:48})){this.state='menu';return true;}return true;}return click.call(this,x,y);};const esc=p.handleEscape;p.handleEscape=function(){if(this.state==='releaseHub'){this.state='menu';return;}return esc.call(this);};const draw=p.draw;p.draw=function(...a){if(this.state==='releaseHub'){this.uiRegions=[];this.ctx.save();this.drawArena();drawHub(this);this.ctx.restore();return;}return draw.apply(this,a);};}

@@ -4,91 +4,156 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **72%**
+- Overall project completion: **84%**
 - Milestone 01 — First Playable Vertical Slice: **100%**
 - Milestone 02 — Combat, Arabic presentation, boss, and upgrades: **100%**
 - Milestone 02.5 — UI/UX and anime presentation: **100%**
 - Milestone 02.6 — Stabilization and balance: **100%**
 - Milestone 03A — Visual Identity Overhaul: **100% implemented**
-- Current milestone: **Milestone 03B — Persistent Progression**
-- Milestone 03B implementation: **100%**
-- State: **Pull Request #8 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser review is required before milestone acceptance**
+- Milestone 03B — Persistent Progression: **100% implemented**
+- Current milestone: **Milestone 03C — Replayability Expansion**
+- Milestone 03C implementation: **100%**
+- State: **Pull Request #9 implementation complete; automated verification passed; final status-commit verification and live browser review are required before merge acceptance**
 
-## Milestone 03B implemented
+## Milestone 03C implemented
 
-- Added a versioned local progression save with validation, normalization, migration-safe defaults, and corrupted-data fallback.
-- Added persistent **Core Shards** earned from wave progress, kills, rank, accuracy, speed, and victory.
-- Rebuilt the main menu around progression access while preserving the Arabic presentation and direct start flow.
-- Added a dedicated **Core Hub** with currency display, unlocking, equipping, mastery statistics, and readable core traits.
-- Added five one-bullet-compatible cores:
-  - Standard Core: balanced default behavior.
-  - Ricochet Core: two extra ricochets, scaling bounce damage, and slightly lower speed.
-  - Heavy Core: significantly higher damage and knockback with lower speed and one fewer ricochet.
-  - Shock Core: reduced direct damage with a chained strike to a nearby enemy.
-  - Recall Core: Magnetic Recall available from the start with a small damage tradeoff.
-- Added persistent mastery data per core: runs, victories, and best score.
-- Added a result-screen reward summary with rank, selected core, earned shards, balance, and newly unlocked achievements.
-- Added a persistent last-20-runs history with result, score, rank, time, accuracy, core, reward, and date.
-- Added lifetime statistics for runs, victories, defeats, score, time, shots, hits, kills, ricochets, S ranks, precision runs, and fastest victory.
-- Added six achievements with shard rewards and visible progress bars.
-- Added save export, import, and confirmed full reset controls.
-- Added selected-core identity to the combat HUD and a subtle matching player aura.
-- Advanced the browser package to **v0.5.0**.
+### Upgrade rarity and build systems
+
+- Added four upgrade rarity tiers: Common, Rare, Epic, and Legendary.
+- Rarity probability scales with wave progression and receives a small bonus during Daily Challenges.
+- Rare and Epic selections strengthen supported numerical upgrade effects.
+- Added six one-stack Legendary upgrades:
+  - Ghost Round.
+  - Vengeful Return.
+  - Final Detonation.
+  - Time Core.
+  - Chain Lightning.
+  - Nuclear Gamble.
+- Added four named core/upgrade synergies:
+  - Angle Master.
+  - Storm Loop.
+  - Recall Hunter.
+  - Siege Core.
+- Added an in-run Build Inspector available from the pause menu or the `B` key.
+- Build Inspector shows the selected core, upgrades, rarity, stack levels, active synergies, and current challenge progress.
+
+### Elite enemy modifiers
+
+- Elite enemies now receive deterministic functional modifiers rather than health-only scaling.
+- Added six Elite modifiers:
+  - Explosive: damages nearby units and the player on death.
+  - Regenerator: restores health after avoiding damage.
+  - Armored: requires a ricochet before direct bullet damage is accepted.
+  - Summoner: periodically creates mini Scouts.
+  - Bullet Hunter: moves toward the released bullet.
+  - Accelerator: increases the movement speed of nearby enemies.
+- Added modifier icons, colored auras, score rewards, and Elite kill tracking.
+
+### Run challenges and Daily Challenge
+
+- Added six optional run challenges:
+  - Complete a run without taking damage.
+  - Kill three enemies with one shot.
+  - Reach eight ricochets in one shot.
+  - Win without dashing.
+  - Win with 30 shots or fewer.
+  - Kill three Elite enemies.
+- Successful challenges grant bonus Core Shards.
+- Added a deterministic Daily Challenge generated from the local calendar date.
+- Each Daily Challenge fixes:
+  - challenge objective;
+  - bullet core;
+  - upgrade sequence seed;
+  - Elite modifier sequence;
+  - daily mutator.
+- Added four daily mutators: Elite Rush, Fragile Core, Ricochet Storm, and Overclocked.
+- Added daily attempts, best score, best time, completion state, and consecutive-day streak tracking.
+
+### Cosmetic inventory
+
+- Added cosmetic slots for player aura, bullet, trail, dash, and HUD theme.
+- Added eleven cosmetic items with unlock requirements based on:
+  - completed challenges;
+  - Daily Challenge wins;
+  - consecutive daily streak;
+  - Legendary upgrade selections;
+  - Elite kills.
+- Cosmetics are presentation-only and do not change combat power.
+- Added a dedicated Arabic Cosmetics screen and persistent cosmetic selection.
+
+### Persistence and presentation
+
+- Progression save schema advanced from version 1 to version 2.
+- Replayability data now participates in save export, import, malformed-data repair, and full reset.
+- Added final settlement logic so challenge bonuses, Daily forced cores, Elite kills, Legendary selections, history details, and cosmetic unlocks are recorded exactly once.
+- Result screens now show challenge completion, bonus shards, Daily status, and newly unlocked cosmetics.
+- Combat HUD now shows the current run challenge and live progress.
+- Main menu now provides direct access to Daily Challenge and Cosmetics.
+- Browser package advanced to **v0.6.0**.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, UI, visual, stabilization, save, and progression modules.
-- Automated tests: **28/28 passed**.
+- JavaScript syntax checks: **passed** for all runtime, UI, visual, progression, replayability, and persistence modules.
+- Automated tests: **42/42 passed** on the latest implementation commit.
 - New tests cover:
-  - default save creation;
-  - malformed-save repair;
-  - deterministic reward calculation;
-  - core unlock costs and currency deduction;
-  - run rewards, mastery, achievements, and lifetime statistics;
-  - the 20-run history limit;
-  - save export/import round trips;
-  - invalid import rejection.
-- Pull Request #8: **squash-merged to main**.
-- Merge commit: `20729087830f829ce2084fe42bc24b8796380e91`.
-- GitHub Actions Verify: **passed** on the final Pull Request #8 commit.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live persistence and core-balance review: pending.
+  - deterministic seeded random generation;
+  - rarity thresholds and deterministic upgrade decoration;
+  - Legendary upgrade catalogue integrity;
+  - synergy activation;
+  - deterministic Elite modifier assignment;
+  - all six challenge objectives;
+  - stable Daily Challenge generation by date;
+  - cosmetic unlock rules;
+  - version-two save migration and replayability export/import;
+  - malformed replayability data repair;
+  - challenge reward settlement;
+  - Daily forced-core history;
+  - idempotent reward processing;
+  - cosmetic unlock settlement.
+- Pull Request #9: **open**.
+- GitHub Actions Verify: **passed** on the latest implementation commit.
+- Final verification on this status commit: pending.
+- GitHub Pages deployment: pending merge to `main`.
+- Live gameplay and balance review: pending.
 
 ## Acceptance gate
 
-Do not close Milestone 03B until:
+Do not close Milestone 03C until:
 
-1. A completed or lost run grants the expected shard reward exactly once.
-2. Reloading the page preserves shards, unlocked cores, selected core, achievements, history, and lifetime statistics.
-3. All five cores visibly and mechanically match their documented traits.
-4. Unlocking a core deducts the correct amount and cannot spend more shards than available.
-5. The result screen, Core Hub, history, and achievements remain readable at desktop, fullscreen, and mobile landscape sizes.
-6. Save export produces a valid JSON file and importing it restores the expected progression.
-7. Invalid or malformed imported files are rejected without destroying the current save.
-8. Reset requires confirmation and clears progression without leaving stale core selection or score data.
-9. Existing movement, firing, upgrades, boss flow, visual identity, defeat stabilization, and Arabic UI remain intact.
-10. The project owner approves the live progression pacing and core balance.
+1. Upgrade cards display the correct rarity and Legendary cards remain visually readable.
+2. Each Legendary upgrade produces its documented gameplay effect.
+3. All four synergies activate only after the required core and upgrades are present.
+4. Every Elite modifier is identifiable and behaves correctly without breaking collision readability.
+5. Challenge progress updates during the run and bonus shards are granted exactly once.
+6. Daily Challenge content remains identical after reload on the same date.
+7. Daily attempts, best score, completion, and streak persist correctly.
+8. Daily forced cores work even when the core is not permanently unlocked and are recorded correctly in history.
+9. Build Inspector opens and closes correctly from keyboard and pause controls.
+10. Cosmetic unlocks and selections persist through reload, export, and import.
+11. Desktop, fullscreen, and mobile landscape layouts remain usable.
+12. Existing combat, visual identity, progression, boss, defeat stabilization, and Arabic RTL behavior remain intact.
+13. The project owner approves rarity rates, challenge rewards, Elite difficulty, and Daily pacing.
 
 ## Known limitations
 
-- Progression is local to the current browser/device; cloud accounts and cross-device synchronization are not implemented.
-- Core prices and run-reward values require continued live balancing.
-- Achievements currently award shards; cosmetic reward inventory is reserved for a later milestone.
+- Progression remains local to the current browser/device; cloud accounts and cross-device synchronization are not implemented.
+- Daily Challenges are deterministic and local; global leaderboards are not implemented.
+- Rarity probabilities, Elite frequency, challenge rewards, and Legendary power require live balance testing.
 - Real-browser automated gameplay and screenshot regression testing is still pending.
 - Final illustrated backgrounds, portraits, and bespoke audio assets are not integrated.
-- Daily challenges, upgrade rarity tiers, elite modifiers, additional regions, and additional bosses are not implemented yet.
+- Additional regions, enemies, bosses, Endless Mode, and Boss Rush are not implemented yet.
 
 ## Next milestone after acceptance
 
-**Milestone 03C — Replayability Expansion**
+**Milestone 04 — Content Expansion**
 
 Planned scope:
 
-- Common, Rare, Epic, and Legendary upgrade tiers.
-- Legendary effects that change run builds while preserving one bullet.
-- Distinct elite enemy modifiers instead of health-only elite variants.
-- Run challenges and optional objectives.
-- Daily seeded challenge mode.
-- Current-build inspection during a run.
-- Additional progression rewards and cosmetic unlock inventory.
-- Core and upgrade balance pass based on live playtesting.
+- Three larger themed regions with distinct arena mechanics.
+- New region-specific enemy types.
+- Three additional bosses.
+- Region and difficulty selection.
+- Longer run structure.
+- Endless Mode.
+- Boss Rush Mode.
+- Additional music, ambience, and balance refinement.

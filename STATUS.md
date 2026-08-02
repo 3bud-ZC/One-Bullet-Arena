@@ -5,9 +5,10 @@ Last updated: 2026-08-02
 ## Completion
 
 - Overall project completion: **18%**
-- Current milestone: **Milestone 01 — First Playable Vertical Slice**
-- Milestone completion: **100%**
-- State: **Merged to main; CI passed; Pages source enabled; deployment retry triggered; manual live review required**
+- Completed milestone: **Milestone 01 — First Playable Vertical Slice**
+- Milestone 01 completion: **100%**
+- Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
+- State: **Milestone 01 accepted by the project owner after live GitHub Pages gameplay review; Milestone 02 is ready to begin**
 
 ## Implemented
 
@@ -27,6 +28,7 @@ Last updated: 2026-08-02
 - Node-based syntax and deterministic math tests.
 - GitHub Actions verification workflow.
 - GitHub Pages deployment workflow for `main`.
+- Live GitHub Pages deployment verified by the project owner.
 
 ## Verification
 
@@ -34,35 +36,38 @@ Last updated: 2026-08-02
 - Local unit tests: **4/4 passed**.
 - GitHub Actions Verify workflow: **passed** on Pull Request #1.
 - Pull Request #1: **squash-merged to main**.
-- GitHub Pages source: **GitHub Actions enabled by repository owner**.
-- Previous Pages runs failed before the source was enabled.
-- A fresh Pages deployment was triggered by commit after enabling the source.
-- Browser gameplay review: required on the public Pages URL.
+- GitHub Pages source: **GitHub Actions enabled**.
+- Public deployment: **opened successfully**.
+- Manual gameplay review: **passed by the project owner on 2026-08-02**.
+- Verified during manual review: live arena load, player movement, firing, bullet recovery, enemy waves, HUD, and playable combat loop.
 
 ## Known limitations
 
 - Desktop controls only; touch controls are not implemented.
 - No audio, settings screen, accessibility remapping, bosses, upgrades, or level selection yet.
 - Gameplay uses procedural vector visuals; production art is not integrated.
-- Balance values are first-pass defaults and require manual playtesting.
+- Balance values are first-pass defaults and require continued playtesting.
 
-## Next milestone
+## Current milestone
 
 **Milestone 02 — Combat Feel and Arena Progression**
 
-Planned scope:
+Target scope:
 
 - Add a dedicated boss encounter.
 - Add bullet modifiers and between-wave upgrade choices.
-- Add audio and volume controls.
-- Improve enemy telegraphs and collision feedback.
-- Add mobile touch controls.
+- Add multiple arena layouts, obstacles, and hazards.
+- Add audio, music, and volume controls.
+- Improve enemy telegraphs, hit reactions, and collision feedback.
+- Improve HUD clarity and wave transition presentation.
 - Add automated browser smoke testing.
 
-## Acceptance gate
+## Milestone 02 acceptance gate
 
-Do not start Milestone 02 until:
+Do not close Milestone 02 until:
 
-1. GitHub Actions passes.
-2. GitHub Pages deployment opens successfully.
-3. The user manually tests movement, firing, ricochet, recovery, dash, all enemy types, defeat, restart, and victory.
+1. All automated verification passes.
+2. The full five-wave run and boss encounter can be completed without blocking defects.
+3. Each upgrade has a visible and measurable gameplay effect.
+4. Audio and settings persist correctly.
+5. The project owner manually approves combat feel, progression, and boss balance on the live GitHub Pages build.

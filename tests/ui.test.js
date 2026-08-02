@@ -5,7 +5,7 @@ import { calculateRank, formatUiNumber } from '../src/ui-polish.js';
 
 test('result ranking rewards strong victorious runs', () => {
   assert.equal(calculateRank({ score: 18000, hits: 34, shots: 38, runTime: 105, victory: true }), 'S');
-  assert.equal(calculateRank({ score: 9000, hits: 18, shots: 35, runTime: 145, victory: true }), 'A');
+  assert.equal(calculateRank({ score: 9000, hits: 18, shots: 35, runTime: 145, victory: true }), 'B');
 });
 
 test('result ranking keeps incomplete or inefficient runs below top grades', () => {

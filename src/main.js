@@ -7,6 +7,7 @@ import { installDefeatUiRefine } from './defeat-ui-refine.js';
 import { installVisualIdentity } from './visual-identity.js';
 import { attachProgressionControls, installProgression } from './progression.js';
 import { attachReplayabilityControls, installReplayability } from './replayability.js';
+import { installReplayabilityPersistence } from './replayability-persistence.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -16,6 +17,7 @@ installDefeatUiRefine(OneBulletArena);
 installVisualIdentity(OneBulletArena);
 installProgression(OneBulletArena);
 installReplayability(OneBulletArena);
+installReplayabilityPersistence(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

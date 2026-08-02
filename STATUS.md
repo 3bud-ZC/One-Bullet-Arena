@@ -2,149 +2,116 @@
 
 Last updated: 2026-08-02
 
-## Completion
+## Scope and completion
 
-- Overall project completion: **96%**
-- Milestones 01–03D: **100% implemented**
-- Milestone 03E — Final Live UI QA: **100% implemented**
-- Milestone 04A — Regions and Run Structure: **100% implemented**
-- Milestone 04A.1 — Mobile Browser Optimization: **100% implemented**
-- Milestone 04B — Region-Specific Enemies and Enemy Codex: **100% implemented**
-- Current state: **Pull Request #13 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live enemy balance and Codex review are required before acceptance**
-- Browser build: **v0.8.0**
+The approved scope has expanded from the previous arena-only release into **One Bullet Arena: Corebreak Protocol**, including unique bosses, a branching roguelite route, run economy, Relics, Overdrive, additional modes, tutorial, platform polish, and production release work.
 
-## Milestone 04B implemented
+- Previous v0.8 arena scope: **96% complete**
+- Expanded Corebreak Protocol v1.0 scope: **76% complete**
+- Milestones 01–04B: **implemented**
+- Corebreak Phase 1 — The Three Guardians: **implemented on Pull Request #14**
+- Browser build: **v0.9.0**
+- Current state: **Pull Request #14 initial verification passed with 73/73 tests; final verification after this status commit is required before merge**
 
-### Reactor Forge enemies
+## Corebreak Phase 1 implemented
 
-- Shield Drone:
-  - faces the player with a visible frontal energy shield;
-  - blocks direct non-ricochet hits from the front;
-  - remains vulnerable from behind or after a wall ricochet.
-- Furnace Brute:
-  - heavy high-health pressure unit;
-  - creates temporary heat zones during combat;
-  - leaves a larger heat zone when destroyed.
-- Magnet Unit:
-  - creates a visible magnetic field;
-  - pulls the released bullet toward itself inside the field;
-  - changes recovery paths without changing player controls.
-- Repair Bot:
-  - searches for damaged allies;
-  - moves toward its repair target;
-  - restores bounded health on a visible cooldown beam.
+### Mirror Guardian — Neon
 
-### Void Circuit enemies
+- Three combat phases.
+- Direct unbounced shots are reflected during the shield phase.
+- Mirror decoys intercept and redirect the bullet.
+- Final phase periodically reverses player movement with an explicit warning.
+- Unique silhouette, health HUD, phase banners, particles, and shard rewards.
 
-- Phase Walker:
-  - enters a temporary untargetable phase state;
-  - teleports to a new position around the player;
-  - exposes itself again after the phase transition.
-- Rift Sniper:
-  - opens a visible rift exit;
-  - fires its projectile from the remote exit instead of its own body;
-  - uses arena portals when available.
-- Gravity Orb:
-  - displays a readable gravity radius;
-  - pulls the player and released bullet toward its center;
-  - uses stronger fields for Elite variants.
-- Mirror Drone:
-  - reflects direct unbounced bullets at a new angle;
-  - becomes vulnerable after the bullet has ricocheted;
-  - displays a reflective split silhouette.
+### Bullet Hunter — Reactor Forge
 
-### Region wave integration
+- Hunts the released bullet instead of only chasing the player.
+- Captures the bullet inside a visible magnetic cage and releases it automatically to prevent soft locks.
+- Creates a bounded vulnerability window after release.
+- Final phase accepts normal damage only during recall or the release vulnerability window.
+- Uses aimed spreads, radial attacks, and dash pressure across three phases.
 
-- Forge and Void now use dedicated five-wave regional compositions.
-- Story Route resets local enemy progression when entering Forge and Void.
-- All eight new enemies appear through normal Region Mission and Story Route progression.
-- Existing Neon compositions remain unchanged.
-- Difficulty health, speed, score, Elite modifiers, challenges, upgrades, and bullet cores remain integrated.
+### Rift King — Void Circuit
 
-### Visual feedback
+- Uses paired portals that transport and rotate the bullet trajectory.
+- Applies readable gravity pull and push phases to the player and bullet.
+- Final phase divides the arena with alternating spectral collapse lines.
+- Uses targeted spreads and radial attacks with increasing pressure.
 
-- Added eight unique silhouettes and color identities.
-- Added shield arcs, heat fields, magnetic ranges, repair beams, phase echoes, rift exits, gravity rings, and mirror facets.
-- Added first-discovery notifications with the enemy name and immediate counter advice.
-- Added custom health bars and Elite rings.
-- New effects remain compatible with mobile performance quality tiers.
+### Boss mastery and rewards
 
-### Enemy Codex
-
-- Added a dedicated Arabic Enemy Codex screen from the main menu.
-- Added Forge and Void tabs with four entries each.
-- Locked entries remain hidden until the enemy is encountered.
-- Discovered entries show:
-  - description;
-  - counter strategy;
-  - recommended bullet cores;
-  - encounter count;
-  - kill count.
-- Codex data is normalized and repaired when malformed.
-- Codex discovery and kill statistics persist locally across sessions.
+- Added persistent local mastery for all three guardians.
+- Records encounters, victories, best time, highest cleared difficulty, and no-damage wins.
+- Grants permanent Core Shards after each victory.
+- Grants a larger one-time first-victory mastery bonus.
+- Added a dedicated Arabic Guardian Mastery screen from the main menu.
+- Boss mastery data is normalized and repaired if malformed.
 
 ### Offline integration
 
-- Service-worker cache advanced to **v0.8.0**.
-- Region enemy data and runtime modules are included in the offline application shell.
-- Old caches are removed during service-worker activation.
+- Service-worker application shell advanced to **v0.9.0**.
+- Boss data and runtime modules are cached for installed and offline play.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all existing modules, region enemy modules, and service worker.
-- Automated tests: **68/68 passed**.
+- JavaScript syntax checks: **passed** for all existing modules, boss expansion modules, and the service worker.
+- Automated tests: **73/73 passed** on the initial Pull Request #14 run.
 - New tests cover:
-  - eight unique region enemy definitions;
-  - four enemies per advanced region;
-  - supported region wave compositions;
-  - Story Route local-wave resets;
-  - discovery and repeat encounter tracking;
-  - kill tracking without duplicate encounters;
-  - Codex completion values;
-  - malformed Codex repair and unsupported-entry removal.
-- Pull Request #13: **squash-merged to main**.
-- Merge commit: `e2830074cef836bf06855e88d142a94ab041fa76`.
-- GitHub Actions Verify: **passed on the final Pull Request #13 status commit**.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live desktop, mobile, regional combat balance, Codex layout, and offline-cache review: pending.
+  - one unique three-phase boss per region;
+  - health scaling for difficulty and Story Route;
+  - phase thresholds;
+  - encounter and victory mastery;
+  - first-victory rewards;
+  - best-time and difficulty preservation;
+  - no-damage wins;
+  - malformed mastery repair.
 
-## Acceptance gate
+## Manual acceptance gate
 
-Do not close Milestone 04B until:
+1. Mirror Guardian reflects direct shots without repeated collision loops.
+2. Decoys remain readable on desktop and mobile.
+3. Movement inversion starts and ends cleanly without leaving controls reversed.
+4. Bullet Hunter capture always releases the bullet and never creates a soft lock.
+5. Phase-three Bullet Hunter weakness is understandable and achievable with every Core.
+6. Rift King portal transport preserves a recoverable bullet trajectory.
+7. Gravity and segmentation remain controllable on mobile.
+8. Boss rewards are granted once and persist after reload.
+9. Guardian Mastery cards stay within the screen at supported resolutions.
+10. Existing region enemies, progression, Daily Challenge, PWA, and mobile controls remain intact.
 
-1. Every Forge enemy appears naturally across a five-wave Forge mission.
-2. Every Void enemy appears naturally across a five-wave Void mission.
-3. Shield Drone blocks frontal direct shots but accepts rear or ricochet hits.
-4. Furnace heat zones are readable, temporary, and do not create unavoidable damage chains.
-5. Magnet Unit changes bullet movement without permanently trapping the bullet.
-6. Repair Bot never heals above max health and its target beam remains readable.
-7. Phase Walker cannot be damaged while phased and always returns to a valid arena position.
-8. Rift Sniper shots emerge from visible rift exits and remain dodgeable.
-9. Gravity Orb pull remains controllable on desktop and mobile.
-10. Mirror Drone reflects direct shots once without creating repeated collision loops.
-11. First-discovery alerts do not cover critical mobile controls.
-12. Codex locked and discovered layouts remain inside their cards.
-13. Encounter and kill totals persist after reload.
-14. Existing Neon missions, Story Route, Daily Challenge, boss flow, progression, PWA, and mobile controls remain intact.
-15. The project owner approves live enemy balance and readability.
+## Remaining Corebreak Protocol phases
 
-## Known limitations
+### Phase 2 — Roguelite Run Map and Economy
 
-- Enemy Codex uses its own local storage record and is not yet included in progression export/import.
-- Region enemy behaviors have automated data tests but still require real-browser gameplay verification.
-- Three unique region bosses are not implemented yet.
-- Endless Mode and Boss Rush are not implemented yet.
-- Real-device screenshot regression automation is not implemented yet.
-- iOS still lacks a dedicated PNG Apple Touch Icon.
-- Final bespoke music, portraits, and illustrated background assets are not integrated.
+- Branching node map.
+- Combat, Elite, Forge, Shop, Recovery, Mystery, Challenge, and Boss nodes.
+- Temporary Broken Energy currency.
+- Route choices and deterministic seeded layouts.
 
-## Next milestone after acceptance
+### Phase 3 — Advanced Builds
 
-**Milestone 04C — Unique Region Bosses**
+- Bullet Overdrive per Core.
+- Approximately 25 gameplay-changing Relics.
+- Additional Synergies.
+- Build Codex and Relic discovery.
 
-Planned scope:
+### Phase 4 — Game Modes
 
-- Mirror Guardian for Neon with directional reflection and decoys.
-- Bullet Hunter for Reactor Forge with bullet capture and recovery pressure.
-- Rift King for Void Circuit with portals, gravity shifts, and arena segmentation.
-- Three phases, intros, achievements, mastery statistics, and region-specific rewards for each boss.
+- Story Run on the branching route.
+- Endless Mode.
+- Boss Rush.
+- Core Contracts.
+- Mode-specific local records.
+
+### Phase 5 — Production Release
+
+- Interactive tutorial.
+- Gamepad and remapping.
+- Audio and visual production pass.
+- Complete save export including Codex and mastery data.
+- Browser gameplay tests, screenshot regression, and performance benchmark.
+- Final PWA/mobile polish and v1.0.0 release.
+
+## Next execution step
+
+**Corebreak Phase 2 — Branching Roguelite Run Map and In-Run Economy**

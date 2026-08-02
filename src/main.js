@@ -14,6 +14,7 @@ import { installLiveQaRegions } from './live-qa-regions.js';
 import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
 import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
 import { installRegionEnemies } from './region-enemies.js';
+import { installRegionBosses } from './region-bosses.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -30,6 +31,7 @@ installLiveQaRegions(OneBulletArena);
 installRegionRuntimeFixes(OneBulletArena);
 installMobileBrowser(OneBulletArena);
 installRegionEnemies(OneBulletArena);
+installRegionBosses(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

@@ -9,7 +9,7 @@ Last updated: 2026-08-02
 - Milestone 02 gameplay implementation: **100%**
 - Current milestone: **Milestone 02.5 — UI/UX and Anime Presentation Polish**
 - Milestone 02.5 implementation: **100%**
-- State: **Implementation complete on Pull Request #4; automated verification passed; merge and live GitHub Pages review are required before owner acceptance**
+- State: **Pull Request #4 merged to main after successful automated verification; GitHub Pages deployment triggered; live owner review is required before milestone acceptance**
 
 ## Core gameplay implemented
 
@@ -45,11 +45,12 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, input, and UI modules.
-- Automated tests: **13/13 passed** on Pull Request #4 implementation commit.
+- Automated tests: **13/13 passed** on the final Pull Request #4 commit.
 - UI tests cover run ranking and RTL-safe numeral formatting.
 - Existing tests continue to cover arena content, upgrades, math, collisions, spawning, and physical keyboard mappings.
-- Pull Request #4: **open**.
-- GitHub Pages deployment: pending merge to `main`.
+- Pull Request #4: **squash-merged to main**.
+- Merge commit: `f506cba54b34ea26179d944aea7d6a519de9f834`.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
 - Real-browser live UI review: pending.
 
 ## Acceptance gate

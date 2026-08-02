@@ -68,27 +68,34 @@ test('keyboard start enters gameplay with a compact edge HUD', async ({ page }, 
   await page.goto('/');
   await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1900);
   const box = await page.locator('#game-canvas').boundingBox();
   const viewport = page.viewportSize();
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  if (testInfo.project.name === 'mobile-landscape') {
+    expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(2);
+  }
   await expectViewportFit(page);
   await page.screenshot({ path: testInfo.outputPath('gameplay.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('PWA manifest service worker and stabilization stylesheet are reachable', async ({ request }) => {
+test('PWA manifest service worker and stabilization assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const stylesheet = await request.get('/ui-ux-stabilization.css');
+  const runtimeFixes = await request.get('/src/ui-ux-runtime-fixes.js');
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
   expect(stylesheet.ok()).toBeTruthy();
+  expect(runtimeFixes.ok()).toBeTruthy();
   const data = await manifest.json();
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
-  expect(await worker.text()).toContain('one-bullet-arena-v1.0.1');
+  const workerText = await worker.text();
+  expect(workerText).toContain('one-bullet-arena-v1.0.1');
+  expect(workerText).toContain('ui-ux-runtime-fixes.js');
 });

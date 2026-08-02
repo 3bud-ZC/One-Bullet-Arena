@@ -8,7 +8,7 @@ Last updated: 2026-08-02
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
 - Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
 - Milestone 02 implementation: **100%**
-- State: **Implementation complete on Pull Request #2; automated verification passed; merge is permitted for GitHub Pages deployment; live gameplay review and owner acceptance are required before closing the milestone**
+- State: **Pull Request #2 merged to main after successful automated verification; GitHub Pages deployment triggered; live gameplay review and owner acceptance are required before closing the milestone**
 
 ## Milestone 02 implemented
 
@@ -43,24 +43,24 @@ Last updated: 2026-08-02
 
 - JavaScript syntax checks: **passed** for main, game, math, audio, and content modules.
 - Automated tests: **8/8 passed**.
-- GitHub Actions Verify workflow: **passed** on Pull Request #2 implementation and documentation commits.
-- Pull Request: **#2 open and mergeable**.
-- GitHub Pages deployment: pending merge to `main`.
+- GitHub Actions Verify workflow: **passed** on the final Pull Request #2 commit.
+- Pull Request #2: **squash-merged to main**.
+- Merge commit: `1caeda3f1ffd618b83c065cfbdf76cc96c172f03`.
+- GitHub Pages deployment: **triggered by the main-branch merge and this status update**.
 - Live full-run gameplay review: pending.
 
 ## Acceptance gate
 
 Do not close Milestone 02 until:
 
-1. The latest Pull Request #2 commit passes GitHub Actions.
-2. The Arabic menu, tutorial, settings, and upgrade screens render correctly.
-3. A full five-wave run reaches the Core Warden.
-4. The Core Warden can be defeated through all three phases.
-5. Each upgrade has a visible and measurable gameplay effect.
-6. Music, SFX, mute, and saved settings work after a page reload.
-7. Desktop controls pass manual review.
-8. Mobile landscape controls receive at least one manual device test.
-9. The project owner approves combat feel, progression, Arabic presentation, and boss balance on the live GitHub Pages build.
+1. The Arabic menu, tutorial, settings, and upgrade screens render correctly on GitHub Pages.
+2. A full five-wave run reaches the Core Warden.
+3. The Core Warden can be defeated through all three phases.
+4. Each upgrade has a visible and measurable gameplay effect.
+5. Music, SFX, mute, and saved settings work after a page reload.
+6. Desktop controls pass manual review.
+7. Mobile landscape controls receive at least one manual device test.
+8. The project owner approves combat feel, progression, Arabic presentation, and boss balance on the live GitHub Pages build.
 
 ## Known limitations
 

@@ -6,12 +6,13 @@ Last updated: 2026-08-03
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Current production release: **v1.0.1 — UI/UX Stabilization**
-- Expansion candidate: **v1.2.0 — Combat & Mobile Expansion**
+- Current release: **v1.2.0 — Combat & Mobile Expansion**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
-- v1.2.0 expansion: **implemented on Pull Request #20**
-- Current state: **implementation, deterministic verification, browser verification, phone viewport matrix, and screenshot review are complete; final workflows after this status commit are required before merge**
+- v1.2.0 expansion: **squash-merged through Pull Request #20**
+- Merge commit: `84a4d822f35ccda977b3ff1e360861a3f40518e8`
+- GitHub Pages deployment: **triggered by the PR #20 merge and this status update**
+- Current state: **implementation, deterministic verification, browser verification, phone viewport matrix, and screenshot review complete; live owner and physical-device acceptance remains**
 
 ## v1.2.0 delivered
 
@@ -107,14 +108,15 @@ Last updated: 2026-08-03
 - Service-worker cache advanced to `one-bullet-arena-v1.2.0`.
 - Direct-shell styles and all v1.2 runtime/data modules are included in the offline application shell.
 
-## Verification
+## Final verification
 
 ### Deterministic verification
 
 - JavaScript syntax checks: **passed** for all runtime modules, Playwright configuration, and service worker.
 - Automated deterministic tests: **102/102 passed**.
 - Failures: **0**.
-- Coverage added for:
+- Final Verify workflow on the Pull Request #20 status commit: **passed**.
+- Coverage includes:
   - expanded mission lengths;
   - story region transitions;
   - eight regional compositions;
@@ -125,7 +127,8 @@ Last updated: 2026-08-03
 
 ### Browser verification
 
-- Playwright Browser Smoke: **14/14 passed** on the latest implementation commit.
+- Playwright Browser Smoke: **14/14 passed**.
+- Final Browser Smoke workflow on the Pull Request #20 status commit: **passed**.
 - Desktop Chromium coverage includes:
   - direct full-viewport route;
   - menu, Command Center, and Core Hub navigation;
@@ -144,7 +147,7 @@ Last updated: 2026-08-03
 ## Visual QA completed
 
 - The first browser run exposed a remaining legacy 42-pixel mobile toolbar subtraction and a possible technique/banner overlap.
-- Both defects were fixed before merge consideration.
+- Both defects were fixed before merge.
 - Final desktop and mobile screenshots confirm:
   - no external page header, source link, build badge, or footer;
   - direct game-only presentation;
@@ -159,23 +162,15 @@ Last updated: 2026-08-03
 
 These require physical hardware or extended owner play and are not represented as completed automated verification:
 
-1. Test the deployed v1.2.0 build on Chrome Android and Samsung Internet.
-2. Test Safari iOS landscape, including address-bar collapse and safe-area behavior.
-3. Test the installed PWA after an offline restart.
-4. Test a physical Gamepad alongside the two new keyboard techniques.
-5. Complete an eight-wave regional mission and a twenty-four-wave Story run.
-6. Review late-wave balance, enemy evolution frequency, map-mutator damage, and technique cooldowns.
-7. Confirm touch-control comfort on at least one small and one large physical phone.
+1. Review the deployed v1.2.0 GitHub Pages build after deployment completes.
+2. Test Chrome Android and Samsung Internet on physical phones.
+3. Test Safari iOS landscape, including address-bar collapse and safe-area behavior.
+4. Test the installed PWA after an offline restart.
+5. Test a physical Gamepad alongside the two new keyboard techniques.
+6. Complete an eight-wave regional mission and a twenty-four-wave Story run.
+7. Review late-wave balance, enemy evolution frequency, map-mutator damage, and technique cooldowns.
+8. Confirm touch-control comfort on at least one small and one large physical phone.
 
-## Pull Request #20 release gate
+## Live refresh note
 
-Before merge:
-
-- Verify must pass on this final status commit.
-- Browser Smoke must pass on this final status commit.
-- Pull Request #20 must remain mergeable.
-
-After merge:
-
-- GitHub Pages deployment will be triggered.
-- Existing installations may require a hard refresh or site-data reset because the service-worker cache advances from v1.0.1 to v1.2.0.
+The service-worker cache advances from v1.0.1 to v1.2.0. If the previous page shell or interface remains visible, use a hard refresh on desktop or clear the site's stored data on mobile before reopening the game.

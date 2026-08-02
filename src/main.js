@@ -16,6 +16,7 @@ import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
 import { installRegionEnemies } from './region-enemies.js';
 import { installRegionBosses } from './region-bosses.js';
 import { installRogueliteRoute } from './roguelite-route.js';
+import { attachAdvancedBuildControls, installAdvancedBuilds } from './advanced-builds.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -34,6 +35,7 @@ installMobileBrowser(OneBulletArena);
 installRegionEnemies(OneBulletArena);
 installRegionBosses(OneBulletArena);
 installRogueliteRoute(OneBulletArena);
+installAdvancedBuilds(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -49,4 +51,5 @@ attachStabilizationControls(game);
 attachProgressionControls(game);
 attachReplayabilityControls(game);
 attachMobileBrowser(game);
+attachAdvancedBuildControls(game);
 game.requestProgressionReset = game.resetProgressionSave;

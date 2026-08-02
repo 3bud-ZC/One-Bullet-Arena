@@ -15,6 +15,7 @@ import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
 import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
 import { installRegionEnemies } from './region-enemies.js';
 import { installRegionBosses } from './region-bosses.js';
+import { installRogueliteRoute } from './roguelite-route.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -32,6 +33,7 @@ installRegionRuntimeFixes(OneBulletArena);
 installMobileBrowser(OneBulletArena);
 installRegionEnemies(OneBulletArena);
 installRegionBosses(OneBulletArena);
+installRogueliteRoute(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

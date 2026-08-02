@@ -1,14 +1,14 @@
 const FONT = 'Changa, "Segoe UI", Tahoma, sans-serif';
 const CHALLENGE_TITLES = new Set(['تحدي الجولة', 'التحدي اليومي']);
-const HUB_COPY = Object.freeze([
-  ['بروتوكول الكسر', 'الخريطة المتفرعة والحراس'],
-  ['أنماط اللعب', 'اللانهائي، اندفاع الزعماء، والعقود'],
-  ['سجل الأعداء', 'الأنواع ونقاط الضعف'],
-  ['سجل الحراس', 'الإتقان وأفضل الأوقات'],
-  ['موسوعة البناء', 'الآثار والتركيبات المكتشفة'],
-  ['التدريب', 'تعليم تفاعلي داخل الحلبة'],
-  ['يد التحكم', 'الحساسية وتعيين الأزرار'],
-  ['النسخة الاحتياطية', 'تصدير واستيراد كل البيانات'],
+const HUB_ITEMS = Object.freeze([
+  { icon: '⌁', title: 'بروتوكول الكسر', subtitle: 'الخريطة المتفرعة والحراس', color: '#62f3ff' },
+  { icon: '∞', title: 'أنماط اللعب', subtitle: 'اللانهائي، اندفاع الزعماء، والعقود', color: '#ff526a' },
+  { icon: '◇', title: 'سجل الأعداء', subtitle: 'الأنواع ونقاط الضعف', color: '#ffe66d' },
+  { icon: '♜', title: 'سجل الحراس', subtitle: 'الإتقان وأفضل الأوقات', color: '#b983ff' },
+  { icon: '✦', title: 'موسوعة البناء', subtitle: 'الآثار والتركيبات المكتشفة', color: '#53f2a1' },
+  { icon: '◎', title: 'التدريب', subtitle: 'تعليم تفاعلي داخل الحلبة', color: '#62f3ff' },
+  { icon: '⌘', title: 'يد التحكم', subtitle: 'الحساسية وتعيين الأزرار', color: '#ff9f43' },
+  { icon: '⇅', title: 'النسخة الاحتياطية', subtitle: 'تصدير واستيراد كل البيانات', color: '#53f2a1' },
 ]);
 
 function roundedRect(ctx, x, y, width, height, radius = 14) {
@@ -29,7 +29,7 @@ function label(ctx, text, x, y, size, color, weight = 700, align = 'center') {
 
 function redrawSecondaryButton(ctx, x, y, width, height, text) {
   ctx.save();
-  ctx.fillStyle = 'rgba(21, 29, 52, 0.98)';
+  ctx.fillStyle = '#151d34';
   ctx.strokeStyle = '#aeb7da';
   ctx.lineWidth = 2;
   roundedRect(ctx, x, y, width, height, 15);
@@ -39,20 +39,31 @@ function redrawSecondaryButton(ctx, x, y, width, height, text) {
   ctx.restore();
 }
 
-function redrawHubCopy(game) {
+function redrawHubCards(game) {
   const ctx = game.ctx;
   const pointer = game.pointer || { x: -1, y: -1 };
-  HUB_COPY.forEach(([title, subtitle], index) => {
+  HUB_ITEMS.forEach((item, index) => {
     const column = index % 4;
     const row = Math.floor(index / 4);
     const x = 45 + column * 306;
     const y = 142 + row * 216;
-    const hovered = pointer.x >= x && pointer.x <= x + 274 && pointer.y >= y && pointer.y <= y + 180;
+    const width = 274;
+    const height = 180;
+    const hovered = pointer.x >= x && pointer.x <= x + width && pointer.y >= y && pointer.y <= y + height;
     ctx.save();
-    ctx.fillStyle = hovered ? 'rgba(20, 31, 57, 0.97)' : 'rgba(9, 14, 30, 0.97)';
-    ctx.fillRect(x + 13, y + 48, 248, 89);
-    label(ctx, title, x + 246, y + 80, 19, '#f8f9ff', 900, 'right');
-    label(ctx, subtitle, x + 246, y + 113, 12, '#aeb7da', 500, 'right');
+    ctx.fillStyle = hovered ? '#142039' : '#0c1425';
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = item.color;
+    ctx.shadowBlur = hovered ? 14 : 6;
+    roundedRect(ctx, x, y, width, height, 18);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.stroke();
+    label(ctx, item.icon, x + width - 28, y + 43, 25, item.color, 900, 'right');
+    label(ctx, item.title, x + width - 28, y + 80, 19, '#f8f9ff', 900, 'right');
+    label(ctx, item.subtitle, x + width - 28, y + 113, 12, '#aeb7da', 500, 'right');
+    label(ctx, 'فتح', x + 28, y + 154, 13, item.color, 800, 'left');
     ctx.restore();
   });
 }
@@ -102,7 +113,7 @@ export function installUiUxRuntimeFixes(GameClass) {
   const previousDraw = prototype.draw;
   prototype.draw = function drawWithFinalUiRefinements(...args) {
     const result = previousDraw.apply(this, args);
-    if (this.state === 'releaseHub') redrawHubCopy(this);
+    if (this.state === 'releaseHub') redrawHubCards(this);
     if (this.state === 'menu') redrawSecondaryButton(this.ctx, 880, 590, 304, 42, 'طريقة اللعب والتحكم');
     if (this.state === 'coreHub') {
       redrawSecondaryButton(this.ctx, 48, 642, 200, 48, 'تصدير الحفظ');

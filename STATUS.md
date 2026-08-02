@@ -9,7 +9,7 @@ Last updated: 2026-08-02
 - Milestone 03E — Final Live UI QA: **100% implemented**
 - Milestone 04A — Regions and Run Structure: **100% implemented**
 - Milestone 04A.1 — Mobile Browser Optimization: **100% implemented**
-- Current state: **Pull Request #12 open; initial GitHub Actions verification passed; final verification and live phone-browser review are required before acceptance**
+- Current state: **Pull Request #12 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live phone-browser review is required before acceptance**
 - Browser build: **v0.7.1**
 
 ## Milestone 04A.1 implemented
@@ -78,10 +78,11 @@ Last updated: 2026-08-02
   - 16:9 fitting inside short phone landscape viewports;
   - toolbar and safe-area reservation;
   - landscape detection requiring coarse touch input.
-- Pull Request #12: **open**.
-- Initial GitHub Actions Verify: **passed**.
-- Final verification on this status commit: pending.
-- GitHub Pages deployment: pending merge.
+- Pull Request #12: **squash-merged to main**.
+- Merge commit: `b91df3809d20a6bc472b2c3b931d9c673d5fa44a`.
+- GitHub Actions Verify: **passed on the final Pull Request #12 status commit**.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
+- Live Chrome Android, Samsung Internet or Safari iOS, fullscreen, and installed-PWA review: pending.
 
 ## Acceptance gate
 

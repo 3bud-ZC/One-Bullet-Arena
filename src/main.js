@@ -21,6 +21,7 @@ import { installGameModes } from './game-modes.js';
 import { attachReleaseProductionControls, installReleaseProduction } from './release-production.js';
 import { installReleaseMenuFix } from './release-menu-fix.js';
 import { installUiUxStabilization } from './ui-ux-stabilization.js';
+import { installUiUxRuntimeFixes } from './ui-ux-runtime-fixes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -44,6 +45,7 @@ installGameModes(OneBulletArena);
 installReleaseProduction(OneBulletArena);
 installReleaseMenuFix(OneBulletArena);
 installUiUxStabilization(OneBulletArena);
+installUiUxRuntimeFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');

@@ -8,7 +8,7 @@ Last updated: 2026-08-02
 - Milestones 01–03D: **100% implemented**
 - Milestone 03E — Final Live UI QA: **100% implemented**
 - Milestone 04A — Regions and Run Structure: **100% implemented**
-- Current state: **Pull Request #11 open; initial GitHub Actions verification passed; final verification and live browser review are required before acceptance**
+- Current state: **Pull Request #11 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser review is required before acceptance**
 - Browser build: **v0.7.0**
 
 ## Milestone 03E implemented
@@ -74,7 +74,7 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all existing and new modules.
-- Automated tests: **56/56 passed** on the initial Pull Request #11 commit.
+- Automated tests: **56/56 passed**.
 - New tests cover:
   - malformed mission normalization;
   - Region Mission persistence rules;
@@ -84,10 +84,11 @@ Last updated: 2026-08-02
   - portal, conveyor, and gravity mechanics data;
   - valid wave compositions;
   - difficulty health and reward multipliers.
-- Pull Request #11: **open**.
-- Initial GitHub Actions Verify: **passed**.
-- Final verification on this status commit: pending.
-- GitHub Pages deployment: pending merge.
+- Pull Request #11: **squash-merged to main**.
+- Merge commit: `8a0dca7727bacbd2479da64034fb38503619ac1f`.
+- GitHub Actions Verify: **passed on the final Pull Request #11 commit**.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
+- Live desktop, fullscreen, mobile-landscape, Story Route, and region-mechanics review: pending.
 
 ## Acceptance gate
 

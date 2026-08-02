@@ -8,6 +8,7 @@ import { installVisualIdentity } from './visual-identity.js';
 import { attachProgressionControls, installProgression } from './progression.js';
 import { attachReplayabilityControls, installReplayability } from './replayability.js';
 import { installReplayabilityPersistence } from './replayability-persistence.js';
+import { installUiFeedbackBalance } from './ui-feedback-balance.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -18,6 +19,7 @@ installVisualIdentity(OneBulletArena);
 installProgression(OneBulletArena);
 installReplayability(OneBulletArena);
 installReplayabilityPersistence(OneBulletArena);
+installUiFeedbackBalance(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

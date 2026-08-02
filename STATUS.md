@@ -13,7 +13,7 @@ Last updated: 2026-08-02
 - Milestone 03B — Persistent Progression: **100% implemented**
 - Current milestone: **Milestone 03C — Replayability Expansion**
 - Milestone 03C implementation: **100%**
-- State: **Pull Request #9 implementation complete; automated verification passed; final status-commit verification and live browser review are required before merge acceptance**
+- State: **Pull Request #9 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser and balance review are required before milestone acceptance**
 
 ## Milestone 03C implemented
 
@@ -94,7 +94,7 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, UI, visual, progression, replayability, and persistence modules.
-- Automated tests: **42/42 passed** on the latest implementation commit.
+- Automated tests: **42/42 passed**.
 - New tests cover:
   - deterministic seeded random generation;
   - rarity thresholds and deterministic upgrade decoration;
@@ -110,11 +110,11 @@ Last updated: 2026-08-02
   - Daily forced-core history;
   - idempotent reward processing;
   - cosmetic unlock settlement.
-- Pull Request #9: **open**.
-- GitHub Actions Verify: **passed** on the latest implementation commit.
-- Final verification on this status commit: pending.
-- GitHub Pages deployment: pending merge to `main`.
-- Live gameplay and balance review: pending.
+- Pull Request #9: **squash-merged to main**.
+- Merge commit: `d69b4134b42a71c5465e168e179d933bb313959a`.
+- GitHub Actions Verify: **passed** on the final Pull Request #9 commit.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
+- Live gameplay, layout, and balance review: pending.
 
 ## Acceptance gate
 

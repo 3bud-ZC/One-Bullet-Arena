@@ -2,10 +2,16 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#050711" />
     <meta name="description" content="حلبة الطلقة الواحدة — لعبة أكشن عربية سريعة تعتمد على طلقة واحدة قابلة للاستعادة والارتداد." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="One Bullet" />
     <title>حلبة الطلقة الواحدة | One Bullet Arena</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;500;600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -13,8 +19,17 @@
     <link rel="stylesheet" href="./stabilization.css" />
     <link rel="stylesheet" href="./ui-refine.css" />
     <link rel="stylesheet" href="./ui-feedback-balance.css" />
+    <link rel="stylesheet" href="./mobile-browser.css" />
   </head>
   <body>
+    <div class="orientation-gate" aria-live="polite">
+      <div class="orientation-card">
+        <span class="orientation-icon" aria-hidden="true">▭</span>
+        <strong>لف الهاتف للوضع الأفقي</strong>
+        <span>اللعبة مصممة للعب الأفقي حتى تظهر الخريطة وأزرار التحكم بالكامل.</span>
+      </div>
+    </div>
+
     <main class="page-shell">
       <header class="topbar">
         <div class="brand-lockup">

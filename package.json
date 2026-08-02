@@ -1,11 +1,11 @@
 {
   "name": "one-bullet-arena",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Arabic browser action game built around one recoverable ricochet bullet.",
   "scripts": {
-    "check": "node --check src/main.js && node --check src/game.js && node --check src/math.js && node --check src/audio.js && node --check src/content.js && node --check src/input.js && node --check src/ui-polish.js && node --check src/ui-polish-fixes.js && node --check src/stabilization.js && node --check src/defeat-ui-refine.js && node --check src/visual-identity.js && node --check src/progression-data.js && node --check src/progression.js && node --check src/replayability-data.js && node --check src/replayability.js && node --check src/replayability-persistence.js && node --check src/ui-feedback-balance.js && node --check src/accuracy-semantics-fix.js",
+    "check": "node --check src/main.js && node --check src/game.js && node --check src/math.js && node --check src/audio.js && node --check src/content.js && node --check src/input.js && node --check src/ui-polish.js && node --check src/ui-polish-fixes.js && node --check src/stabilization.js && node --check src/defeat-ui-refine.js && node --check src/visual-identity.js && node --check src/progression-data.js && node --check src/progression.js && node --check src/replayability-data.js && node --check src/replayability.js && node --check src/replayability-persistence.js && node --check src/ui-feedback-balance.js && node --check src/accuracy-semantics-fix.js && node --check src/regions-data.js && node --check src/live-qa-regions.js && node --check src/regions-runtime-fixes.js",
     "test": "node --test tests/*.test.js",
     "verify": "npm run check && npm test"
   },

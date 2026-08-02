@@ -4,124 +4,146 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **94%**
+- Overall project completion: **96%**
 - Milestones 01–03D: **100% implemented**
 - Milestone 03E — Final Live UI QA: **100% implemented**
 - Milestone 04A — Regions and Run Structure: **100% implemented**
 - Milestone 04A.1 — Mobile Browser Optimization: **100% implemented**
-- Current state: **Pull Request #12 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live phone-browser review is required before acceptance**
-- Browser build: **v0.7.1**
+- Milestone 04B — Region-Specific Enemies and Enemy Codex: **100% implemented**
+- Current state: **Pull Request #13 open; initial GitHub Actions verification passed; final verification and live combat review are required before acceptance**
+- Browser build: **v0.8.0**
 
-## Milestone 04A.1 implemented
+## Milestone 04B implemented
 
-### Mobile viewport and safe areas
+### Reactor Forge enemies
 
-- Replaced width-only mobile scaling with a viewport-aware layout constrained by both available width and height.
-- Uses `visualViewport` and `100dvh` so Chrome/Safari browser toolbar changes no longer crop the bottom controls.
-- Added `viewport-fit=cover` safe-area support for notches, rounded corners, and gesture areas.
-- Mobile gameplay hides the external desktop header, footer, and toolbar to reserve the maximum playable area.
-- Added a dedicated portrait orientation gate asking the player to rotate the phone.
-- The fixed 1280×720 simulation remains unchanged while CSS scales the canvas without stretching.
+- Shield Drone:
+  - faces the player with a visible frontal energy shield;
+  - blocks direct non-ricochet hits from the front;
+  - remains vulnerable from behind or after a wall ricochet.
+- Furnace Brute:
+  - heavy high-health pressure unit;
+  - creates temporary heat zones during combat;
+  - leaves a larger heat zone when destroyed.
+- Magnet Unit:
+  - creates a visible magnetic field;
+  - pulls the released bullet toward itself inside the field;
+  - changes recovery paths without changing player controls.
+- Repair Bot:
+  - searches for damaged allies;
+  - moves toward its repair target;
+  - restores bounded health on a visible cooldown beam.
 
-### Professional touch controls
+### Void Circuit enemies
 
-- Replaced the legacy single-touch handler with explicit multi-touch roles.
-- One finger can control movement while another simultaneously aims and shoots.
-- Added drag-to-aim with an optional aiming guide and release-to-fire behavior.
-- Added dedicated mobile buttons for:
-  - dash;
-  - bullet recall;
-  - pause;
-  - Build Inspector.
-- The movement joystick spawns at the player's touch origin and remains bounded.
-- Added optional left-handed layout.
-- Added haptic feedback where the browser/device supports vibration.
+- Phase Walker:
+  - enters a temporary untargetable phase state;
+  - teleports to a new position around the player;
+  - exposes itself again after the phase transition.
+- Rift Sniper:
+  - opens a visible rift exit;
+  - fires its projectile from the remote exit instead of its own body;
+  - uses arena portals when available.
+- Gravity Orb:
+  - displays a readable gravity radius;
+  - pulls the player and released bullet toward its center;
+  - uses stronger fields for Elite variants.
+- Mirror Drone:
+  - reflects direct unbounced bullets at a new angle;
+  - becomes vulnerable after the bullet has ricocheted;
+  - displays a reflective split silhouette.
 
-### Mobile HUD and menus
+### Region wave integration
 
-- Added a compact phone-specific combat HUD.
-- Region, difficulty, wave progress, score, hearts, bullet state, dash state, core, combo, and challenge status use less playfield space.
-- Added a mobile-specific pause menu.
-- Added a Mobile Controls settings screen with:
-  - small, medium, and large controls;
-  - control opacity;
-  - right-handed or left-handed layout;
-  - release-to-fire or touch-to-fire;
-  - aiming guide visibility;
-  - automatic/high/balanced/performance visual quality;
-  - haptic feedback toggle.
-- Settings persist locally without changing progression data.
+- Forge and Void now use dedicated five-wave regional compositions.
+- Story Route resets local enemy progression when entering Forge and Void.
+- All eight new enemies appear through normal Region Mission and Story Route progression.
+- Existing Neon compositions remain unchanged.
+- Difficulty health, speed, score, Elite modifiers, challenges, upgrades, and bullet cores remain integrated.
 
-### Browser interruption and performance handling
+### Visual feedback
 
-- The game pauses automatically when the tab becomes hidden, the page is suspended, or the user changes applications.
-- Prevented page scrolling, text selection, browser touch callouts, and touch movement leakage inside the game stage.
-- Added automatic visual quality selection using available memory, logical CPU cores, and device pixel ratio.
-- Balanced and Performance modes reduce combat particle counts while keeping gameplay logic unchanged.
-- Fullscreen attempts to lock landscape orientation when supported.
+- Added eight unique silhouettes and color identities.
+- Added shield arcs, heat fields, magnetic ranges, repair beams, phase echoes, rift exits, gravity rings, and mirror facets.
+- Added first-discovery notifications with the enemy name and immediate counter advice.
+- Added custom health bars and Elite rings.
+- New effects remain compatible with mobile performance quality tiers.
 
-### PWA and offline support
+### Enemy Codex
 
-- Added an installable Web App Manifest.
-- Added an application icon and standalone landscape configuration.
-- Added a service worker with versioned application-shell caching.
-- The game can reopen from cached files after the first successful online load.
-- Old application caches are removed during service-worker activation.
+- Added a dedicated Arabic Enemy Codex screen from the main menu.
+- Added Forge and Void tabs with four entries each.
+- Locked entries remain hidden until the enemy is encountered.
+- Discovered entries show:
+  - description;
+  - counter strategy;
+  - recommended bullet cores;
+  - encounter count;
+  - kill count.
+- Codex data is normalized and repaired when malformed.
+- Codex discovery and kill statistics persist locally across sessions.
+
+### Offline integration
+
+- Service-worker cache advanced to **v0.8.0**.
+- Region enemy data and runtime modules are included in the offline application shell.
+- Old caches are removed during service-worker activation.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all existing modules, the new mobile runtime, and the service worker.
-- Automated tests: **61/61 passed**.
+- JavaScript syntax checks: **passed** for all existing modules, region enemy modules, and service worker.
+- Automated tests: **68/68 passed**.
 - New tests cover:
-  - malformed mobile settings normalization;
-  - automatic device quality tiers;
-  - 16:9 fitting inside short phone landscape viewports;
-  - toolbar and safe-area reservation;
-  - landscape detection requiring coarse touch input.
-- Pull Request #12: **squash-merged to main**.
-- Merge commit: `b91df3809d20a6bc472b2c3b931d9c673d5fa44a`.
-- GitHub Actions Verify: **passed on the final Pull Request #12 status commit**.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live Chrome Android, Samsung Internet or Safari iOS, fullscreen, and installed-PWA review: pending.
+  - eight unique region enemy definitions;
+  - four enemies per advanced region;
+  - supported region wave compositions;
+  - Story Route local-wave resets;
+  - discovery and repeat encounter tracking;
+  - kill tracking without duplicate encounters;
+  - Codex completion values;
+  - malformed Codex repair and unsupported-entry removal.
+- Pull Request #13: **open**.
+- Initial GitHub Actions Verify: **passed**.
+- Final verification on this status commit: pending.
+- GitHub Pages deployment: pending merge.
 
 ## Acceptance gate
 
-Do not close Milestone 04A.1 until:
+Do not close Milestone 04B until:
 
-1. The movement joystick and action buttons remain fully visible on short landscape phones.
-2. Showing or hiding the Chrome/Safari browser toolbar does not crop or stretch the canvas.
-3. Safe-area devices keep controls outside notches, rounded corners, and gesture zones.
-4. Portrait mode displays the rotation message instead of a cropped game.
-5. Movement and aiming work simultaneously with two fingers.
-6. Release-to-fire does not trigger accidental shots while using dash, recall, pause, or Build Inspector.
-7. Left-handed layout swaps movement and action sides correctly.
-8. Mobile HUD remains readable without hiding enemies or arena mechanics.
-9. The game pauses safely after app switching, tab hiding, and phone interruptions.
-10. High, Balanced, and Performance modes remain playable and visually understandable.
-11. PWA installation opens in landscape standalone mode where supported.
-12. Offline reopening works after one complete online load.
-13. Existing desktop controls, fullscreen, progression, regions, upgrades, challenges, and boss flow remain intact.
-14. The project owner approves Chrome Android and at least one additional mobile browser.
+1. Every Forge enemy appears naturally across a five-wave Forge mission.
+2. Every Void enemy appears naturally across a five-wave Void mission.
+3. Shield Drone blocks frontal direct shots but accepts rear or ricochet hits.
+4. Furnace heat zones are readable, temporary, and do not create unavoidable damage chains.
+5. Magnet Unit changes bullet movement without permanently trapping the bullet.
+6. Repair Bot never heals above max health and its target beam remains readable.
+7. Phase Walker cannot be damaged while phased and always returns to a valid arena position.
+8. Rift Sniper shots emerge from visible rift exits and remain dodgeable.
+9. Gravity Orb pull remains controllable on desktop and mobile.
+10. Mirror Drone reflects direct shots once without creating repeated collision loops.
+11. First-discovery alerts do not cover critical mobile controls.
+12. Codex locked and discovered layouts remain inside their cards.
+13. Encounter and kill totals persist after reload.
+14. Existing Neon missions, Story Route, Daily Challenge, boss flow, progression, PWA, and mobile controls remain intact.
+15. The project owner approves live enemy balance and readability.
 
 ## Known limitations
 
-- Real-device and browser screenshot automation is not implemented yet.
-- iOS may use a generated home-screen icon because a dedicated PNG Apple Touch Icon is not included yet.
-- Some browsers reject programmatic landscape locking unless the game is in fullscreen or installed mode.
-- Region-specific enemy archetypes are not implemented yet.
+- Enemy Codex uses its own local storage record and is not yet included in progression export/import.
+- Region enemy behaviors have automated data tests but still require real-browser gameplay verification.
 - Three unique region bosses are not implemented yet.
 - Endless Mode and Boss Rush are not implemented yet.
-- Progression and Daily Challenge records remain local to the current browser/device.
+- Real-device screenshot regression automation is not implemented yet.
+- iOS still lacks a dedicated PNG Apple Touch Icon.
 - Final bespoke music, portraits, and illustrated background assets are not integrated.
 
 ## Next milestone after acceptance
 
-**Milestone 04B — Region-Specific Enemies and Enemy Codex**
+**Milestone 04C — Unique Region Bosses**
 
 Planned scope:
 
-- Shield Drone, Furnace Brute, Magnet Unit, and Repair Bot for Reactor Forge.
-- Phase Walker, Rift Sniper, Gravity Orb, and Mirror Drone for Void Circuit.
-- Behavior-specific telegraphs and silhouettes.
-- Persistent Enemy Codex discovery screen.
-- Region enemy balance and automated behavior tests.
+- Mirror Guardian for Neon with directional reflection and decoys.
+- Bullet Hunter for Reactor Forge with bullet capture and recovery pressure.
+- Rift King for Void Circuit with portals, gravity shifts, and arena segmentation.
+- Three phases, intros, achievements, mastery statistics, and region-specific rewards for each boss.

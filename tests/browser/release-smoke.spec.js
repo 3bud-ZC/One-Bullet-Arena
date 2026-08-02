@@ -126,22 +126,25 @@ test('portrait phone displays the orientation gate instead of a clipped game', a
   await expectViewportFit(page);
 });
 
-test('PWA shell and v1.2 expansion assets are reachable', async ({ request }) => {
+test('PWA shell and v1.2.1 progressive hazard assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const directStyles = await request.get('/direct-game.css');
   const expansionData = await request.get('/src/v12-expansion-data.js');
   const expansionRuntime = await request.get('/src/v12-expansion.js');
+  const progressiveHazards = await request.get('/src/progressive-map-hazards.js');
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
   expect(directStyles.ok()).toBeTruthy();
   expect(expansionData.ok()).toBeTruthy();
   expect(expansionRuntime.ok()).toBeTruthy();
+  expect(progressiveHazards.ok()).toBeTruthy();
   const data = await manifest.json();
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.2.0');
+  expect(workerText).toContain('one-bullet-arena-v1.2.1');
   expect(workerText).toContain('direct-game.css');
   expect(workerText).toContain('v12-expansion.js');
+  expect(workerText).toContain('progressive-map-hazards.js');
 });

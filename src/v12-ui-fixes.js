@@ -10,7 +10,7 @@ function drawReleaseVersion(game) {
   ctx.textAlign = 'right';
   ctx.fillStyle = '#62f3ff';
   ctx.font = `800 12px ${FONT}`;
-  ctx.fillText('COREBREAK PROTOCOL  •  v1.2.1', 1210, 94);
+  ctx.fillText('COREBREAK PROTOCOL  •  v1.2.2', 1210, 94);
   ctx.restore();
 }
 

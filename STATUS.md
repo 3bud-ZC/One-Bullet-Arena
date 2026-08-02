@@ -12,7 +12,7 @@ Last updated: 2026-08-02
 - Milestone 03A — Visual Identity Overhaul: **100% implemented**
 - Current milestone: **Milestone 03B — Persistent Progression**
 - Milestone 03B implementation: **100%**
-- State: **Pull Request #8 implementation complete; initial automated verification passed; final commit verification and live browser review are required before acceptance**
+- State: **Pull Request #8 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser review is required before milestone acceptance**
 
 ## Milestone 03B implemented
 
@@ -38,7 +38,7 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, UI, visual, stabilization, save, and progression modules.
-- Automated tests: **28/28 passed** on the initial Pull Request #8 implementation commit.
+- Automated tests: **28/28 passed**.
 - New tests cover:
   - default save creation;
   - malformed-save repair;
@@ -48,10 +48,10 @@ Last updated: 2026-08-02
   - the 20-run history limit;
   - save export/import round trips;
   - invalid import rejection.
-- Pull Request #8: **open**.
-- Initial GitHub Actions Verify: **passed**.
-- Final verification on the latest status commit: pending.
-- GitHub Pages deployment: pending merge to `main`.
+- Pull Request #8: **squash-merged to main**.
+- Merge commit: `20729087830f829ce2084fe42bc24b8796380e91`.
+- GitHub Actions Verify: **passed** on the final Pull Request #8 commit.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
 - Live persistence and core-balance review: pending.
 
 ## Acceptance gate

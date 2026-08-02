@@ -57,9 +57,7 @@ export function installRegionRuntimeFixes(GameClass) {
   const originalSpawnNextWave = prototype.spawnNextWave;
   prototype.spawnNextWave = function spawnRegionWaveWithDailyRules(...args) {
     const result = originalSpawnNextWave.apply(this, args);
-    if (this.isDailyRun && this.dailyConfig?.mutator?.id === 'elite-rush') {
-      this.spawnEnemy('scout', { elite: true });
-    }
+    if (this.isDailyRun && this.dailyConfig?.mutator?.id === 'elite-rush') this.spawnEnemy('scout', { elite: true });
     if (this.isDailyRun && this.dailyConfig?.mutator?.id === 'ricochet-storm') {
       for (const enemy of this.enemies) enemy.speed *= 1.1;
     }
@@ -99,7 +97,7 @@ export function installRegionRuntimeFixes(GameClass) {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#62f3ff';
     ctx.font = `800 12px ${NUMBER_FONT}`;
-    ctx.fillText('ONE BULLET ARENA  •  v0.10.0', WIDTH / 2, 44);
+    ctx.fillText('ONE BULLET ARENA  •  v0.11.0', WIDTH / 2, 44);
     ctx.restore();
   };
 }

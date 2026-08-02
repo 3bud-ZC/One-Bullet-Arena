@@ -14,7 +14,7 @@ Last updated: 2026-08-02
 - Milestone 03C — Replayability Expansion: **100%**
 - Current milestone: **Milestone 03D — UI, Feedback & Balance Polish**
 - Milestone 03D implementation: **100%**
-- State: **Pull Request #10 implementation complete; automated verification passed; final verification on this status commit and live browser review are required before acceptance**
+- State: **Pull Request #10 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live desktop, fullscreen, and mobile-landscape review are required before acceptance**
 
 ## Milestone 03D implemented
 
@@ -78,7 +78,7 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, UI, progression, replayability, feedback, and accuracy modules.
-- Automated tests: **50/50 passed** on the latest implementation commit.
+- Automated tests: **50/50 passed**.
 - New tests cover:
   - Arabic RTL progress order;
   - separation of successful shots and direct impacts;
@@ -89,10 +89,10 @@ Last updated: 2026-08-02
   - strict direct-impact accounting;
   - exclusion of indirect damage from direct impacts;
   - strict run-settlement hit semantics.
-- Pull Request #10: **open**.
-- GitHub Actions Verify: **passed** on the latest implementation commit.
-- Final verification on this status commit: pending.
-- GitHub Pages deployment: pending merge to `main`.
+- Pull Request #10: **squash-merged to main**.
+- Merge commit: `ecff5366f549ae9295d9dcbc6e09c1130844cd12`.
+- GitHub Actions Verify: **passed** on the final Pull Request #10 status commit.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
 - Live desktop, fullscreen, and mobile-landscape review: pending.
 
 ## Acceptance gate

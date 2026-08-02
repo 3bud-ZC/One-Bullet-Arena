@@ -25,18 +25,10 @@
     <link rel="stylesheet" href="./direct-game.css" />
   </head>
   <body class="direct-game-shell">
-    <div class="orientation-gate" aria-live="polite">
-      <div class="orientation-card">
-        <span class="orientation-icon" aria-hidden="true">▭</span>
-        <strong>لف الهاتف للوضع الأفقي</strong>
-        <span>اللعبة مصممة للعب الأفقي حتى تظهر الحلبة وأزرار التحكم بالكامل.</span>
-      </div>
-    </div>
-
     <main class="page-shell">
       <section class="game-stage" id="game-stage" aria-label="لعبة حلبة الطلقة الواحدة">
-        <button type="button" id="fullscreen-toggle" class="direct-control" tabindex="-1" aria-hidden="true">ملء الشاشة</button>
-        <span id="presentation-status" class="direct-control" aria-live="polite">جاهز للعب</span>
+        <button type="button" id="fullscreen-toggle" class="direct-control" tabindex="-1" aria-hidden="true" hidden>ملء الشاشة</button>
+        <span id="presentation-status" class="direct-control" aria-live="polite" hidden>جاهز للعب</span>
         <div class="game-frame">
           <canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas>
         </div>

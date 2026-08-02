@@ -36,6 +36,12 @@ async function expectCanvasContained(page) {
   return { box, viewport };
 }
 
+async function expectNoExternalChrome(page) {
+  await expect(page.locator('.orientation-gate')).toHaveCount(0);
+  await expect(page.locator('#fullscreen-toggle')).toBeHidden();
+  await expect(page.locator('#presentation-status')).toBeHidden();
+}
+
 test('direct public URL contains only the full-viewport game surface', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
@@ -43,6 +49,7 @@ test('direct public URL contains only the full-viewport game surface', async ({ 
   await expect(page.locator('header')).toHaveCount(0);
   await expect(page.locator('footer')).toHaveCount(0);
   await expect(page.locator('.top-actions')).toHaveCount(0);
+  await expectNoExternalChrome(page);
   await expect(page.locator('.game-stage')).toBeVisible();
   await page.waitForTimeout(900);
   const { box, viewport } = await expectCanvasContained(page);
@@ -90,12 +97,13 @@ test('keyboard start enters expanded gameplay and techniques run without errors'
   if (testInfo.project.name === 'mobile-landscape') {
     expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(2);
   }
+  await expectNoExternalChrome(page);
   await expectViewportFit(page);
   await page.screenshot({ path: testInfo.outputPath('expanded-gameplay.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('phone landscape viewport matrix remains scroll-free and fully contained', async ({ page }, testInfo) => {
+test('phone landscape viewport matrix remains scroll-free, chrome-free, and fully contained', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   const sizes = [
     { width: 740, height: 360 },
@@ -108,6 +116,7 @@ test('phone landscape viewport matrix remains scroll-free and fully contained', 
     await page.setViewportSize(size);
     await page.goto('/');
     await page.waitForTimeout(280);
+    await expectNoExternalChrome(page);
     await expectViewportFit(page);
     const { box } = await expectCanvasContained(page);
     expect(box.width).toBeGreaterThan(size.width * 0.76);
@@ -117,16 +126,18 @@ test('phone landscape viewport matrix remains scroll-free and fully contained', 
   expect(errors).toEqual([]);
 });
 
-test('portrait phone displays the orientation gate instead of a clipped game', async ({ page }) => {
+test('portrait phone keeps a clean contained game surface without orientation chrome', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
-  if (coarse) await expect(page.locator('.orientation-gate')).toBeVisible();
+  await expectNoExternalChrome(page);
+  await expect(page.locator('.game-stage')).toBeVisible();
+  await expectCanvasContained(page);
   await expectViewportFit(page);
+  await page.screenshot({ path: testInfo.outputPath('portrait-clean-shell.png'), fullPage: true });
 });
 
-test('PWA shell and v1.2.1 progressive hazard assets are reachable', async ({ request }) => {
+test('PWA shell and v1.2.2 clean-shell assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const directStyles = await request.get('/direct-game.css');
@@ -143,7 +154,7 @@ test('PWA shell and v1.2.1 progressive hazard assets are reachable', async ({ re
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.2.1');
+  expect(workerText).toContain('one-bullet-arena-v1.2.2');
   expect(workerText).toContain('direct-game.css');
   expect(workerText).toContain('v12-expansion.js');
   expect(workerText).toContain('progressive-map-hazards.js');

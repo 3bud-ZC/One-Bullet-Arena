@@ -23,8 +23,12 @@ body.direct-game-shell {
   -webkit-touch-callout: none;
 }
 
-.direct-game-shell::before {
-  display: none;
+.direct-game-shell::before,
+.direct-game-shell .orientation-gate,
+.direct-game-shell .direct-control,
+.direct-game-shell #fullscreen-toggle,
+.direct-game-shell #presentation-status {
+  display: none !important;
 }
 
 .direct-game-shell .page-shell {
@@ -38,6 +42,7 @@ body.direct-game-shell {
   padding: 0;
   display: block;
   overflow: hidden;
+  visibility: visible !important;
 }
 
 .direct-game-shell .game-stage,
@@ -95,18 +100,6 @@ body.direct-game-shell {
   touch-action: none;
 }
 
-.direct-control {
-  position: fixed;
-  inline-size: 1px;
-  block-size: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .direct-game-shell.mobile-runtime,
 .direct-game-shell.mobile-runtime .page-shell,
 .direct-game-shell.mobile-runtime .game-stage {
@@ -148,11 +141,5 @@ body.direct-game-shell.mobile-runtime:not([data-game-state="playing"]):not([data
     width: 100vw;
     height: 100dvh;
     overflow: hidden;
-  }
-}
-
-@media (orientation: portrait) and (pointer: coarse) {
-  .orientation-gate {
-    display: grid;
   }
 }

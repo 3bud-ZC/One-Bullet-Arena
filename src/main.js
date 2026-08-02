@@ -11,6 +11,7 @@ import { installReplayabilityPersistence } from './replayability-persistence.js'
 import { installUiFeedbackBalance } from './ui-feedback-balance.js';
 import { installAccuracySemanticsFix } from './accuracy-semantics-fix.js';
 import { installLiveQaRegions } from './live-qa-regions.js';
+import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -24,6 +25,7 @@ installReplayabilityPersistence(OneBulletArena);
 installUiFeedbackBalance(OneBulletArena);
 installAccuracySemanticsFix(OneBulletArena);
 installLiveQaRegions(OneBulletArena);
+installRegionRuntimeFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

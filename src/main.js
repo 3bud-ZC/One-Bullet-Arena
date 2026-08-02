@@ -12,6 +12,7 @@ import { installUiFeedbackBalance } from './ui-feedback-balance.js';
 import { installAccuracySemanticsFix } from './accuracy-semantics-fix.js';
 import { installLiveQaRegions } from './live-qa-regions.js';
 import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
+import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -26,6 +27,7 @@ installUiFeedbackBalance(OneBulletArena);
 installAccuracySemanticsFix(OneBulletArena);
 installLiveQaRegions(OneBulletArena);
 installRegionRuntimeFixes(OneBulletArena);
+installMobileBrowser(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -40,4 +42,5 @@ attachPresentationControls(game);
 attachStabilizationControls(game);
 attachProgressionControls(game);
 attachReplayabilityControls(game);
+attachMobileBrowser(game);
 game.requestProgressionReset = game.resetProgressionSave;

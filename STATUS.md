@@ -4,116 +4,112 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **92%**
+- Overall project completion: **94%**
 - Milestones 01–03D: **100% implemented**
 - Milestone 03E — Final Live UI QA: **100% implemented**
 - Milestone 04A — Regions and Run Structure: **100% implemented**
-- Current state: **Pull Request #11 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live browser review is required before acceptance**
-- Browser build: **v0.7.0**
+- Milestone 04A.1 — Mobile Browser Optimization: **100% implemented**
+- Current state: **Pull Request #12 open; initial GitHub Actions verification passed; final verification and live phone-browser review are required before acceptance**
+- Browser build: **v0.7.1**
 
-## Milestone 03E implemented
+## Milestone 04A.1 implemented
 
-### Core Hub layout repair
+### Mobile viewport and safe areas
 
-- Rebuilt all five Core cards with bounded Arabic RTL text wrapping.
-- Prevented descriptions, traits, mastery values, and action labels from crossing card boundaries.
-- Rebalanced the Core grid into three upper cards and two centered lower cards.
-- Preserved unlock, equip, export, import, reset, and return actions.
+- Replaced width-only mobile scaling with a viewport-aware layout constrained by both available width and height.
+- Uses `visualViewport` and `100dvh` so Chrome/Safari browser toolbar changes no longer crop the bottom controls.
+- Added `viewport-fit=cover` safe-area support for notches, rounded corners, and gesture areas.
+- Mobile gameplay hides the external desktop header, footer, and toolbar to reserve the maximum playable area.
+- Added a dedicated portrait orientation gate asking the player to rotate the phone.
+- The fixed 1280×720 simulation remains unchanged while CSS scales the canvas without stretching.
 
-### Terminal screen cleanup
+### Professional touch controls
 
-- Result screens now render from a clean arena background rather than behind the active combat HUD.
-- Challenge toast, Elite alert, wave banner, combo state, and combat overlays are cleared before victory or defeat presentation.
-- Removed the duplicate faded challenge message below the result panel.
-- Kept corrected shots, accurate shots, direct impacts, accuracy, rewards, and challenge state inside the main result layout.
+- Replaced the legacy single-touch handler with explicit multi-touch roles.
+- One finger can control movement while another simultaneously aims and shoots.
+- Added drag-to-aim with an optional aiming guide and release-to-fire behavior.
+- Added dedicated mobile buttons for:
+  - dash;
+  - bullet recall;
+  - pause;
+  - Build Inspector.
+- The movement joystick spawns at the player's touch origin and remains bounded.
+- Added optional left-handed layout.
+- Added haptic feedback where the browser/device supports vibration.
 
-## Milestone 04A implemented
+### Mobile HUD and menus
 
-### Mission selection
+- Added a compact phone-specific combat HUD.
+- Region, difficulty, wave progress, score, hearts, bullet state, dash state, core, combo, and challenge status use less playfield space.
+- Added a mobile-specific pause menu.
+- Added a Mobile Controls settings screen with:
+  - small, medium, and large controls;
+  - control opacity;
+  - right-handed or left-handed layout;
+  - release-to-fire or touch-to-fire;
+  - aiming guide visibility;
+  - automatic/high/balanced/performance visual quality;
+  - haptic feedback toggle.
+- Settings persist locally without changing progression data.
 
-- Added a dedicated Arabic mission-selection screen.
-- Mission selection persists locally between sessions.
-- Added two run structures:
-  - Region Mission: five waves and a region guardian.
-  - Story Route: twelve waves across all three regions followed by the final guardian.
-- Main menu now shows the selected mission and opens the mission selector directly.
+### Browser interruption and performance handling
 
-### Regions
+- The game pauses automatically when the tab becomes hidden, the page is suspended, or the user changes applications.
+- Prevented page scrolling, text selection, browser touch callouts, and touch movement leakage inside the game stage.
+- Added automatic visual quality selection using available memory, logical CPU cores, and device pixel ratio.
+- Balanced and Performance modes reduce combat particle counts while keeping gameplay logic unchanged.
+- Fullscreen attempts to lock landscape orientation when supported.
 
-- Added Neon Core District with laser lanes and linked bullet portals.
-- Added Reactor Forge with conveyors, heat lanes, industrial obstacles, and breakable structures.
-- Added Void Circuit with gravity wells, push fields, portals, and unstable arena layouts.
-- Each region contains five distinct arena configurations.
-- Story Route automatically advances Neon → Forge → Void.
-- Region mechanics affect the player, enemies, and recoverable bullet where appropriate.
+### PWA and offline support
 
-### Difficulty system
-
-- Added Recruit:
-  - four hearts;
-  - slower and lighter enemies.
-- Added Hunter:
-  - standard intended balance.
-- Added Corebreaker:
-  - stronger and faster enemies;
-  - increased mission rewards.
-- Added One-Hit Protocol:
-  - one heart;
-  - high enemy pressure;
-  - large risk reward multiplier.
-- Enemy health, speed, score value, boss health, player hearts, and mission bonus rewards respond to difficulty.
-
-### Runtime integration
-
-- Story Route HUD uses the correct twelve-wave total instead of the legacy five-wave label.
-- HUD displays the current region and difficulty.
-- Daily Challenge forced cores and mutators remain functional with custom region spawning.
-- Existing progression, replayability, Elite modifiers, rarity, challenges, cosmetics, Arabic RTL, fullscreen, and defeat stabilization remain integrated.
-- Build label advanced to **v0.7.0**.
+- Added an installable Web App Manifest.
+- Added an application icon and standalone landscape configuration.
+- Added a service worker with versioned application-shell caching.
+- The game can reopen from cached files after the first successful online load.
+- Old application caches are removed during service-worker activation.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all existing and new modules.
-- Automated tests: **56/56 passed**.
+- JavaScript syntax checks: **passed** for all existing modules, the new mobile runtime, and the service worker.
+- Automated tests: **61/61 passed**.
 - New tests cover:
-  - malformed mission normalization;
-  - Region Mission persistence rules;
-  - Story Route region transitions;
-  - twelve-wave target calculation;
-  - cloned arena state;
-  - portal, conveyor, and gravity mechanics data;
-  - valid wave compositions;
-  - difficulty health and reward multipliers.
-- Pull Request #11: **squash-merged to main**.
-- Merge commit: `8a0dca7727bacbd2479da64034fb38503619ac1f`.
-- GitHub Actions Verify: **passed on the final Pull Request #11 commit**.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live desktop, fullscreen, mobile-landscape, Story Route, and region-mechanics review: pending.
+  - malformed mobile settings normalization;
+  - automatic device quality tiers;
+  - 16:9 fitting inside short phone landscape viewports;
+  - toolbar and safe-area reservation;
+  - landscape detection requiring coarse touch input.
+- Pull Request #12: **open**.
+- Initial GitHub Actions Verify: **passed**.
+- Final verification on this status commit: pending.
+- GitHub Pages deployment: pending merge.
 
 ## Acceptance gate
 
-Do not close Milestone 03E / 04A until:
+Do not close Milestone 04A.1 until:
 
-1. Core descriptions remain inside every card at desktop and fullscreen sizes.
-2. Victory and defeat screens no longer show duplicate challenge text or active HUD elements behind the result.
-3. Mission selection persists after page reload.
-4. Region Mission ends after five waves.
-5. Story Route reaches waves 6–12 and changes region at waves 5 and 9.
-6. HUD wave totals remain correct for both run structures.
-7. Neon portals teleport the bullet once without immediate teleport loops.
-8. Forge conveyors visibly move entities without pushing them outside the arena.
-9. Void gravity affects the player, enemies, and released bullet without destroying control readability.
-10. Recruit, Hunter, Corebreaker, and One-Hit Protocol apply the documented health and speed rules.
-11. Daily Challenge mutators still function after region spawning.
-12. Existing progression, boss flow, upgrades, Elite behavior, save import/export, and Arabic UI remain intact.
-13. The project owner approves live balance and layout.
+1. The movement joystick and action buttons remain fully visible on short landscape phones.
+2. Showing or hiding the Chrome/Safari browser toolbar does not crop or stretch the canvas.
+3. Safe-area devices keep controls outside notches, rounded corners, and gesture zones.
+4. Portrait mode displays the rotation message instead of a cropped game.
+5. Movement and aiming work simultaneously with two fingers.
+6. Release-to-fire does not trigger accidental shots while using dash, recall, pause, or Build Inspector.
+7. Left-handed layout swaps movement and action sides correctly.
+8. Mobile HUD remains readable without hiding enemies or arena mechanics.
+9. The game pauses safely after app switching, tab hiding, and phone interruptions.
+10. High, Balanced, and Performance modes remain playable and visually understandable.
+11. PWA installation opens in landscape standalone mode where supported.
+12. Offline reopening works after one complete online load.
+13. Existing desktop controls, fullscreen, progression, regions, upgrades, challenges, and boss flow remain intact.
+14. The project owner approves Chrome Android and at least one additional mobile browser.
 
 ## Known limitations
 
+- Real-device and browser screenshot automation is not implemented yet.
+- iOS may use a generated home-screen icon because a dedicated PNG Apple Touch Icon is not included yet.
+- Some browsers reject programmatic landscape locking unless the game is in fullscreen or installed mode.
 - Region-specific enemy archetypes are not implemented yet.
-- Three unique region bosses are not implemented yet; the current guardian receives region naming and difficulty scaling.
+- Three unique region bosses are not implemented yet.
 - Endless Mode and Boss Rush are not implemented yet.
-- Real-browser automated gameplay and screenshot regression tests are still pending.
 - Progression and Daily Challenge records remain local to the current browser/device.
 - Final bespoke music, portraits, and illustrated background assets are not integrated.
 

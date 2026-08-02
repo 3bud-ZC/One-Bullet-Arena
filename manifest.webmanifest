@@ -1,0 +1,22 @@
+{
+  "name": "حلبة الطلقة الواحدة",
+  "short_name": "One Bullet",
+  "description": "لعبة أكشن عربية تعتمد على طلقة واحدة قابلة للاستعادة والارتداد.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#03050a",
+  "theme_color": "#050711",
+  "icons": [
+    {
+      "src": "./icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

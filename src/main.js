@@ -20,6 +20,7 @@ import { attachAdvancedBuildControls, installAdvancedBuilds } from './advanced-b
 import { installGameModes } from './game-modes.js';
 import { attachReleaseProductionControls, installReleaseProduction } from './release-production.js';
 import { installReleaseMenuFix } from './release-menu-fix.js';
+import { installUiUxStabilization } from './ui-ux-stabilization.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -42,6 +43,7 @@ installAdvancedBuilds(OneBulletArena);
 installGameModes(OneBulletArena);
 installReleaseProduction(OneBulletArena);
 installReleaseMenuFix(OneBulletArena);
+installUiUxStabilization(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');

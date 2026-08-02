@@ -1,60 +1,111 @@
-# One Bullet Arena — حلبة الطلقة الواحدة
+# One Bullet Arena: Corebreak Protocol
 
-A fast Arabic 2D browser action game built around one rule: **you have one bullet, and every shot must be recovered before you can fire again.**
+**حلبة الطلقة الواحدة: بروتوكول الكسر** is an Arabic browser roguelite action game built around one strict rule:
 
-## Current build — v0.3.0
+> You own one recoverable bullet. Every shot changes the fight, and the same bullet must return before you can fire again.
 
-- Full Arabic RTL interface using Changa for Arabic display text and Inter for stable game statistics.
-- Compact redesigned combat HUD with wave, score, health, bullet, dash, ricochet, combo, and boss states.
-- Direction indicator when the recoverable bullet is far from the player.
-- Anime-inspired wave banners, boss intro, speed lines, screen transitions, hit-stop, and slow motion.
-- Redesigned victory and defeat screens with six stat cards and S/A/B/C performance ranking.
-- Redesigned upgrade cards with icons, categories, current/next levels, and measurable effect summaries.
-- Fullscreen focus mode with responsive 16:9 scaling and the `F` keyboard shortcut.
-- Presentation and accessibility preferences for screen shake, reduced motion, damage numbers, numeral style, and high contrast.
-- Five escalating waves across five distinct arena layouts.
-- Solid and breakable obstacles, damage hazards, and explosive arena nodes.
-- Eight stackable between-wave upgrades without breaking the one-bullet rule.
-- Five core enemy archetypes plus mini and elite variants.
-- Three-phase **Core Warden** boss encounter.
-- Procedural music and sound effects with persistent music, SFX, and mute settings.
-- Desktop controls that work across Arabic and English keyboard layouts.
-- Mobile landscape touch movement, firing, and dash controls.
-- Local high-score, best-wave, audio-setting, and presentation-setting persistence.
-- Automated JavaScript syntax checks and thirteen deterministic tests.
+## Play
+
+- GitHub Pages: `https://3bud-zc.github.io/One-Bullet-Arena/`
+- Installable PWA with offline application-shell support.
+- Desktop, mobile landscape, keyboard, mouse, touch, and remappable Gamepad controls.
+
+## v1.0.0 features
+
+### Combat
+
+- Recoverable single-bullet combat with ricochets, recall, dash, perfect catches, hit-stop, slow motion, and Overdrive.
+- Five bullet Cores: Standard, Ricochet, Heavy, Shock, and Recall.
+- Five Core-specific Overdrive states.
+- Common, Rare, Epic, and Legendary upgrades.
+- Twenty-five gameplay-changing Relics and six advanced Core/Relic Synergies.
+
+### Regions and enemies
+
+- Neon Core District.
+- Reactor Forge.
+- Void Circuit.
+- Region mechanics include portals, lasers, conveyors, heat, gravity wells, and breakable structures.
+- Core enemy roster plus eight region-specific archetypes.
+- Persistent Enemy Codex with encounters, kills, counters, and recommended Cores.
+
+### Guardians
+
+- Mirror Guardian: reflection, decoys, and movement inversion.
+- Bullet Hunter: bullet capture, pursuit, and recall vulnerability windows.
+- Rift King: portals, gravity shifts, and arena segmentation.
+- Persistent Guardian Mastery records and rewards.
+
+### Roguelite systems
+
+- Three-act branching Corebreak Protocol route.
+- Combat, Elite, Forge, Shop, Recovery, Mystery, Challenge, and Boss nodes.
+- Temporary Broken Energy economy inside each Protocol run.
+- Persistent Core Shards, achievements, cosmetics, mastery, run history, Daily Challenge, and local records.
+- Build Codex for Relics, Synergies, and Overdrive usage.
+
+### Modes
+
+- Region Missions.
+- Story Route.
+- Corebreak Protocol.
+- Endless Mode with scaling waves and guardian gates.
+- Boss Rush.
+- Five Core Contracts.
+- Daily seeded challenge.
+
+### Production features
+
+- Interactive seven-step tutorial.
+- Gamepad movement, aiming, actions, and button remapping.
+- Mobile landscape controls with safe areas, browser-toolbar handling, left-handed layout, and quality tiers.
+- Full unified save export/import covering progression, Codices, mastery, mode records, and settings.
+- PWA installation and offline reopening after the first complete online load.
+- Automated Node verification plus Playwright desktop/mobile smoke screenshots.
+- Runtime performance monitor and quality-specific frame budgets.
 
 ## Controls
 
-| Action | Desktop | Mobile |
-| --- | --- | --- |
-| Move | `WASD` or arrow keys | Drag the left virtual stick |
-| Aim | Mouse | Tap the target position |
-| Fire | Left click | Tap on the right side |
-| Dash | `Space` or `Shift` | Tap the dash circle |
-| Magnetic recall | `Q` after unlocking it | Dedicated mobile control pending |
-| Pause | `P` or `Escape` | Browser back is not intercepted |
-| Select an upgrade | Click or `1`, `2`, `3` | Tap an upgrade card |
-| Mute | `M` or Settings | Settings |
-| Fullscreen | `F` or the presentation toolbar | Presentation toolbar |
+| Action | Keyboard / mouse | Mobile | Gamepad default |
+| --- | --- | --- | --- |
+| Move | `WASD` or arrows | Virtual stick | Left stick |
+| Aim | Mouse | Drag on aim side | Right stick |
+| Fire | Left click | Release aim touch | Button 0 |
+| Dash | `Space` / `Shift` | Dash button | Button 1 |
+| Recall | `Q` | Recall button | Button 2 |
+| Overdrive | `E` | Overdrive button | Button 3 |
+| Build inspection | `V` | Build button | Button 4 |
+| Pause | `P` / `Escape` | Pause button | Button 9 |
+| Fullscreen | `F` | Toolbar / installed mode | — |
 
-## Boss rule
+Gamepad buttons can be remapped inside the game.
 
-The Core Warden's first shield phase only takes bullet damage **after the bullet has ricocheted at least once**. Later phases introduce radial attacks, charge attacks, and faster projectile patterns.
+## Local development
 
-## Run locally
-
-The game has no runtime dependencies and can be served by any static HTTP server.
+The production game has no runtime framework dependency. Serve the repository over HTTP:
 
 ```bash
-npx serve .
+python3 -m http.server 4173
 ```
 
-Run the full verification suite:
+Run deterministic syntax and unit verification:
 
 ```bash
+npm install
 npm run verify
 ```
 
-## Project status
+Run browser smoke tests and capture desktop/mobile screenshots:
 
-[`STATUS.md`](./STATUS.md) is the single source of truth for completion, verification, known limitations, and the next milestone.
+```bash
+npx playwright install chromium
+npm run test:browser
+```
+
+## Architecture
+
+The game uses a fixed `1280×720` Canvas simulation with modular prototype installers for presentation, progression, replayability, regions, mobile controls, enemies, guardians, routes, builds, modes, and release systems. Persistent data is normalized before use and remains local to the player's browser unless exported manually.
+
+## Status
+
+[`STATUS.md`](./STATUS.md) is the single source of truth for verification results, manual acceptance gates, and release state.

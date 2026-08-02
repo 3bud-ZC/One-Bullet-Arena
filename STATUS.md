@@ -6,116 +6,176 @@ Last updated: 2026-08-03
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Current release: **v1.0.1 — UI/UX Stabilization**
+- Current production release: **v1.0.1 — UI/UX Stabilization**
+- Expansion candidate: **v1.2.0 — Combat & Mobile Expansion**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
-- UI/UX Stabilization Pass: **squash-merged through Pull Request #19**
-- Merge commit: `9897e03096fec7b6e20ed86d97bb71a77e626dc3`
-- GitHub Pages deployment: **triggered by the PR #19 merge and this status update**
-- Current state: **implementation, automated verification, and desktop/mobile screenshot review complete; live owner/device acceptance remains**
+- UI/UX Stabilization Pass: **merged through Pull Request #19**
+- v1.2.0 expansion: **implemented on Pull Request #20**
+- Current state: **implementation, deterministic verification, browser verification, phone viewport matrix, and screenshot review are complete; final workflows after this status commit are required before merge**
 
-## v1.0.1 UI/UX stabilization delivered
+## v1.2.0 delivered
 
-### Main menu hierarchy
+### Direct public game URL
 
-- Replaced the competing multi-panel menu with one dominant next-run panel.
-- Added one clear primary Start action.
-- Kept Protocol and mission selection as explicit secondary actions.
-- Reduced the daily challenge to one focused card.
-- Consolidated secondary destinations into a compact quick-access section.
-- Kept mission, selected Core, score, victories, shards, and run totals readable without covering navigation.
+- Removed the external website header, title block, source-code link, build badge, toolbar, and footer instructions from the public route.
+- The GitHub Pages URL now opens directly into the game canvas.
+- Preserved hidden accessibility and fullscreen hooks required by the existing runtime.
+- Added a dedicated full-viewport shell using dynamic viewport units and safe-area insets.
+- Prevented document scrolling, overscroll, text selection, touch callouts, and accidental browser zoom inside the game surface.
+- Preserved the internal 16:9 game aspect ratio without stretching or cropping.
 
-### Command Center
+### Longer runs
 
-- Rebuilt the screen as a consistent 4×2 grid.
-- Increased card size, title readability, touch area, and visual separation.
-- Converted mixed-direction English/Arabic copy to clean Arabic UI copy.
-- Preserved access to Protocol, game modes, Enemy Codex, Guardian Mastery, Build Codex, tutorial, Gamepad, and unified backup.
+- Regional missions increased from **5 to 8 waves**.
+- Story runs increased from **12 to 24 waves**.
+- Story progression now dedicates eight waves to each region:
+  - waves 1–8: Neon;
+  - waves 9–16: Reactor Forge;
+  - waves 17–24: Void Circuit.
+- Daily runs remain five waves to preserve their compact repeatable format.
+- Added denser assault compositions and reinforcement pressure in waves 6–8.
+- Boss thresholds and HUD wave counters use the expanded mission targets.
 
-### Core Hub
+### Active combat techniques
 
-- Replaced five dense information cards with a Core selector and one large detail panel.
-- Added clear locked, unlocked, and equipped states.
-- Separated description, traits, mastery statistics, price, and primary action.
-- Increased contrast for save export/import controls.
-- Kept all cards and actions inside desktop and mobile landscape viewports.
+- Added **Kinetic Pulse**:
+  - damages and pushes nearby enemies;
+  - destroys nearby enemy projectiles;
+  - applies limited Guardian damage;
+  - gains shield and range improvements at higher technique tiers.
+- Added **Phase Shift**:
+  - swaps the player with the free bullet;
+  - performs a directional blink while the bullet is held;
+  - grants a short invulnerability window;
+  - gains shield protection at higher technique tiers.
+- Desktop controls:
+  - `R`: Kinetic Pulse;
+  - `C`: Phase Shift.
+- Added dedicated touch buttons for both techniques with mirrored left-handed layouts.
+- Added three technique tiers unlocked through longer regional progression.
+- Tier three technique use contributes to Overdrive charging.
 
-### Combat HUD and announcements
+### Enemy evolution system
 
-- Replaced the layered HUD with compact edge panels.
-- Top-left contains bullet and dash state.
-- Top-right contains wave, score, and health.
-- Combo and Guardian health appear only when relevant.
-- Region introduction and run challenge announcements are queued instead of appearing simultaneously.
-- Removed performance telemetry from the normal player HUD.
-- Preserved mobile movement, dash, recall, Overdrive, build, and pause controls.
+- Added four deterministic combat evolutions for eligible later-wave enemies:
+  - **Armored Shell:** absorbs the first direct bullet impact;
+  - **Blink Drive:** relocates periodically around the player;
+  - **Volatile Core:** explodes on death and affects nearby units;
+  - **Rage Engine:** accelerates below half health.
+- Evolutions exclude early-wave, mini, and Elite enemies to avoid stacking unreadable modifiers.
+- Added distinct rings, icons, telegraphs, floating text, and impact effects for each evolution.
 
-### Responsive application shell
+### Dynamic regional map mutators
 
-- Removed desktop document scrolling at 1440×900.
-- Converted the shell to a strict dynamic-viewport layout.
-- Canvas sizing now uses the available grid area instead of fixed viewport subtraction.
-- Mobile gameplay uses the full height after the toolbar is hidden.
-- Removed the previous black strip beneath active mobile gameplay.
-- Fullscreen and PWA layouts retain 16:9 containment.
+- Neon:
+  - moving Laser Sweep;
+  - periodic Pulse Gates.
+- Reactor Forge:
+  - alternating Heat Cycle;
+  - moving Piston Line.
+- Void Circuit:
+  - alternating Gravity Tide;
+  - Rift Storm that changes bullet trajectory.
+- Mutators rotate deterministically by local regional wave.
+- Added visible telegraphs and performance-safe effects for every mutator.
+
+### Mobile browser stabilization
+
+- Removed the obsolete 42-pixel toolbar reservation from the direct mobile shell.
+- Gameplay now uses the complete available landscape height.
+- Preserved safe areas for notches, rounded corners, and system gesture regions.
+- Added automated landscape checks at:
+  - 740×360;
+  - 844×390;
+  - 873×393;
+  - 915×412;
+  - 932×430.
+- Added portrait orientation gating instead of rendering a clipped game.
+- Verified touch controls, technique buttons, HUD panels, direct shell containment, and zero document overflow in Chromium mobile emulation.
+- Very wide displays may retain side letterboxing to preserve the correct 16:9 game geometry.
+
+### UI and announcement fixes
+
+- Updated visible menu copy to **v1.2.0**.
+- Prevented active-technique notices from overlapping major region or challenge announcements.
+- Kept one primary combat announcement visible at a time.
+- Retained the compact edge HUD and removed all external page chrome.
 
 ### Offline integration
 
-- Package version advanced to **1.0.1**.
-- Service-worker cache advanced to `one-bullet-arena-v1.0.1`.
-- Stabilization CSS and runtime modules are included in the offline application shell.
+- Package version advanced to **1.2.0**.
+- Service-worker cache advanced to `one-bullet-arena-v1.2.0`.
+- Direct-shell styles and all v1.2 runtime/data modules are included in the offline application shell.
 
-## Final verification
+## Verification
 
-### Node verification
+### Deterministic verification
 
 - JavaScript syntax checks: **passed** for all runtime modules, Playwright configuration, and service worker.
-- Deterministic tests: **95/95 passed**.
+- Automated deterministic tests: **102/102 passed**.
 - Failures: **0**.
-- Final Verify workflow on the PR #19 status commit: **passed**.
+- Coverage added for:
+  - expanded mission lengths;
+  - story region transitions;
+  - eight regional compositions;
+  - combat technique cooldowns and tiers;
+  - deterministic enemy evolutions;
+  - map-mutator rotation;
+  - left-handed mobile technique layout.
 
 ### Browser verification
 
-- Playwright Browser Smoke: **10/10 passed**.
-- Final Browser Smoke workflow on the PR #19 status commit: **passed**.
-- Tested layouts:
-  - desktop Chromium at 1440×900;
-  - Chromium mobile landscape at 915×412 with touch enabled.
-- Browser coverage includes:
-  - zero document overflow;
-  - menu rendering and navigation;
-  - Command Center layout;
-  - Core selector/detail layout;
-  - gameplay entry and compact HUD containment;
-  - full-height mobile gameplay;
-  - manifest, service worker, stylesheet, and runtime asset reachability.
+- Playwright Browser Smoke: **14/14 passed** on the latest implementation commit.
+- Desktop Chromium coverage includes:
+  - direct full-viewport route;
+  - menu, Command Center, and Core Hub navigation;
+  - real gameplay entry;
+  - both combat techniques;
+  - expanded HUD and map-mutator rendering;
+  - zero document overflow.
+- Mobile landscape coverage includes:
+  - full-height gameplay;
+  - direct-shell containment;
+  - touch-enabled HUD and ability controls;
+  - the five-size phone viewport matrix;
+  - portrait orientation gate;
+  - PWA and service-worker assets.
 
 ## Visual QA completed
 
-Three screenshot-review rounds were completed.
-
-1. Desktop document overflow was identified and fixed.
-2. Simultaneous challenge/region announcements, the mobile bottom strip, mixed-direction card copy, and low-contrast secondary controls were identified and fixed.
-3. Final desktop and mobile screenshots confirmed:
-   - no document scroll;
-   - clear menu hierarchy;
-   - clean Arabic Command Center cards;
-   - readable Core Hub details;
-   - high-contrast secondary actions;
-   - one major combat announcement at a time;
-   - full-height phone landscape gameplay;
-   - no previous overlap or black-strip defects.
+- The first browser run exposed a remaining legacy 42-pixel mobile toolbar subtraction and a possible technique/banner overlap.
+- Both defects were fixed before merge consideration.
+- Final desktop and mobile screenshots confirm:
+  - no external page header, source link, build badge, or footer;
+  - direct game-only presentation;
+  - full-height mobile landscape gameplay;
+  - contained movement, dash, recall, Overdrive, build, pause, and new technique controls;
+  - readable compact HUD;
+  - visible map mutators;
+  - one major announcement at a time;
+  - no previous black bottom strip or document scrolling.
 
 ## Remaining live acceptance checks
 
-These require the project owner or physical hardware and are not unfinished implementation work:
+These require physical hardware or extended owner play and are not represented as completed automated verification:
 
-1. Review v1.0.1 on the live GitHub Pages build after deployment completes.
-2. Test Chrome Android, Samsung Internet, and Safari iOS in landscape.
-3. Test a physical Gamepad and remapping flow.
-4. Verify the installed PWA after an offline restart.
-5. Complete a unified backup export/import in a real browser profile.
-6. Play a long Endless run and Boss Rush to review HUD density under extended combat.
+1. Test the deployed v1.2.0 build on Chrome Android and Samsung Internet.
+2. Test Safari iOS landscape, including address-bar collapse and safe-area behavior.
+3. Test the installed PWA after an offline restart.
+4. Test a physical Gamepad alongside the two new keyboard techniques.
+5. Complete an eight-wave regional mission and a twenty-four-wave Story run.
+6. Review late-wave balance, enemy evolution frequency, map-mutator damage, and technique cooldowns.
+7. Confirm touch-control comfort on at least one small and one large physical phone.
 
-## Live refresh note
+## Pull Request #20 release gate
 
-The service-worker cache advances from v1.0.0 to v1.0.1. If an older interface remains visible, use a hard refresh on desktop or clear the site's stored data on mobile before reopening the game.
+Before merge:
+
+- Verify must pass on this final status commit.
+- Browser Smoke must pass on this final status commit.
+- Pull Request #20 must remain mergeable.
+
+After merge:
+
+- GitHub Pages deployment will be triggered.
+- Existing installations may require a hard refresh or site-data reset because the service-worker cache advances from v1.0.1 to v1.2.0.

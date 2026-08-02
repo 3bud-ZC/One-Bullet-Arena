@@ -24,18 +24,31 @@ async function expectViewportFit(page) {
   expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.innerHeight + 2);
 }
 
-test('stabilized release menu fits the viewport without browser errors', async ({ page }, testInfo) => {
+async function expectCanvasContained(page) {
+  const canvas = page.locator('#game-canvas');
+  const box = await canvas.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(-1);
+  expect(box.y).toBeGreaterThanOrEqual(-1);
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  return { box, viewport };
+}
+
+test('direct public URL contains only the full-viewport game surface', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
-  const canvas = page.locator('#game-canvas');
-  await expect(canvas).toBeVisible();
-  await page.waitForTimeout(1200);
-  const box = await canvas.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box.width).toBeGreaterThan(500);
-  expect(box.height).toBeGreaterThan(280);
+  await expect(page.locator('body')).toHaveClass(/direct-game-shell/);
+  await expect(page.locator('header')).toHaveCount(0);
+  await expect(page.locator('footer')).toHaveCount(0);
+  await expect(page.locator('.top-actions')).toHaveCount(0);
+  await expect(page.locator('.game-stage')).toBeVisible();
+  await page.waitForTimeout(900);
+  const { box, viewport } = await expectCanvasContained(page);
+  expect(box.width * box.height).toBeGreaterThan(viewport.width * viewport.height * 0.72);
   await expectViewportFit(page);
-  await page.screenshot({ path: testInfo.outputPath('menu.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('direct-menu.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
@@ -63,39 +76,72 @@ test('core hub uses selector plus readable detail panel', async ({ page }, testI
   expect(errors).toEqual([]);
 });
 
-test('keyboard start enters gameplay with a compact edge HUD', async ({ page }, testInfo) => {
+test('keyboard start enters expanded gameplay and techniques run without errors', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(1900);
-  const box = await page.locator('#game-canvas').boundingBox();
-  const viewport = page.viewportSize();
-  expect(box.x).toBeGreaterThanOrEqual(0);
-  expect(box.y).toBeGreaterThanOrEqual(0);
-  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
-  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  await page.keyboard.press('KeyR');
+  await page.waitForTimeout(250);
+  await page.keyboard.press('KeyC');
+  await page.waitForTimeout(500);
+  const { box, viewport } = await expectCanvasContained(page);
   if (testInfo.project.name === 'mobile-landscape') {
     expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(2);
   }
   await expectViewportFit(page);
-  await page.screenshot({ path: testInfo.outputPath('gameplay.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('expanded-gameplay.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('PWA manifest service worker and stabilization assets are reachable', async ({ request }) => {
+test('phone landscape viewport matrix remains scroll-free and fully contained', async ({ page }, testInfo) => {
+  const errors = await collectErrors(page);
+  const sizes = [
+    { width: 740, height: 360 },
+    { width: 844, height: 390 },
+    { width: 873, height: 393 },
+    { width: 915, height: 412 },
+    { width: 932, height: 430 },
+  ];
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    await page.waitForTimeout(280);
+    await expectViewportFit(page);
+    const { box } = await expectCanvasContained(page);
+    expect(box.width).toBeGreaterThan(size.width * 0.76);
+    expect(box.height).toBeGreaterThan(size.height * 0.76);
+  }
+  await page.screenshot({ path: testInfo.outputPath('mobile-matrix-last-size.png'), fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('portrait phone displays the orientation gate instead of a clipped game', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+  if (coarse) await expect(page.locator('.orientation-gate')).toBeVisible();
+  await expectViewportFit(page);
+});
+
+test('PWA shell and v1.2 expansion assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
-  const stylesheet = await request.get('/ui-ux-stabilization.css');
-  const runtimeFixes = await request.get('/src/ui-ux-runtime-fixes.js');
+  const directStyles = await request.get('/direct-game.css');
+  const expansionData = await request.get('/src/v12-expansion-data.js');
+  const expansionRuntime = await request.get('/src/v12-expansion.js');
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
-  expect(stylesheet.ok()).toBeTruthy();
-  expect(runtimeFixes.ok()).toBeTruthy();
+  expect(directStyles.ok()).toBeTruthy();
+  expect(expansionData.ok()).toBeTruthy();
+  expect(expansionRuntime.ok()).toBeTruthy();
   const data = await manifest.json();
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.0.1');
-  expect(workerText).toContain('ui-ux-runtime-fixes.js');
+  expect(workerText).toContain('one-bullet-arena-v1.2.0');
+  expect(workerText).toContain('direct-game.css');
+  expect(workerText).toContain('v12-expansion.js');
 });

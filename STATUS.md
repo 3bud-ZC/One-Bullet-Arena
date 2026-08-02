@@ -10,7 +10,7 @@ Last updated: 2026-08-02
 - Milestone 02.5 UI/UX implementation: **100%**
 - Milestone 02.6 stabilization implementation: **100%**
 - Current work: **Post-Milestone 02.6 defeat-state hotfix and compact UI refinement**
-- State: **Pull Request #6 implementation complete; initial automated verification passed; final commit verification and live GitHub Pages review are required before acceptance**
+- State: **Pull Request #6 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live owner review is required before acceptance**
 
 ## Core gameplay implemented
 
@@ -49,12 +49,12 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, input, UI, stabilization, and defeat-refinement modules.
-- Automated tests: **18/18 passed** on the initial Pull Request #6 implementation commit.
+- Automated tests: **18/18 passed**.
 - New tests verify that all terminal combat effects reset and the defeat pulse reaches zero instead of persisting.
-- Pull Request #6: **open**.
-- Initial GitHub Actions Verify: **passed**.
-- Final verification on the latest status commit: pending.
-- GitHub Pages deployment: pending merge to `main`.
+- Pull Request #6: **squash-merged to main**.
+- Merge commit: `e47444cbcd545cca9ae30d7bd4f4cefdaf2b0ba9`.
+- GitHub Actions Verify: **passed** on the final Pull Request #6 commit.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
 - Live defeat and compact-layout review: pending.
 
 ## Acceptance gate

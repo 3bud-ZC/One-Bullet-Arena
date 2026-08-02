@@ -8,7 +8,7 @@ Last updated: 2026-08-02
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
 - Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
 - Milestone 02 implementation: **100%**
-- State: **Implementation complete on Pull Request #2; automated verification passed; live gameplay review and owner acceptance are required before closing the milestone**
+- State: **Implementation complete on Pull Request #2; automated verification passed; merge is permitted for GitHub Pages deployment; live gameplay review and owner acceptance are required before closing the milestone**
 
 ## Milestone 02 implemented
 
@@ -43,14 +43,14 @@ Last updated: 2026-08-02
 
 - JavaScript syntax checks: **passed** for main, game, math, audio, and content modules.
 - Automated tests: **8/8 passed**.
-- GitHub Actions Verify workflow: **passed** on Pull Request #2 implementation commit.
-- Pull Request: **#2 open**.
+- GitHub Actions Verify workflow: **passed** on Pull Request #2 implementation and documentation commits.
+- Pull Request: **#2 open and mergeable**.
 - GitHub Pages deployment: pending merge to `main`.
 - Live full-run gameplay review: pending.
 
 ## Acceptance gate
 
-Do not merge or close Milestone 02 until:
+Do not close Milestone 02 until:
 
 1. The latest Pull Request #2 commit passes GitHub Actions.
 2. The Arabic menu, tutorial, settings, and upgrade screens render correctly.

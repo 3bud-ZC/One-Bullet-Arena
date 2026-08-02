@@ -10,7 +10,7 @@ Last updated: 2026-08-02
 - Milestone 02.5 UI/UX implementation: **100%**
 - Current milestone: **Milestone 02.6 — Stabilization and Balance**
 - Milestone 02.6 implementation: **100%**
-- State: **Pull Request #5 implementation complete; automated verification passed; final commit verification and live GitHub Pages review are required before acceptance**
+- State: **Pull Request #5 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live owner review is required before milestone acceptance**
 
 ## Core gameplay implemented
 
@@ -36,7 +36,7 @@ Last updated: 2026-08-02
 
 ## Milestone 02.6 implemented
 
-- Wave progress is now drawn in a dedicated LTR numeric context so it displays as `current / total` inside the Arabic HUD.
+- Wave progress is drawn in a dedicated LTR numeric context so it displays as `current / total` inside the Arabic HUD.
 - Ricochet registration is debounced to prevent one physical collision from being counted across multiple animation frames.
 - Stationary bullets no longer create additional ricochet statistics.
 - Outer-wall reflections only occur while the bullet is moving into the relevant wall.
@@ -50,11 +50,11 @@ Last updated: 2026-08-02
 ## Verification
 
 - JavaScript syntax checks: **passed** for all runtime, input, UI, and stabilization modules.
-- Automated tests: **16/16 passed** on the initial Pull Request #5 implementation commit.
-- Pull Request #5: **open**.
-- GitHub Actions Verify: **passed** before this status update.
-- Final verification on the latest status commit: pending.
-- GitHub Pages deployment: pending merge to `main`.
+- Automated tests: **16/16 passed**.
+- Pull Request #5: **squash-merged to main**.
+- Merge commit: `eb01499feec4afb73d42891abac89457a17c96b7`.
+- GitHub Actions Verify: **passed** on the final Pull Request #5 commit.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
 - Live stabilization review: pending.
 
 ## Acceptance gate

@@ -4,89 +4,72 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **57%**
-- Completed milestone: **Milestone 01 — First Playable Vertical Slice**
-- Milestone 02 gameplay implementation: **100%**
-- Milestone 02.5 UI/UX implementation: **100%**
-- Milestone 02.6 stabilization implementation: **100%**
-- Current work: **Post-Milestone 02.6 defeat-state hotfix and compact UI refinement**
-- State: **Pull Request #6 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live owner review is required before acceptance**
+- Overall project completion: **63%**
+- Milestone 01 — First Playable Vertical Slice: **100%**
+- Milestone 02 — Combat, Arabic presentation, boss, and upgrades: **100%**
+- Milestone 02.5 — UI/UX and anime presentation: **100%**
+- Milestone 02.6 — Stabilization and balance: **100%**
+- Current milestone: **Milestone 03A — Visual Identity Overhaul**
+- Milestone 03A implementation: **100%**
+- State: **Pull Request #7 implementation complete; initial automated verification passed; final commit verification and live visual review are required before acceptance**
 
-## Core gameplay implemented
+## Milestone 03A implemented
 
-- Full Arabic RTL game experience.
-- Five escalating waves across five arena layouts.
-- Solid and breakable obstacles, damage hazards, and explosive arena nodes.
-- Eight stackable upgrades that preserve the one-bullet rule.
-- Scout, Brute, Sniper, Charger, and Splitter enemies with mini and elite variants.
-- Three-phase Core Warden boss with a ricochet requirement during phase one.
-- Procedural music and sound effects with persistent volume and mute settings.
-- Desktop keyboard/mouse controls and mobile landscape touch controls.
-- Physical-key desktop input that works with Arabic and English keyboard layouts.
-
-## UI, presentation, and stabilization implemented
-
-- Unified anime/arcade presentation system for the Arabic build.
-- Redesigned public page shell, menu, HUD, settings, upgrades, boss intro, and result screens.
-- Fullscreen focus mode with responsive 16:9 scaling and `F` shortcut.
-- Six result-stat cards and S/A/B/C run ranking.
-- RTL-safe numeral preference and correct `current / total` wave order.
-- Debounced ricochet registration and clean bullet stop after ricochets are exhausted.
-- Dedicated mobile Magnetic Recall control.
-- Auto-hiding fullscreen toolbar that does not reduce the game viewport.
-
-## Defeat-state hotfix and compact UI refinement
-
-- Root cause: screen shake and flash decayed only while the game state was `playing`; after defeat, the game changed to `gameover` while the last shake value remained active on every frame.
-- Terminal result states now clear shake, flash, hit-stop, and slow-motion values immediately.
-- Enemy projectiles, temporary banners, and pending dash requests are cleared when the run ends.
-- The infinite shake was replaced with a finite **620 ms** red defeat vignette pulse.
-- The main menu now has a tighter hierarchy, clearer primary action, paired secondary actions, integrated best-score tiles, and a visible build badge.
-- Page header, toolbar, game framing, footer spacing, and short-viewport behavior were refined.
-- Dedicated responsive fitting was added for desktop displays around **1366×768**.
-- Browser package version advanced to **0.3.2**.
+- Added a dedicated rendering module so visual changes remain isolated from combat logic.
+- Replaced the circular player marker with a directional armored energy-core silhouette.
+- Added an aiming barrel, animated central core, movement exhaust, dash streaks, and shield arc.
+- Redesigned Scout, Brute, Sniper, Charger, and Splitter enemies with distinct silhouettes and internal visual language.
+- Added stronger elite auras, rotating markers, and readable health bars.
+- Rebuilt the Core Warden with animated orbital rings, phase-based colors, shield presentation, and overload cracks.
+- Replaced the simple bullet marker with a rotating diamond energy core, enhanced trail, and recall color state.
+- Added four visual arena identities:
+  - Neon Circuit for early waves.
+  - Reactor Forge for middle waves.
+  - Void Rift for the final regular wave.
+  - Core Sanctum for the boss encounter.
+- Redesigned floor circuitry, arena borders, solid obstacles, breakable obstacles, hazards, and explosive nodes.
+- Advanced the browser package to **v0.4.0**.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, input, UI, stabilization, and defeat-refinement modules.
-- Automated tests: **18/18 passed**.
-- New tests verify that all terminal combat effects reset and the defeat pulse reaches zero instead of persisting.
-- Pull Request #6: **squash-merged to main**.
-- Merge commit: `e47444cbcd545cca9ae30d7bd4f4cefdaf2b0ba9`.
-- GitHub Actions Verify: **passed** on the final Pull Request #6 commit.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live defeat and compact-layout review: pending.
+- JavaScript syntax checks: **passed** for all runtime, UI, stabilization, defeat, and visual modules.
+- Automated tests: **20/20 passed** on the initial Pull Request #7 commit.
+- New tests cover arena-theme progression and enemy silhouette mappings.
+- Pull Request #7: **open**.
+- Initial GitHub Actions Verify: **passed**.
+- Final verification on the latest status commit: pending.
+- GitHub Pages deployment: pending merge to `main`.
 
 ## Acceptance gate
 
-Do not close this hotfix until:
+Do not close Milestone 03A until:
 
-1. Losing a run produces only a short defeat pulse and the result screen then remains completely stable.
-2. Restarting after defeat restores normal movement, firing, shake, and audio behavior.
-3. The refined main menu fits correctly at 1366×768 without clipping the page header or footer.
-4. Fullscreen mode remains correctly scaled and its toolbar still hides and reveals as expected.
-5. The existing wave, ricochet, keyboard, settings, upgrade, boss, and mobile recall behavior remains intact.
-6. The owner approves the deployed defeat screen and compact UI presentation.
+1. Player direction and aiming remain easy to read during crowded combat.
+2. Every enemy type can be identified quickly without relying only on color.
+3. Elite variants remain readable and do not obscure collision boundaries.
+4. Arena themes change correctly across the five waves and boss encounter.
+5. New artwork remains aligned with existing collision shapes and obstacle positions.
+6. The Core Warden phases remain visually distinct without reducing attack readability.
+7. Desktop, fullscreen, and mobile performance remain stable.
+8. The owner approves the live visual identity.
 
 ## Known limitations
 
-- Changa and Inter are loaded from Google Fonts; system fonts are used if loading fails.
-- A real-browser automated gameplay and screenshot regression suite is still pending.
-- Procedural vector visuals remain intentional; final illustrated character and environment art are not integrated.
-- Combat, ranking, and boss values still require continued live balancing.
-- Persistent progression, achievements, run history, and additional regions are not implemented yet.
+- The new art remains procedural vector rendering rather than external sprite sheets.
+- Real-browser screenshot regression testing is still pending.
+- Final illustrated backgrounds, character portraits, and bespoke audio assets are not integrated.
+- Persistent progression, Core Shards, run history, achievements, and unlockable bullet cores are not implemented yet.
 
 ## Next milestone after acceptance
 
-**Milestone 03 — Replayability and Persistent Progression**
+**Milestone 03B — Persistent Progression**
 
 Planned scope:
 
+- Versioned local save system.
 - Persistent run history and player statistics.
 - Core Shards earned after runs.
-- Unlockable bullet cores and cosmetic variants.
-- Upgrade rarity tiers and legendary effects.
-- Elite enemy modifiers.
-- Achievements and challenge objectives.
-- New arena regions and bosses.
-- Gamepad support, control remapping, PWA installation, and offline caching.
+- Progression Hub.
+- Four unlockable bullet cores.
+- Result-screen rewards and unlock flow.
+- Save export, import, and reset controls.

@@ -7,6 +7,12 @@ async function collectErrors(page) {
   return errors;
 }
 
+async function clickCanvasPoint(page, internalX, internalY) {
+  const canvas = page.locator('#game-canvas');
+  const box = await canvas.boundingBox();
+  await page.mouse.click(box.x + box.width * internalX / 1280, box.y + box.height * internalY / 720);
+}
+
 test('release menu renders without browser errors and captures a baseline', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
@@ -21,10 +27,20 @@ test('release menu renders without browser errors and captures a baseline', asyn
   expect(errors).toEqual([]);
 });
 
+test('command center opens without overlapping the main menu', async ({ page }, testInfo) => {
+  const errors = await collectErrors(page);
+  await page.goto('/');
+  await page.waitForTimeout(700);
+  await clickCanvasPoint(page, 1085, 551);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: testInfo.outputPath('command-center.png'), fullPage: true });
+  expect(errors).toEqual([]);
+});
+
 test('keyboard start enters gameplay and keeps the canvas inside the viewport', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
-  await page.locator('#game-canvas').click({ position: { x: 640, y: 360 } });
+  await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(1000);
   const box = await page.locator('#game-canvas').boundingBox();

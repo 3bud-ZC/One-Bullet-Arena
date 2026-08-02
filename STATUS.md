@@ -7,7 +7,7 @@ Last updated: 2026-08-02
 - Overall project completion: **18%**
 - Current milestone: **Milestone 01 — First Playable Vertical Slice**
 - Milestone completion: **100%**
-- State: **CI verified; ready for merge, Pages deployment, and manual gameplay review**
+- State: **Merged to main; CI passed; Pages workflow configured; manual live review required**
 
 ## Implemented
 
@@ -33,7 +33,9 @@ Last updated: 2026-08-02
 - Local JavaScript syntax checks: **passed**.
 - Local unit tests: **4/4 passed**.
 - GitHub Actions Verify workflow: **passed** on Pull Request #1.
-- Browser gameplay review: required after Pages deployment.
+- Pull Request #1: **squash-merged to main**.
+- GitHub Pages workflow: configured and triggered by pushes to `main`; connector-level result unavailable.
+- Browser gameplay review: required on the public Pages URL.
 
 ## Known limitations
 

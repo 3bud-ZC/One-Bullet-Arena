@@ -8,7 +8,7 @@ Last updated: 2026-08-02
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
 - Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
 - Milestone 02 implementation: **100%**
-- State: **Pull Request #2 merged to main after successful automated verification; GitHub Pages deployment triggered; live gameplay review and owner acceptance are required before closing the milestone**
+- State: **Arabic Milestone 02 build is deployed; desktop keyboard hotfix merged and deployment triggered; owner gameplay acceptance is still required before closing the milestone**
 
 ## Milestone 02 implemented
 
@@ -17,15 +17,7 @@ Last updated: 2026-08-02
 - Arabic main menu, tutorial, pause, settings, upgrade, boss-intro, defeat, and victory screens.
 - Five escalating waves and five distinct arena layouts.
 - Solid obstacles, destructible obstacles, damage hazards, and explosive nodes.
-- Eight stackable bullet upgrades:
-  - Heavy Core.
-  - Hot Ricochet.
-  - Magnetic Recall.
-  - Shock Impact.
-  - Extended Charge.
-  - Quick Recovery.
-  - Last Heart.
-  - Perfect Catch.
+- Eight stackable bullet upgrades.
 - Core Warden boss with three phases.
 - Boss first-phase shield requires a ricocheted shot.
 - Scout, Brute, Sniper, Charger, and Splitter enemy archetypes.
@@ -37,36 +29,44 @@ Last updated: 2026-08-02
 - Mobile landscape touch movement, firing, and dash controls.
 - Run statistics for score, time, shots, hits, ricochets, and kills.
 - Updated Arabic public page shell and responsive presentation.
-- Updated project documentation and verification scripts.
+
+## Desktop keyboard hotfix
+
+- Root cause: the game used `KeyboardEvent.key`, so physical WASD keys reported Arabic characters while the Arabic keyboard layout was active.
+- Fix: controls now normalize physical key positions through `KeyboardEvent.code`.
+- WASD now works with Arabic, English, and other active keyboard layouts.
+- Arrow keys, Space, Shift, Q, P, M, R, Enter, Escape, and upgrade number keys are normalized as well.
+- The canvas now receives focus after pointer interaction.
+- Pull Request #3 was squash-merged to `main`.
+- Hotfix merge commit: `649eaa2224c4dfb7d75a5a89a5a337bdaa59dc86`.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for main, game, math, audio, and content modules.
-- Automated tests: **8/8 passed**.
-- GitHub Actions Verify workflow: **passed** on the final Pull Request #2 commit.
-- Pull Request #2: **squash-merged to main**.
-- Merge commit: `1caeda3f1ffd618b83c065cfbdf76cc96c172f03`.
-- GitHub Pages deployment: **triggered by the main-branch merge and this status update**.
+- JavaScript syntax checks: **passed** for all runtime modules including the new input module.
+- Automated tests: **10/10 passed**.
+- GitHub Actions Verify: **passed** for Pull Request #3.
+- GitHub Pages deployment: **triggered after the hotfix merge and this status update**.
+- Live desktop retest: pending owner confirmation.
 - Live full-run gameplay review: pending.
 
 ## Acceptance gate
 
 Do not close Milestone 02 until:
 
-1. The Arabic menu, tutorial, settings, and upgrade screens render correctly on GitHub Pages.
-2. A full five-wave run reaches the Core Warden.
-3. The Core Warden can be defeated through all three phases.
-4. Each upgrade has a visible and measurable gameplay effect.
-5. Music, SFX, mute, and saved settings work after a page reload.
-6. Desktop controls pass manual review.
+1. Desktop movement works using WASD with both Arabic and English keyboard layouts.
+2. Arrow-key movement, dash, pause, recall, restart, mute, and upgrade shortcuts work correctly.
+3. The Arabic menu, tutorial, settings, and upgrade screens render correctly on GitHub Pages.
+4. A full five-wave run reaches and defeats the Core Warden through all three phases.
+5. Each upgrade has a visible and measurable gameplay effect.
+6. Music, SFX, mute, and saved settings work after a page reload.
 7. Mobile landscape controls receive at least one manual device test.
-8. The project owner approves combat feel, progression, Arabic presentation, and boss balance on the live GitHub Pages build.
+8. The project owner approves combat feel, progression, Arabic presentation, and boss balance.
 
 ## Known limitations
 
 - The Changa font is loaded from Google Fonts; system Arabic fonts are used if the network request fails.
 - Magnetic Recall currently uses the keyboard `Q` shortcut and does not yet have a dedicated mobile button.
-- Automated tests validate syntax, math, content, arena cloning, and upgrade selection; a real-browser automated gameplay smoke test is still pending.
+- A real-browser automated gameplay smoke test is still pending.
 - Procedural vector visuals are intentional for this phase; production illustration and character art are not integrated.
 - Combat and boss values are first-pass balance values and require live playtesting.
 

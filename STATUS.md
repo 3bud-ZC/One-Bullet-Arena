@@ -4,134 +4,126 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **88%**
-- Milestone 01 — First Playable Vertical Slice: **100%**
-- Milestone 02 — Combat, Arabic presentation, boss, and upgrades: **100%**
-- Milestone 02.5 — UI/UX and anime presentation: **100%**
-- Milestone 02.6 — Stabilization and balance: **100%**
-- Milestone 03A — Visual Identity Overhaul: **100%**
-- Milestone 03B — Persistent Progression: **100%**
-- Milestone 03C — Replayability Expansion: **100%**
-- Current milestone: **Milestone 03D — UI, Feedback & Balance Polish**
-- Milestone 03D implementation: **100%**
-- State: **Pull Request #10 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live desktop, fullscreen, and mobile-landscape review are required before acceptance**
+- Overall project completion: **92%**
+- Milestones 01–03D: **100% implemented**
+- Milestone 03E — Final Live UI QA: **100% implemented**
+- Milestone 04A — Regions and Run Structure: **100% implemented**
+- Current state: **Pull Request #11 open; initial GitHub Actions verification passed; final verification and live browser review are required before acceptance**
+- Browser build: **v0.7.0**
 
-## Milestone 03D implemented
+## Milestone 03E implemented
 
-### Main menu and navigation
+### Core Hub layout repair
 
-- Rebuilt the main menu into a balanced three-column layout.
-- Added a compact Daily Challenge card with completion, attempts, best score, and reward information.
-- Added a fighter-profile card with selected core, daily streak, completed challenges, Elite kills, and unlocked cosmetics.
-- Kept direct access to Core Hub, run history, achievements, cosmetics, settings, and how-to screens.
-- Advanced the browser package to **v0.6.1**.
+- Rebuilt all five Core cards with bounded Arabic RTL text wrapping.
+- Prevented descriptions, traits, mastery values, and action labels from crossing card boundaries.
+- Rebalanced the Core grid into three upper cards and two centered lower cards.
+- Preserved unlock, equip, export, import, reset, and return actions.
 
-### HUD and combat readability
+### Terminal screen cleanup
 
-- Rebuilt the combat HUD to prevent overlap between the selected core and combo counter.
-- Separated bullet state, dash state, wave progress, score, health, core identity, combo, and challenge status.
-- Added explicit score and wave labels.
-- Added immediate challenge states: active, completed, and failed.
-- Added short success/failure challenge toasts.
-- Replaced the large center wave banner with a compact upper-center banner.
-- Added a short enemy movement grace period during each wave introduction.
-- Added Elite spawn alerts and an animated danger ring around Explosive Elites.
-- Rebuilt the pause screen with visible challenge state and direct Build Inspector access.
+- Result screens now render from a clean arena background rather than behind the active combat HUD.
+- Challenge toast, Elite alert, wave banner, combo state, and combat overlays are cleared before victory or defeat presentation.
+- Removed the duplicate faded challenge message below the result panel.
+- Kept corrected shots, accurate shots, direct impacts, accuracy, rewards, and challenge state inside the main result layout.
 
-### Statistics and ranking semantics
+## Milestone 04A implemented
 
-- Separated:
-  - total shots;
-  - shots that connected at least once;
-  - direct bullet impacts;
-  - accuracy percentage.
-- Accuracy now uses successful shots divided by total shots instead of total impacts divided by total shots.
-- Multi-hit ricochets can increase direct impacts without producing impossible accuracy above 100%.
-- Indirect damage from arena nodes, explosions, chained effects, and other non-bullet sources is excluded from direct-impact statistics.
-- Progression recording, rank calculation, precision achievements, and run history now receive the corrected successful-shot value.
+### Mission selection
 
-### Achievements, Daily Challenge, and results
+- Added a dedicated Arabic mission-selection screen.
+- Mission selection persists locally between sessions.
+- Added two run structures:
+  - Region Mission: five waves and a region guardian.
+  - Story Route: twelve waves across all three regions followed by the final guardian.
+- Main menu now shows the selected mission and opens the mission selector directly.
 
-- Fixed Arabic RTL progress order from reversed values such as `6 / 0` to `0 / 6`.
-- Rebuilt achievement cards with explicit LTR progress values and clearer reward labels.
-- Rebuilt the Daily Challenge screen with:
-  - forced core;
-  - daily mutator;
-  - objective;
-  - total first-completion reward;
-  - attempts;
-  - best score;
-  - best time;
-  - daily streak;
-  - completion state.
-- Rebuilt the result screen to show corrected accuracy statistics.
-- Integrated challenge status, bonus shards, and cosmetic unlocks inside the main result panel.
-- Removed the detached challenge panel that previously extended below the result layout.
+### Regions
 
-### Browser layout
+- Added Neon Core District with laser lanes and linked bullet portals.
+- Added Reactor Forge with conveyors, heat lanes, industrial obstacles, and breakable structures.
+- Added Void Circuit with gravity wells, push fields, portals, and unstable arena layouts.
+- Each region contains five distinct arena configurations.
+- Story Route automatically advances Neon → Forge → Void.
+- Region mechanics affect the player, enemies, and recoverable bullet where appropriate.
 
-- Added short-screen spacing refinements.
-- Reduced top-page clipping risk for headings and supporting text.
-- Improved fullscreen canvas sizing so the toolbar no longer permanently consumes game height.
-- Hid the external footer on narrow screens to protect the playable viewport.
+### Difficulty system
+
+- Added Recruit:
+  - four hearts;
+  - slower and lighter enemies.
+- Added Hunter:
+  - standard intended balance.
+- Added Corebreaker:
+  - stronger and faster enemies;
+  - increased mission rewards.
+- Added One-Hit Protocol:
+  - one heart;
+  - high enemy pressure;
+  - large risk reward multiplier.
+- Enemy health, speed, score value, boss health, player hearts, and mission bonus rewards respond to difficulty.
+
+### Runtime integration
+
+- Story Route HUD uses the correct twelve-wave total instead of the legacy five-wave label.
+- HUD displays the current region and difficulty.
+- Daily Challenge forced cores and mutators remain functional with custom region spawning.
+- Existing progression, replayability, Elite modifiers, rarity, challenges, cosmetics, Arabic RTL, fullscreen, and defeat stabilization remain integrated.
+- Build label advanced to **v0.7.0**.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, UI, progression, replayability, feedback, and accuracy modules.
-- Automated tests: **50/50 passed**.
+- JavaScript syntax checks: **passed** for all existing and new modules.
+- Automated tests: **56/56 passed** on the initial Pull Request #11 commit.
 - New tests cover:
-  - Arabic RTL progress order;
-  - separation of successful shots and direct impacts;
-  - accuracy clamping;
-  - immediate irreversible challenge failures;
-  - live challenge completion;
-  - victory-only challenge completion;
-  - strict direct-impact accounting;
-  - exclusion of indirect damage from direct impacts;
-  - strict run-settlement hit semantics.
-- Pull Request #10: **squash-merged to main**.
-- Merge commit: `ecff5366f549ae9295d9dcbc6e09c1130844cd12`.
-- GitHub Actions Verify: **passed** on the final Pull Request #10 status commit.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live desktop, fullscreen, and mobile-landscape review: pending.
+  - malformed mission normalization;
+  - Region Mission persistence rules;
+  - Story Route region transitions;
+  - twelve-wave target calculation;
+  - cloned arena state;
+  - portal, conveyor, and gravity mechanics data;
+  - valid wave compositions;
+  - difficulty health and reward multipliers.
+- Pull Request #11: **open**.
+- Initial GitHub Actions Verify: **passed**.
+- Final verification on this status commit: pending.
+- GitHub Pages deployment: pending merge.
 
 ## Acceptance gate
 
-Do not close Milestone 03D until:
+Do not close Milestone 03E / 04A until:
 
-1. Achievement progress reads current value first on Arabic screens.
-2. Result statistics clearly separate shots, successful shots, direct impacts, and accuracy.
-3. Accuracy never exceeds 100% because of ricochets, shock effects, or chained hits.
-4. The core badge and combo counter never overlap.
-5. Challenge failure appears immediately after an irreversible mistake.
-6. Challenge completion appears immediately when a skill target is reached.
-7. Wave banners do not hide the middle of active combat.
-8. Enemies do not attack during the short wave-introduction grace period.
-9. Daily details and rewards are understandable without entering a run.
-10. Result content remains inside the canvas at desktop, fullscreen, and mobile landscape sizes.
-11. Explosive Elite warning remains visible without obscuring collision readability.
-12. Existing combat, progression, rarity, Daily, cosmetics, boss flow, stabilization, and Arabic RTL behavior remain intact.
-13. The project owner approves the refined layout and corrected ranking behavior.
+1. Core descriptions remain inside every card at desktop and fullscreen sizes.
+2. Victory and defeat screens no longer show duplicate challenge text or active HUD elements behind the result.
+3. Mission selection persists after page reload.
+4. Region Mission ends after five waves.
+5. Story Route reaches waves 6–12 and changes region at waves 5 and 9.
+6. HUD wave totals remain correct for both run structures.
+7. Neon portals teleport the bullet once without immediate teleport loops.
+8. Forge conveyors visibly move entities without pushing them outside the arena.
+9. Void gravity affects the player, enemies, and released bullet without destroying control readability.
+10. Recruit, Hunter, Corebreaker, and One-Hit Protocol apply the documented health and speed rules.
+11. Daily Challenge mutators still function after region spawning.
+12. Existing progression, boss flow, upgrades, Elite behavior, save import/export, and Arabic UI remain intact.
+13. The project owner approves live balance and layout.
 
 ## Known limitations
 
+- Region-specific enemy archetypes are not implemented yet.
+- Three unique region bosses are not implemented yet; the current guardian receives region naming and difficulty scaling.
+- Endless Mode and Boss Rush are not implemented yet.
 - Real-browser automated gameplay and screenshot regression tests are still pending.
-- Progression remains local to the current browser/device.
-- Daily Challenges remain local and do not have global leaderboards.
-- Region expansion, additional bosses, Endless Mode, and Boss Rush are not implemented.
-- Final illustrated backgrounds, portraits, and bespoke audio assets are not integrated.
+- Progression and Daily Challenge records remain local to the current browser/device.
+- Final bespoke music, portraits, and illustrated background assets are not integrated.
 
 ## Next milestone after acceptance
 
-**Milestone 04 — Content Expansion**
+**Milestone 04B — Region-Specific Enemies and Enemy Codex**
 
 Planned scope:
 
-- Three larger themed regions with distinct arena mechanics.
-- Region-specific enemy types.
-- Three additional bosses.
-- Region and difficulty selection.
-- Longer run structure.
-- Endless Mode.
-- Boss Rush Mode.
-- Additional music, ambience, and balance refinement.
+- Shield Drone, Furnace Brute, Magnet Unit, and Repair Bot for Reactor Forge.
+- Phase Walker, Rift Sniper, Gravity Orb, and Mirror Drone for Void Circuit.
+- Behavior-specific telegraphs and silhouettes.
+- Persistent Enemy Codex discovery screen.
+- Region enemy balance and automated behavior tests.

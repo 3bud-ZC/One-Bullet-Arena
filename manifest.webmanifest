@@ -1,7 +1,8 @@
 {
-  "name": "حلبة الطلقة الواحدة",
+  "id": "./?source=pwa",
+  "name": "حلبة الطلقة الواحدة: بروتوكول الكسر",
   "short_name": "One Bullet",
-  "description": "لعبة أكشن عربية تعتمد على طلقة واحدة قابلة للاستعادة والارتداد.",
+  "description": "لعبة Roguelite أكشن عربية تعتمد على طلقة واحدة قابلة للاستعادة والارتداد.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
@@ -11,12 +12,8 @@
   "orientation": "landscape",
   "background_color": "#03050a",
   "theme_color": "#050711",
+  "categories": ["games", "entertainment"],
   "icons": [
-    {
-      "src": "./icons/app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "./icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

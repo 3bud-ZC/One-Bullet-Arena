@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#050711" />
-    <meta name="description" content="حلبة الطلقة الواحدة — لعبة أكشن عربية سريعة تعتمد على طلقة واحدة قابلة للاستعادة والارتداد." />
+    <meta name="description" content="حلبة الطلقة الواحدة: بروتوكول الكسر — لعبة Roguelite أكشن عربية تعتمد على طلقة واحدة قابلة للاستعادة والارتداد." />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="One Bullet" />
-    <title>حلبة الطلقة الواحدة | One Bullet Arena</title>
+    <title>حلبة الطلقة الواحدة: بروتوكول الكسر</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;500;600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -33,36 +34,27 @@
     <main class="page-shell">
       <header class="topbar">
         <div class="brand-lockup">
-          <p class="eyebrow">ABUD FUN / ARCADE WEB GAME</p>
+          <p class="eyebrow">ABUD FUN / COREBREAK PROTOCOL</p>
           <h1>حلبة الطلقة الواحدة</h1>
-          <p class="subtitle">طلقة واحدة، زوايا محسوبة، وجولة لا تسمح بالإهدار.</p>
+          <p class="subtitle">طلقة واحدة، مسارات Roguelite متفرعة، وحراس لا يسمحون بالإهدار.</p>
         </div>
         <nav class="top-actions" aria-label="روابط اللعبة">
-          <span class="build-badge">نسخة تجريبية عربية</span>
+          <span class="build-badge">الإصدار الكامل v1.0.0</span>
           <a href="https://github.com/3bud-ZC/One-Bullet-Arena" target="_blank" rel="noreferrer">الكود المصدري</a>
         </nav>
       </header>
 
       <section class="game-stage" id="game-stage" aria-label="لعبة حلبة الطلقة الواحدة">
         <div class="stage-toolbar">
-          <div class="stage-status">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span id="presentation-status" aria-live="polite">جاهز للعب</span>
-          </div>
-          <div class="stage-actions">
-            <span class="shortcut-hint"><kbd>F</kbd> ملء الشاشة</span>
-            <button type="button" id="fullscreen-toggle">ملء الشاشة</button>
-          </div>
+          <div class="stage-status"><span class="status-dot" aria-hidden="true"></span><span id="presentation-status" aria-live="polite">جاهز للعب</span></div>
+          <div class="stage-actions"><span class="shortcut-hint"><kbd>F</kbd> ملء الشاشة</span><button type="button" id="fullscreen-toggle">ملء الشاشة</button></div>
         </div>
-
-        <div class="game-frame">
-          <canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas>
-        </div>
+        <div class="game-frame"><canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas></div>
       </section>
 
       <footer>
-        <span>الحركة: WASD أو الأسهم • إطلاق: الماوس • اندفاع: Space / Shift</span>
-        <span>تدعم الكمبيوتر والهاتف — يفضّل الوضع الأفقي على الهاتف.</span>
+        <span>الحركة: WASD أو الأسهم • إطلاق: الماوس • اندفاع: Space / Shift • Overdrive: E • Build: V</span>
+        <span>تدعم الكمبيوتر والهاتف وGamepad — يفضّل الوضع الأفقي على الهاتف.</span>
       </footer>
     </main>
     <script type="module" src="./src/main.js"></script>

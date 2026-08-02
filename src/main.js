@@ -18,6 +18,8 @@ import { installRegionBosses } from './region-bosses.js';
 import { installRogueliteRoute } from './roguelite-route.js';
 import { attachAdvancedBuildControls, installAdvancedBuilds } from './advanced-builds.js';
 import { installGameModes } from './game-modes.js';
+import { attachReleaseProductionControls, installReleaseProduction } from './release-production.js';
+import { installReleaseMenuFix } from './release-menu-fix.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -38,6 +40,8 @@ installRegionBosses(OneBulletArena);
 installRogueliteRoute(OneBulletArena);
 installAdvancedBuilds(OneBulletArena);
 installGameModes(OneBulletArena);
+installReleaseProduction(OneBulletArena);
+installReleaseMenuFix(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
@@ -51,4 +55,5 @@ attachProgressionControls(game);
 attachReplayabilityControls(game);
 attachMobileBrowser(game);
 attachAdvancedBuildControls(game);
+attachReleaseProductionControls(game);
 game.requestProgressionReset = game.resetProgressionSave;

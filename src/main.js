@@ -23,6 +23,7 @@ import { installReleaseMenuFix } from './release-menu-fix.js';
 import { installUiUxStabilization } from './ui-ux-stabilization.js';
 import { installUiUxRuntimeFixes } from './ui-ux-runtime-fixes.js';
 import { attachV12ExpansionControls, installV12Expansion } from './v12-expansion.js';
+import { installV12UiFixes } from './v12-ui-fixes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -48,6 +49,7 @@ installReleaseMenuFix(OneBulletArena);
 installUiUxStabilization(OneBulletArena);
 installUiUxRuntimeFixes(OneBulletArena);
 installV12Expansion(OneBulletArena);
+installV12UiFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');

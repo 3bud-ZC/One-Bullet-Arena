@@ -3,11 +3,13 @@ import { installPhysicalKeyboardBridge } from './input.js';
 import { attachPresentationControls, installUiPolish } from './ui-polish.js';
 import { installUiPolishFixes } from './ui-polish-fixes.js';
 import { attachStabilizationControls, installStabilization } from './stabilization.js';
+import { installDefeatUiRefine } from './defeat-ui-refine.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
 installUiPolishFixes(OneBulletArena);
 installStabilization(OneBulletArena);
+installDefeatUiRefine(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

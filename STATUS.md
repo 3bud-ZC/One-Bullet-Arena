@@ -4,13 +4,13 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **55%**
+- Overall project completion: **57%**
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
 - Milestone 02 gameplay implementation: **100%**
 - Milestone 02.5 UI/UX implementation: **100%**
-- Current milestone: **Milestone 02.6 — Stabilization and Balance**
-- Milestone 02.6 implementation: **100%**
-- State: **Pull Request #5 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live owner review is required before milestone acceptance**
+- Milestone 02.6 stabilization implementation: **100%**
+- Current work: **Post-Milestone 02.6 defeat-state hotfix and compact UI refinement**
+- State: **Pull Request #6 implementation complete; initial automated verification passed; final commit verification and live GitHub Pages review are required before acceptance**
 
 ## Core gameplay implemented
 
@@ -24,50 +24,49 @@ Last updated: 2026-08-02
 - Desktop keyboard/mouse controls and mobile landscape touch controls.
 - Physical-key desktop input that works with Arabic and English keyboard layouts.
 
-## UI and presentation implemented
+## UI, presentation, and stabilization implemented
 
 - Unified anime/arcade presentation system for the Arabic build.
 - Redesigned public page shell, menu, HUD, settings, upgrades, boss intro, and result screens.
 - Fullscreen focus mode with responsive 16:9 scaling and `F` shortcut.
 - Six result-stat cards and S/A/B/C run ranking.
-- Separate Changa Arabic display typography and Inter numeric typography.
-- RTL-safe preference for Latin or Arabic numerals.
-- Persistent presentation settings for screen shake, reduced motion, damage numbers, contrast, and numeral style.
+- RTL-safe numeral preference and correct `current / total` wave order.
+- Debounced ricochet registration and clean bullet stop after ricochets are exhausted.
+- Dedicated mobile Magnetic Recall control.
+- Auto-hiding fullscreen toolbar that does not reduce the game viewport.
 
-## Milestone 02.6 implemented
+## Defeat-state hotfix and compact UI refinement
 
-- Wave progress is drawn in a dedicated LTR numeric context so it displays as `current / total` inside the Arabic HUD.
-- Ricochet registration is debounced to prevent one physical collision from being counted across multiple animation frames.
-- Stationary bullets no longer create additional ricochet statistics.
-- Outer-wall reflections only occur while the bullet is moving into the relevant wall.
-- The bullet stops cleanly when its available ricochets are exhausted.
-- A dedicated mobile Magnetic Recall button appears after unlocking the upgrade.
-- The fullscreen toolbar no longer reduces the game viewport.
-- Fullscreen controls hide automatically and can be revealed from the top edge, touch, or keyboard activity.
-- Added deterministic tests for RTL wave order and ricochet registration.
-- Browser package version advanced to **0.3.1**.
+- Root cause: screen shake and flash decayed only while the game state was `playing`; after defeat, the game changed to `gameover` while the last shake value remained active on every frame.
+- Terminal result states now clear shake, flash, hit-stop, and slow-motion values immediately.
+- Enemy projectiles, temporary banners, and pending dash requests are cleared when the run ends.
+- The infinite shake was replaced with a finite **620 ms** red defeat vignette pulse.
+- The main menu now has a tighter hierarchy, clearer primary action, paired secondary actions, integrated best-score tiles, and a visible build badge.
+- Page header, toolbar, game framing, footer spacing, and short-viewport behavior were refined.
+- Dedicated responsive fitting was added for desktop displays around **1366×768**.
+- Browser package version advanced to **0.3.2**.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, input, UI, and stabilization modules.
-- Automated tests: **16/16 passed**.
-- Pull Request #5: **squash-merged to main**.
-- Merge commit: `eb01499feec4afb73d42891abac89457a17c96b7`.
-- GitHub Actions Verify: **passed** on the final Pull Request #5 commit.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Live stabilization review: pending.
+- JavaScript syntax checks: **passed** for all runtime, input, UI, stabilization, and defeat-refinement modules.
+- Automated tests: **18/18 passed** on the initial Pull Request #6 implementation commit.
+- New tests verify that all terminal combat effects reset and the defeat pulse reaches zero instead of persisting.
+- Pull Request #6: **open**.
+- Initial GitHub Actions Verify: **passed**.
+- Final verification on the latest status commit: pending.
+- GitHub Pages deployment: pending merge to `main`.
+- Live defeat and compact-layout review: pending.
 
 ## Acceptance gate
 
-Do not close Milestone 02.6 until:
+Do not close this hotfix until:
 
-1. The wave HUD shows `1 / 5`, `2 / 5`, and subsequent values in the correct order.
-2. A complete run produces a realistic ricochet total rather than hundreds of duplicate counts.
-3. The bullet stops and remains recoverable after exhausting its ricochets.
-4. Fullscreen uses the complete viewport and the toolbar auto-hides and reveals correctly.
-5. The mobile Magnetic Recall button appears and works after unlocking the upgrade.
-6. Desktop movement and shortcuts continue to work with Arabic and English keyboard layouts.
-7. The owner approves the stabilized live GitHub Pages build.
+1. Losing a run produces only a short defeat pulse and the result screen then remains completely stable.
+2. Restarting after defeat restores normal movement, firing, shake, and audio behavior.
+3. The refined main menu fits correctly at 1366×768 without clipping the page header or footer.
+4. Fullscreen mode remains correctly scaled and its toolbar still hides and reveals as expected.
+5. The existing wave, ricochet, keyboard, settings, upgrade, boss, and mobile recall behavior remains intact.
+6. The owner approves the deployed defeat screen and compact UI presentation.
 
 ## Known limitations
 

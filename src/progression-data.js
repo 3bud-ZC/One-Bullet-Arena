@@ -1,5 +1,5 @@
 export const PROGRESSION_STORAGE_KEY = 'one-bullet-arena-progression';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const MAX_RUN_HISTORY = 20;
 
 export const BULLET_CORES = Object.freeze([
@@ -106,6 +106,16 @@ export const ACHIEVEMENTS = Object.freeze([
   },
 ]);
 
+const DEFAULT_COSMETICS = Object.freeze({
+  player: 'player-cyan',
+  bullet: 'bullet-diamond',
+  trail: 'trail-neon',
+  dash: 'dash-cyan',
+  hud: 'hud-cyan',
+});
+
+const DEFAULT_UNLOCKED_COSMETICS = Object.freeze(Object.values(DEFAULT_COSMETICS));
+
 function finiteNumber(value, fallback = 0, minimum = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(minimum, number) : fallback;
@@ -113,6 +123,26 @@ function finiteNumber(value, fallback = 0, minimum = 0) {
 
 function safeInteger(value, fallback = 0, minimum = 0) {
   return Math.trunc(finiteNumber(value, fallback, minimum));
+}
+
+export function createDefaultReplayability() {
+  return {
+    unlockedCosmetics: [...DEFAULT_UNLOCKED_COSMETICS],
+    selectedCosmetics: { ...DEFAULT_COSMETICS },
+    challengeCompletions: {},
+    totals: {
+      challengesCompleted: 0,
+      dailyWins: 0,
+      legendaryPicks: 0,
+      eliteKills: 0,
+    },
+    daily: {
+      lastAttemptDate: '',
+      lastWinDate: '',
+      streak: 0,
+      records: {},
+    },
+  };
 }
 
 export function createDefaultSave() {
@@ -141,6 +171,7 @@ export function createDefaultSave() {
       precisionRuns: 0,
       fastestVictory: 0,
     },
+    replayability: createDefaultReplayability(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -178,7 +209,59 @@ function normalizeHistory(history) {
     kills: safeInteger(run?.kills),
     coreId: coreById(run?.coreId) ? run.coreId : 'standard',
     shards: safeInteger(run?.shards),
+    challengeId: typeof run?.challengeId === 'string' ? run.challengeId : '',
+    challengeCompleted: Boolean(run?.challengeCompleted),
+    daily: Boolean(run?.daily),
+    eliteKills: safeInteger(run?.eliteKills),
+    legendaryPicks: safeInteger(run?.legendaryPicks),
   }));
+}
+
+function normalizeReplayability(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const unlockedCosmetics = Array.isArray(source.unlockedCosmetics)
+    ? [...new Set([...DEFAULT_UNLOCKED_COSMETICS, ...source.unlockedCosmetics.filter((id) => typeof id === 'string' && id.length <= 80)])]
+    : [...DEFAULT_UNLOCKED_COSMETICS];
+  const selectedCosmetics = { ...DEFAULT_COSMETICS };
+  for (const key of Object.keys(selectedCosmetics)) {
+    const selected = source.selectedCosmetics?.[key];
+    if (typeof selected === 'string' && unlockedCosmetics.includes(selected)) selectedCosmetics[key] = selected;
+  }
+  const challengeCompletions = {};
+  if (source.challengeCompletions && typeof source.challengeCompletions === 'object') {
+    for (const [id, count] of Object.entries(source.challengeCompletions)) {
+      if (typeof id === 'string' && id.length <= 80) challengeCompletions[id] = safeInteger(count);
+    }
+  }
+  const records = {};
+  if (source.daily?.records && typeof source.daily.records === 'object') {
+    for (const [date, record] of Object.entries(source.daily.records).slice(-45)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      records[date] = {
+        attempts: safeInteger(record?.attempts),
+        bestScore: safeInteger(record?.bestScore),
+        bestTime: finiteNumber(record?.bestTime),
+        completed: Boolean(record?.completed),
+      };
+    }
+  }
+  return {
+    unlockedCosmetics,
+    selectedCosmetics,
+    challengeCompletions,
+    totals: {
+      challengesCompleted: safeInteger(source.totals?.challengesCompleted),
+      dailyWins: safeInteger(source.totals?.dailyWins),
+      legendaryPicks: safeInteger(source.totals?.legendaryPicks),
+      eliteKills: safeInteger(source.totals?.eliteKills),
+    },
+    daily: {
+      lastAttemptDate: String(source.daily?.lastAttemptDate || ''),
+      lastWinDate: String(source.daily?.lastWinDate || ''),
+      streak: safeInteger(source.daily?.streak),
+      records,
+    },
+  };
 }
 
 export function normalizeSave(candidate) {
@@ -213,6 +296,7 @@ export function normalizeSave(candidate) {
     achievements,
     history: normalizeHistory(candidate.history),
     stats,
+    replayability: normalizeReplayability(candidate.replayability),
     createdAt: String(candidate.createdAt || defaults.createdAt),
     updatedAt: String(candidate.updatedAt || new Date().toISOString()),
   };
@@ -293,6 +377,11 @@ export function recordRun(inputSave, runInput) {
     kills: safeInteger(runInput.kills),
     coreId,
     shards: reward,
+    challengeId: typeof runInput.challengeId === 'string' ? runInput.challengeId : '',
+    challengeCompleted: Boolean(runInput.challengeCompleted),
+    daily: Boolean(runInput.daily),
+    eliteKills: safeInteger(runInput.eliteKills),
+    legendaryPicks: safeInteger(runInput.legendaryPicks),
   };
 
   save.shards += reward;

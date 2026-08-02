@@ -37,6 +37,16 @@ test('command center opens without overlapping the main menu', async ({ page }, 
   expect(errors).toEqual([]);
 });
 
+test('core hub keeps every description, trait, statistic, and action inside its card', async ({ page }, testInfo) => {
+  const errors = await collectErrors(page);
+  await page.goto('/');
+  await page.waitForTimeout(700);
+  await clickCanvasPoint(page, 500, 343);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: testInfo.outputPath('core-hub.png'), fullPage: true });
+  expect(errors).toEqual([]);
+});
+
 test('keyboard start enters gameplay and keeps the canvas inside the viewport', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');

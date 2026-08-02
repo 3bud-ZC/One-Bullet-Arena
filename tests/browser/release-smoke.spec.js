@@ -13,7 +13,18 @@ async function clickCanvasPoint(page, internalX, internalY) {
   await page.mouse.click(box.x + box.width * internalX / 1280, box.y + box.height * internalY / 720);
 }
 
-test('release menu renders without browser errors and captures a baseline', async ({ page }, testInfo) => {
+async function expectViewportFit(page) {
+  const metrics = await page.evaluate(() => ({
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    scrollWidth: document.documentElement.scrollWidth,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 2);
+  expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.innerHeight + 2);
+}
+
+test('stabilized release menu fits the viewport without browser errors', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   const canvas = page.locator('#game-canvas');
@@ -23,52 +34,68 @@ test('release menu renders without browser errors and captures a baseline', asyn
   expect(box).not.toBeNull();
   expect(box.width).toBeGreaterThan(500);
   expect(box.height).toBeGreaterThan(280);
+  await expectViewportFit(page);
   await page.screenshot({ path: testInfo.outputPath('menu.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('command center opens without overlapping the main menu', async ({ page }, testInfo) => {
+test('command center opens from the simplified quick-access panel', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   await page.waitForTimeout(700);
-  await clickCanvasPoint(page, 1085, 551);
-  await page.waitForTimeout(400);
+  await clickCanvasPoint(page, 1030, 490);
+  await page.waitForTimeout(450);
   await page.screenshot({ path: testInfo.outputPath('command-center.png'), fullPage: true });
+  await expectViewportFit(page);
   expect(errors).toEqual([]);
 });
 
-test('core hub keeps every description, trait, statistic, and action inside its card', async ({ page }, testInfo) => {
+test('core hub uses selector plus readable detail panel', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   await page.waitForTimeout(700);
-  await clickCanvasPoint(page, 500, 343);
-  await page.waitForTimeout(500);
+  await clickCanvasPoint(page, 950, 552);
+  await page.waitForTimeout(400);
+  await clickCanvasPoint(page, 210, 266);
+  await page.waitForTimeout(350);
   await page.screenshot({ path: testInfo.outputPath('core-hub.png'), fullPage: true });
+  await expectViewportFit(page);
   expect(errors).toEqual([]);
 });
 
-test('keyboard start enters gameplay and keeps the canvas inside the viewport', async ({ page }, testInfo) => {
+test('keyboard start enters gameplay with a compact edge HUD', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1900);
   const box = await page.locator('#game-canvas').boundingBox();
   const viewport = page.viewportSize();
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  if (testInfo.project.name === 'mobile-landscape') {
+    expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(2);
+  }
+  await expectViewportFit(page);
   await page.screenshot({ path: testInfo.outputPath('gameplay.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('PWA manifest and service worker assets are reachable', async ({ request }) => {
+test('PWA manifest service worker and stabilization assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
+  const stylesheet = await request.get('/ui-ux-stabilization.css');
+  const runtimeFixes = await request.get('/src/ui-ux-runtime-fixes.js');
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
+  expect(stylesheet.ok()).toBeTruthy();
+  expect(runtimeFixes.ok()).toBeTruthy();
   const data = await manifest.json();
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
+  const workerText = await worker.text();
+  expect(workerText).toContain('one-bullet-arena-v1.0.1');
+  expect(workerText).toContain('ui-ux-runtime-fixes.js');
 });

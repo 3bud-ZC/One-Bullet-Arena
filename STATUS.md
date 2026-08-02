@@ -1,105 +1,132 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 
 ## Release status
 
 - Product: **One Bullet Arena: Corebreak Protocol**
-- Approved Corebreak Protocol implementation completion: **100%**
-- Release version: **v1.0.0**
-- Corebreak Phases 1–5: **implemented and merged through Pull Requests #14–#18**
-- Pull Request #18: **squash-merged to main after successful final verification**
-- Merge commit: `5c28a51a5957535d5bfabd9236b01b71b8cb700f`
-- GitHub Pages deployment: **triggered by the release merge and this status update**
-- Current state: **v1.0.0 implementation and automated release gates complete; live owner/device acceptance remains**
+- Approved Corebreak Protocol scope: **100% implemented**
+- Current production version: **v1.0.0**
+- UI stabilization candidate: **v1.0.1**
+- Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
+- UI/UX Stabilization Pass: **implemented on Pull Request #19**
+- Current state: **PR #19 implementation, automated verification, and screenshot review are complete; final workflows after this status commit are required before merge**
 
-## Corebreak Protocol delivered
+## v1.0.1 UI/UX stabilization delivered
 
-### Phase 1 — The Three Guardians
+### Main menu hierarchy
 
-- Mirror Guardian with reflection, decoys, and temporary movement inversion.
-- Bullet Hunter with bullet pursuit, safe magnetic capture/release, and recall vulnerability windows.
-- Rift King with portals, gravity shifts, and arena segmentation.
-- Three combat phases, intros, regional presentation, persistent Guardian Mastery, and shard rewards.
+- Replaced the competing multi-panel menu with one dominant next-run panel.
+- Added one clear primary Start action.
+- Kept Protocol and mission selection as explicit secondary actions.
+- Reduced the daily challenge to one focused card.
+- Consolidated secondary destinations into a compact quick-access section.
+- Kept mission, selected Core, score, victories, shards, and run totals readable without covering navigation.
 
-### Phase 2 — Branching Roguelite Route
+### Command Center
 
-- Three-act route across Neon, Reactor Forge, and Void Circuit.
-- Combat, Elite, Forge, Shop, Recovery, Mystery, Challenge, and Boss nodes.
-- Deterministic route generation and challenge selection.
-- Temporary Broken Energy economy for purchases and route decisions.
-- Guardian chapter gates and complete Protocol victory flow.
+- Rebuilt the screen as a consistent 4×2 grid.
+- Increased card size, title readability, touch area, and visual separation.
+- Converted mixed English/Arabic card copy to clear Arabic UI copy.
+- Preserved direct access to Protocol, game modes, Enemy Codex, Guardian Mastery, Build Codex, tutorial, Gamepad, and unified backup.
 
-### Phase 3 — Advanced Builds
+### Core Hub
 
-- Five Core-specific Overdrive modes.
-- Exactly 25 gameplay-changing Relics across four rarity tiers.
-- Six advanced Core/Relic Synergies.
-- Relic drops, purchases, combat effects, and run inspection.
-- Persistent Build Codex with discoveries, pick counts, Synergies, and Overdrive usage.
+- Replaced five dense information cards with a Core selector and one large detail panel.
+- Added clear locked, unlocked, and equipped states.
+- Separated description, traits, mastery statistics, price, and primary action.
+- Increased contrast for save export/import controls.
+- Kept every card and action inside the desktop and mobile landscape canvas.
 
-### Phase 4 — Game Modes
+### Combat HUD and announcements
 
-- Endless Mode with regional rotation, scaling pressure, and a Guardian every five waves.
-- Boss Rush with the three Guardians and upgrade intermissions.
-- Five Core Contracts with forced rules, rewards, and persistent records.
-- Dedicated mode screens and local best-value tracking.
+- Replaced the layered HUD with compact edge panels.
+- Top-left now contains bullet and dash state.
+- Top-right now contains wave, score, and health.
+- Combo and Guardian health appear only when relevant.
+- Region introduction and run challenge announcements are now queued instead of appearing simultaneously.
+- Removed the normal-player performance telemetry panel.
+- Preserved mobile movement, dash, recall, Overdrive, build, and pause controls.
 
-### Phase 5 — Production Release
+### Responsive application shell
 
-- Interactive seven-step in-arena tutorial.
-- Gamepad movement, aiming, actions, deadzone, sensitivity, Y inversion, and button remapping.
-- Unified save export/import for progression, Enemy Codex, Guardian Mastery, Build Codex, mode records, mission/mobile/release settings, tutorial status, and legacy scores.
-- Runtime performance sampling and quality-specific frame budgets.
-- Final PWA metadata, standalone landscape configuration, and v1.0.0 offline application shell.
-- Updated release README, control documentation, and accessibility live announcements.
-- Final Command Center consolidating Protocol, modes, Codices, tutorial, Gamepad, and backup tools.
+- Removed desktop page scrolling at the tested 1440×900 viewport.
+- Converted the shell to a strict dynamic-viewport layout.
+- Canvas sizing now uses the available grid area instead of fixed viewport subtraction.
+- Mobile gameplay uses the full height after the toolbar is hidden.
+- Removed the previous black strip beneath active mobile gameplay.
+- Fullscreen and PWA layouts retain 16:9 containment.
 
-## Final automated verification
+### Offline integration
+
+- Package version advanced to **1.0.1**.
+- Service-worker cache advanced to `one-bullet-arena-v1.0.1`.
+- New stabilization CSS and runtime modules are included in the offline application shell.
+
+## Automated verification
 
 ### Node verification
 
-- JavaScript syntax checks: **passed** for all runtime modules, Playwright configuration, and service worker.
-- Automated deterministic tests: **95/95 passed**.
+- Syntax checks include all existing runtime modules plus:
+  - `src/ui-ux-stabilization.js`;
+  - `src/ui-ux-runtime-fixes.js`.
+- Deterministic tests: **95/95 passed**.
 - Failures: **0**.
-- Final Verify workflow on the Pull Request #18 status commit: **passed**.
 
 ### Browser verification
 
-- Playwright Browser Smoke: **10/10 passed**.
-- Final Browser Smoke workflow on the Pull Request #18 status commit: **passed**.
+- Playwright Browser Smoke: **10/10 passed** on the latest UI implementation commit.
 - Layouts covered:
   - desktop Chromium at 1440×900;
   - Chromium mobile landscape at 915×412 with touch enabled.
-- Browser coverage includes:
+- Browser checks cover:
+  - zero document overflow;
   - menu rendering;
   - Command Center navigation;
-  - Core Hub layout;
-  - real gameplay entry and viewport containment;
-  - PWA manifest and service-worker reachability.
-- Desktop and mobile screenshots were uploaded as GitHub Actions artifacts and manually reviewed.
+  - Core selector/detail layout;
+  - real gameplay entry;
+  - compact HUD containment;
+  - full-height mobile gameplay;
+  - manifest, service worker, stylesheet, and runtime-fix reachability.
 
 ## Visual QA completed
 
-- Browser screenshots exposed stacked expansion buttons during the release candidate review.
-- The defect was fixed before merge by consolidating all expansion systems into a Command Center.
-- The Core Hub was redrawn with fixed spacing for descriptions, traits, mastery statistics, and actions.
-- Performance telemetry was removed from the normal player HUD.
-- Final menu, Command Center, Core Hub, and gameplay screenshots were reviewed on desktop and mobile landscape without the previous overlap defects.
+Three screenshot review rounds were performed.
 
-## Live acceptance checks
+1. The first round exposed desktop document overflow.
+2. The second round exposed simultaneous challenge/region announcements, a mobile gameplay bottom strip, mixed-direction card copy, and low-contrast secondary controls.
+3. The final round confirmed:
+   - no desktop or mobile document scroll;
+   - clean menu hierarchy;
+   - clean Arabic Command Center cards;
+   - readable Core Hub details;
+   - high-contrast secondary actions;
+   - one major combat announcement at a time;
+   - full-height phone landscape gameplay;
+   - no previous overlap or black-strip defects.
 
-These checks require the project owner or physical devices and are not unfinished implementation work:
+Screenshots for menu, Command Center, Core Hub, and gameplay on desktop and mobile landscape are stored in GitHub Actions artifacts.
 
-1. Test a physical Gamepad, including remapping and reconnect behavior.
-2. Test Chrome Android plus Safari iOS or Samsung Internet on real devices.
-3. Install the PWA and reopen it offline after one complete online load.
-4. Export and import a unified backup in a real browser profile.
-5. Complete a long Endless run beyond wave 15 and review balance.
-6. Complete Boss Rush and at least two Core Contracts.
-7. Complete the interactive tutorial with keyboard/mouse and touch.
-8. Review Guardian, Relic, Broken Energy, and reward balance during extended play.
+## Remaining live acceptance checks
 
-## Live refresh note
+These require the project owner or physical hardware and are not unfinished implementation work:
 
-The service-worker cache changes from v0.12.0 to v1.0.0. If an older build remains visible, use a hard refresh on desktop or clear the site's stored data on mobile before reopening the game.
+1. Review v1.0.1 on the live GitHub Pages build after deployment.
+2. Test Chrome Android, Samsung Internet, and Safari iOS landscape behavior.
+3. Test a physical Gamepad and remapping flow.
+4. Verify the installed PWA after an offline restart.
+5. Complete a unified backup export/import in a real browser profile.
+6. Play a long Endless run and Boss Rush to review HUD density under extended combat.
+
+## Pull Request #19 release gate
+
+Before merge:
+
+- Verify must pass on this final status commit.
+- Browser Smoke must pass on this final status commit.
+- Pull Request #19 must remain mergeable.
+
+After merge:
+
+- GitHub Pages deployment will be triggered.
+- Existing installations may require a hard refresh or site-data reset because the service-worker cache advances from v1.0.0 to v1.0.1.

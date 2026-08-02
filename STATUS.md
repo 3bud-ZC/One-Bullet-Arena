@@ -4,12 +4,13 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **50%**
+- Overall project completion: **55%**
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
 - Milestone 02 gameplay implementation: **100%**
-- Current milestone: **Milestone 02.5 — UI/UX and Anime Presentation Polish**
-- Milestone 02.5 implementation: **100%**
-- State: **Pull Request #4 merged to main after successful automated verification; GitHub Pages deployment triggered; live owner review is required before milestone acceptance**
+- Milestone 02.5 UI/UX implementation: **100%**
+- Current milestone: **Milestone 02.6 — Stabilization and Balance**
+- Milestone 02.6 implementation: **100%**
+- State: **Pull Request #5 implementation complete; automated verification passed; final commit verification and live GitHub Pages review are required before acceptance**
 
 ## Core gameplay implemented
 
@@ -23,67 +24,70 @@ Last updated: 2026-08-02
 - Desktop keyboard/mouse controls and mobile landscape touch controls.
 - Physical-key desktop input that works with Arabic and English keyboard layouts.
 
-## Milestone 02.5 implemented
+## UI and presentation implemented
 
 - Unified anime/arcade presentation system for the Arabic build.
-- Redesigned public page shell and game-stage toolbar.
+- Redesigned public page shell, menu, HUD, settings, upgrades, boss intro, and result screens.
 - Fullscreen focus mode with responsive 16:9 scaling and `F` shortcut.
-- Compact combat HUD for wave, score, health, bullet, dash, ricochet, combo, and boss states.
-- Direction indicator when the recoverable bullet is far from the player.
-- Redesigned victory and defeat screens.
-- Six result-stat cards: score, time, shots, hits, ricochets, and kills.
-- S/A/B/C run-ranking system based on score, accuracy, time, and victory.
-- Redesigned upgrade cards with icons, categories, current/next level, and numeric effect summaries.
-- Anime speed lines, wave banners, boss warning presentation, and slash-style transitions.
+- Six result-stat cards and S/A/B/C run ranking.
 - Separate Changa Arabic display typography and Inter numeric typography.
 - RTL-safe preference for Latin or Arabic numerals.
-- Presentation settings for screen shake, reduced motion, damage numbers, high contrast, and numeral style.
-- Refined independent controls for music, SFX, mute, and fullscreen.
-- Persistent UI presentation settings stored locally.
-- Responsive desktop, wide-screen, fullscreen, and mobile page layouts.
+- Persistent presentation settings for screen shake, reduced motion, damage numbers, contrast, and numeral style.
+
+## Milestone 02.6 implemented
+
+- Wave progress is now drawn in a dedicated LTR numeric context so it displays as `current / total` inside the Arabic HUD.
+- Ricochet registration is debounced to prevent one physical collision from being counted across multiple animation frames.
+- Stationary bullets no longer create additional ricochet statistics.
+- Outer-wall reflections only occur while the bullet is moving into the relevant wall.
+- The bullet stops cleanly when its available ricochets are exhausted.
+- A dedicated mobile Magnetic Recall button appears after unlocking the upgrade.
+- The fullscreen toolbar no longer reduces the game viewport.
+- Fullscreen controls hide automatically and can be revealed from the top edge, touch, or keyboard activity.
+- Added deterministic tests for RTL wave order and ricochet registration.
+- Browser package version advanced to **0.3.1**.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime, input, and UI modules.
-- Automated tests: **13/13 passed** on the final Pull Request #4 commit.
-- UI tests cover run ranking and RTL-safe numeral formatting.
-- Existing tests continue to cover arena content, upgrades, math, collisions, spawning, and physical keyboard mappings.
-- Pull Request #4: **squash-merged to main**.
-- Merge commit: `f506cba54b34ea26179d944aea7d6a519de9f834`.
-- GitHub Pages deployment: **triggered by the merge and this status update**.
-- Real-browser live UI review: pending.
+- JavaScript syntax checks: **passed** for all runtime, input, UI, and stabilization modules.
+- Automated tests: **16/16 passed** on the initial Pull Request #5 implementation commit.
+- Pull Request #5: **open**.
+- GitHub Actions Verify: **passed** before this status update.
+- Final verification on the latest status commit: pending.
+- GitHub Pages deployment: pending merge to `main`.
+- Live stabilization review: pending.
 
 ## Acceptance gate
 
-Do not close Milestone 02 or Milestone 02.5 until:
+Do not close Milestone 02.6 until:
 
-1. Desktop movement and shortcuts work with Arabic and English keyboard layouts.
-2. The redesigned menu, HUD, settings, upgrades, boss intro, victory, and defeat screens render correctly.
-3. Fullscreen mode enters, scales correctly, and exits without breaking input.
-4. Reduced motion, screen shake, damage-number, numeral, and high-contrast preferences work and persist after reload.
-5. A full five-wave run reaches and defeats the Core Warden through all three phases.
-6. Music, SFX, mute, and saved audio settings persist correctly.
-7. Mobile landscape controls receive at least one manual device test.
-8. The project owner approves gameplay feel, UI hierarchy, Arabic presentation, and boss balance on the live GitHub Pages build.
+1. The wave HUD shows `1 / 5`, `2 / 5`, and subsequent values in the correct order.
+2. A complete run produces a realistic ricochet total rather than hundreds of duplicate counts.
+3. The bullet stops and remains recoverable after exhausting its ricochets.
+4. Fullscreen uses the complete viewport and the toolbar auto-hides and reveals correctly.
+5. The mobile Magnetic Recall button appears and works after unlocking the upgrade.
+6. Desktop movement and shortcuts continue to work with Arabic and English keyboard layouts.
+7. The owner approves the stabilized live GitHub Pages build.
 
 ## Known limitations
 
 - Changa and Inter are loaded from Google Fonts; system fonts are used if loading fails.
-- Magnetic Recall uses `Q` and does not yet have a dedicated mobile button.
-- A real-browser automated gameplay and visual smoke test is still pending.
+- A real-browser automated gameplay and screenshot regression suite is still pending.
 - Procedural vector visuals remain intentional; final illustrated character and environment art are not integrated.
-- Combat, ranking, and boss balance values require continued live playtesting.
+- Combat, ranking, and boss values still require continued live balancing.
+- Persistent progression, achievements, run history, and additional regions are not implemented yet.
 
 ## Next milestone after acceptance
 
-**Milestone 03 — Content Expansion and Replayability**
+**Milestone 03 — Replayability and Persistent Progression**
 
-Candidate scope:
+Planned scope:
 
-- Dedicated mobile Magnetic Recall button.
-- Automated browser smoke and screenshot regression testing.
-- Additional enemies, bosses, arena themes, and elite modifiers.
-- Persistent unlocks, challenges, achievements, and run history.
-- Gamepad support and control remapping.
-- PWA installation and offline caching.
-- Final art, release presentation, and balancing passes.
+- Persistent run history and player statistics.
+- Core Shards earned after runs.
+- Unlockable bullet cores and cosmetic variants.
+- Upgrade rarity tiers and legendary effects.
+- Elite enemy modifiers.
+- Achievements and challenge objectives.
+- New arena regions and bosses.
+- Gamepad support, control remapping, PWA installation, and offline caching.

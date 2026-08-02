@@ -38,3 +38,4 @@ attachPresentationControls(game);
 attachStabilizationControls(game);
 attachProgressionControls(game);
 attachReplayabilityControls(game);
+game.requestProgressionReset = game.resetProgressionSave;

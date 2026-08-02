@@ -1,4 +1,4 @@
-const CACHE_NAME = 'one-bullet-arena-v0.10.0';
+const CACHE_NAME = 'one-bullet-arena-v0.11.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -36,7 +36,9 @@ const APP_SHELL = [
   './src/region-bosses-data.js',
   './src/region-bosses.js',
   './src/roguelite-route-data.js',
-  './src/roguelite-route.js'
+  './src/roguelite-route.js',
+  './src/advanced-builds-data.js',
+  './src/advanced-builds.js'
 ];
 
 self.addEventListener('install', (event) => {

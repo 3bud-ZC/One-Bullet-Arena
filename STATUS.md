@@ -2,81 +2,110 @@
 
 Last updated: 2026-08-02
 
-## Scope and completion
+## Release status
 
-- Active target: **One Bullet Arena: Corebreak Protocol v1.0**
-- Expanded Corebreak Protocol completion: **94%**
-- Corebreak Phases 1–3: **implemented and merged through Pull Requests #14–#16**
-- Corebreak Phase 4 — Game Modes: **implemented on Pull Request #17**
-- Browser build: **v0.12.0**
-- Current state: **Pull Request #17 verification passed; final verification after this status commit is required before merge**
+- Active target: **One Bullet Arena: Corebreak Protocol v1.0.0**
+- Implementation completion for the approved Corebreak Protocol scope: **100%**
+- Corebreak Phases 1–4: **implemented and merged through Pull Requests #14–#17**
+- Corebreak Phase 5 — Production Release Candidate: **implemented on Pull Request #18**
+- Browser build: **v1.0.0**
+- Current state: **Pull Request #18 open; Verify passed 95/95 and Browser Smoke passed 10/10 on the latest gameplay/UI commit; final verification after this status commit is required before merge**
 
-## Phase 4 implemented
+## Corebreak Protocol delivered
 
-### Endless Mode
+### Phase 1 — The Three Guardians
 
-- Unlimited regional waves.
-- Region rotation every five waves.
-- A unique region guardian every five waves.
-- Escalating enemy health, speed, and Elite pressure.
-- Upgrade selection after each defeated guardian.
-- Persistent attempts, best wave, best score, and guardian count.
+- Mirror Guardian with reflection, decoys, and temporary movement inversion.
+- Bullet Hunter with bullet pursuit, safe magnetic capture/release, and recall vulnerability windows.
+- Rift King with portals, gravity shifts, and arena segmentation.
+- Three combat phases, intros, regional presentation, persistent Guardian Mastery, and shard rewards.
 
-### Boss Rush
+### Phase 2 — Branching Roguelite Route
 
-- Mirror Guardian, Bullet Hunter, and Rift King in sequence.
-- Upgrade selection between guardian encounters.
-- Completion grants permanent Core Shards.
-- Persistent attempts, completions, best time, and least damage.
+- Three-act route across Neon, Reactor Forge, and Void Circuit.
+- Combat, Elite, Forge, Shop, Recovery, Mystery, Challenge, and Boss nodes.
+- Deterministic route generation and challenge selection.
+- Temporary Broken Energy economy for purchases and route decisions.
+- Guardian chapter gates and complete Protocol victory flow.
 
-### Core Contracts
+### Phase 3 — Advanced Builds
 
-- Five contracts:
-  - one heart;
-  - no dash;
-  - Elite in every wave;
-  - bullet slowdown after ricochets;
-  - forced Recall Core.
-- Each contract has a region, rule set, reward, attempts, completions, and best score.
-- Contract rewards settle once and persist in progression.
+- Five Core-specific Overdrive modes.
+- Exactly 25 gameplay-changing Relics across four rarity tiers.
+- Six advanced Core/Relic Synergies.
+- Relic drops, purchases, combat effects, and run inspection.
+- Persistent Build Codex with discoveries, pick counts, Synergies, and Overdrive usage.
 
-### Mode hub and records
+### Phase 4 — Game Modes
 
-- Added Arabic Game Modes and Contract selection screens.
-- Added persistent normalized mode records.
-- Existing Protocol route, Overdrive, Relics, regional enemies, guardians, progression, and mobile controls remain connected.
+- Endless Mode with regional rotation, scaling pressure, and a Guardian every five waves.
+- Boss Rush with the three Guardians and upgrade intermissions.
+- Five Core Contracts with forced rules, rewards, and persistent records.
+- Dedicated mode screens and local best-value tracking.
 
-### Offline integration
+### Phase 5 — Production Release Candidate
 
-- Service-worker cache advanced to **v0.12.0**.
-- Game mode data and runtime modules are cached for installed/offline play.
+- Interactive seven-step in-arena tutorial.
+- Gamepad movement, aiming, actions, deadzone, sensitivity, Y inversion, and button remapping.
+- Unified save export/import for progression, Enemy Codex, Guardian Mastery, Build Codex, mode records, mission/mobile/release settings, tutorial status, and legacy scores.
+- Runtime performance sampling and quality-specific frame budgets.
+- Final PWA metadata, standalone landscape configuration, and v1.0.0 offline application shell.
+- Updated release README, control documentation, and accessibility live announcements.
+- Final Command Center consolidating Protocol, modes, Codices, tutorial, Gamepad, and backup tools.
 
-## Verification
+## Automated verification
 
-- JavaScript syntax checks: **passed** for all modules and service worker.
-- Automated tests: **90/90 passed**.
-- New tests cover Contract uniqueness, Endless records, Boss Rush records, Contract records, best-value preservation, and malformed-data repair.
+### Node verification
 
-## Manual acceptance gate
+- JavaScript syntax checks: **passed** for all runtime modules, Playwright configuration, and service worker.
+- Automated deterministic tests: **95/95 passed**.
+- Failures: **0**.
 
-1. Endless guardian transitions never end the run early.
-2. Endless difficulty remains playable and continues beyond wave 15.
-3. Boss Rush transitions to the next guardian after each intermission.
-4. Boss Rush completion rewards settle once.
-5. Every Contract applies its modifier throughout the mission.
-6. Mode records persist after reload.
-7. Mode screens remain readable on phone landscape.
-8. Existing standard modes and Protocol route remain intact.
+### Browser verification
 
-## Remaining Phase 5 — Production Release
+- Playwright Browser Smoke: **10/10 passed**.
+- Browsers/layouts covered:
+  - desktop Chromium at 1440×900;
+  - Chromium mobile landscape at 915×412 with touch enabled.
+- Browser coverage includes:
+  - menu rendering;
+  - Command Center navigation;
+  - Core Hub layout;
+  - real gameplay entry and viewport containment;
+  - PWA manifest and service-worker reachability.
+- Desktop and mobile screenshots are uploaded as GitHub Actions artifacts.
 
-- Interactive tutorial.
-- Gamepad support and remapping.
-- Audio/visual production pass.
-- Unified save export/import including progression, Enemy Codex, guardian mastery, Build Codex, mode records, and settings.
-- Browser smoke tests, screenshot regression scaffolding, and performance benchmark.
-- Final PWA/mobile polish and **v1.0.0** release.
+## Visual QA performed
 
-## Next execution step
+- The first browser screenshot run exposed stacked expansion buttons over the fighter profile.
+- The release was not merged with that defect.
+- The menu was rebuilt around one clean Command Center and one direct Protocol action.
+- The Core Hub was redrawn with fixed card spacing for descriptions, traits, mastery statistics, and actions.
+- Performance telemetry was removed from the normal player HUD.
+- Final desktop and mobile screenshots for the menu, Command Center, Core Hub, and gameplay were manually reviewed and found visually clear without the previous overlaps.
 
-**Corebreak Phase 5 — Production Release Candidate**
+## Final manual acceptance gate
+
+Implementation and automated release gates are complete. The following remain owner/device acceptance checks rather than unfinished systems:
+
+1. Test a physical Gamepad, including remapping and reconnect behavior.
+2. Test Chrome Android plus Safari iOS or Samsung Internet on real devices.
+3. Install the PWA and reopen it offline after one complete online load.
+4. Export and import a unified backup in a real browser profile.
+5. Complete a long Endless run beyond wave 15 and review balance.
+6. Complete Boss Rush and at least two Core Contracts.
+7. Complete the interactive tutorial with keyboard/mouse and touch.
+8. Review Guardian, Relic, and Broken Energy balance during extended play.
+
+## Pull Request #18 release gate
+
+Before merge:
+
+- Verify workflow must pass on this final status commit.
+- Browser Smoke workflow must pass on this final status commit.
+- Pull Request #18 must remain mergeable.
+
+After merge:
+
+- GitHub Pages deployment will be triggered.
+- The live v1.0.0 build requires a hard refresh or site-data reset because the service-worker cache changes from v0.12.0 to v1.0.0.

@@ -1,9 +1,11 @@
 import { OneBulletArena } from './game.js';
 import { installPhysicalKeyboardBridge } from './input.js';
 import { attachPresentationControls, installUiPolish } from './ui-polish.js';
+import { installUiPolishFixes } from './ui-polish-fixes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
+installUiPolishFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

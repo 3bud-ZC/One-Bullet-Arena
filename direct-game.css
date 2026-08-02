@@ -12,6 +12,7 @@ body {
 }
 
 body.direct-game-shell {
+  --toolbar-height: 0px;
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -127,15 +128,15 @@ body.direct-game-shell {
   height: 100%;
 }
 
-.direct-game-shell.mobile-runtime canvas,
-.direct-game-shell.mobile-runtime:not([data-game-state="playing"]) canvas {
+body.direct-game-shell.mobile-runtime canvas,
+body.direct-game-shell.mobile-runtime:not([data-game-state="playing"]):not([data-game-state="bossIntro"]):not([data-game-state="upgrade"]):not([data-game-state="paused"]):not([data-game-state="buildInspect"]):not([data-game-state="mobileSettings"]) canvas {
   width: min(
     calc(var(--app-width, 100vw) - env(safe-area-inset-left) - env(safe-area-inset-right)),
     calc((var(--app-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9)
-  );
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  ) !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 
 @media (pointer: coarse) and (orientation: landscape) {

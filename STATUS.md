@@ -4,12 +4,14 @@ Last updated: 2026-08-02
 
 ## Release status
 
-- Active target: **One Bullet Arena: Corebreak Protocol v1.0.0**
-- Implementation completion for the approved Corebreak Protocol scope: **100%**
-- Corebreak Phases 1–4: **implemented and merged through Pull Requests #14–#17**
-- Corebreak Phase 5 — Production Release Candidate: **implemented on Pull Request #18**
-- Browser build: **v1.0.0**
-- Current state: **Pull Request #18 open; Verify passed 95/95 and Browser Smoke passed 10/10 on the latest gameplay/UI commit; final verification after this status commit is required before merge**
+- Product: **One Bullet Arena: Corebreak Protocol**
+- Approved Corebreak Protocol implementation completion: **100%**
+- Release version: **v1.0.0**
+- Corebreak Phases 1–5: **implemented and merged through Pull Requests #14–#18**
+- Pull Request #18: **squash-merged to main after successful final verification**
+- Merge commit: `5c28a51a5957535d5bfabd9236b01b71b8cb700f`
+- GitHub Pages deployment: **triggered by the release merge and this status update**
+- Current state: **v1.0.0 implementation and automated release gates complete; live owner/device acceptance remains**
 
 ## Corebreak Protocol delivered
 
@@ -43,7 +45,7 @@ Last updated: 2026-08-02
 - Five Core Contracts with forced rules, rewards, and persistent records.
 - Dedicated mode screens and local best-value tracking.
 
-### Phase 5 — Production Release Candidate
+### Phase 5 — Production Release
 
 - Interactive seven-step in-arena tutorial.
 - Gamepad movement, aiming, actions, deadzone, sensitivity, Y inversion, and button remapping.
@@ -53,18 +55,20 @@ Last updated: 2026-08-02
 - Updated release README, control documentation, and accessibility live announcements.
 - Final Command Center consolidating Protocol, modes, Codices, tutorial, Gamepad, and backup tools.
 
-## Automated verification
+## Final automated verification
 
 ### Node verification
 
 - JavaScript syntax checks: **passed** for all runtime modules, Playwright configuration, and service worker.
 - Automated deterministic tests: **95/95 passed**.
 - Failures: **0**.
+- Final Verify workflow on the Pull Request #18 status commit: **passed**.
 
 ### Browser verification
 
 - Playwright Browser Smoke: **10/10 passed**.
-- Browsers/layouts covered:
+- Final Browser Smoke workflow on the Pull Request #18 status commit: **passed**.
+- Layouts covered:
   - desktop Chromium at 1440×900;
   - Chromium mobile landscape at 915×412 with touch enabled.
 - Browser coverage includes:
@@ -73,20 +77,19 @@ Last updated: 2026-08-02
   - Core Hub layout;
   - real gameplay entry and viewport containment;
   - PWA manifest and service-worker reachability.
-- Desktop and mobile screenshots are uploaded as GitHub Actions artifacts.
+- Desktop and mobile screenshots were uploaded as GitHub Actions artifacts and manually reviewed.
 
-## Visual QA performed
+## Visual QA completed
 
-- The first browser screenshot run exposed stacked expansion buttons over the fighter profile.
-- The release was not merged with that defect.
-- The menu was rebuilt around one clean Command Center and one direct Protocol action.
-- The Core Hub was redrawn with fixed card spacing for descriptions, traits, mastery statistics, and actions.
+- Browser screenshots exposed stacked expansion buttons during the release candidate review.
+- The defect was fixed before merge by consolidating all expansion systems into a Command Center.
+- The Core Hub was redrawn with fixed spacing for descriptions, traits, mastery statistics, and actions.
 - Performance telemetry was removed from the normal player HUD.
-- Final desktop and mobile screenshots for the menu, Command Center, Core Hub, and gameplay were manually reviewed and found visually clear without the previous overlaps.
+- Final menu, Command Center, Core Hub, and gameplay screenshots were reviewed on desktop and mobile landscape without the previous overlap defects.
 
-## Final manual acceptance gate
+## Live acceptance checks
 
-Implementation and automated release gates are complete. The following remain owner/device acceptance checks rather than unfinished systems:
+These checks require the project owner or physical devices and are not unfinished implementation work:
 
 1. Test a physical Gamepad, including remapping and reconnect behavior.
 2. Test Chrome Android plus Safari iOS or Samsung Internet on real devices.
@@ -95,17 +98,8 @@ Implementation and automated release gates are complete. The following remain ow
 5. Complete a long Endless run beyond wave 15 and review balance.
 6. Complete Boss Rush and at least two Core Contracts.
 7. Complete the interactive tutorial with keyboard/mouse and touch.
-8. Review Guardian, Relic, and Broken Energy balance during extended play.
+8. Review Guardian, Relic, Broken Energy, and reward balance during extended play.
 
-## Pull Request #18 release gate
+## Live refresh note
 
-Before merge:
-
-- Verify workflow must pass on this final status commit.
-- Browser Smoke workflow must pass on this final status commit.
-- Pull Request #18 must remain mergeable.
-
-After merge:
-
-- GitHub Pages deployment will be triggered.
-- The live v1.0.0 build requires a hard refresh or site-data reset because the service-worker cache changes from v0.12.0 to v1.0.0.
+The service-worker cache changes from v0.12.0 to v1.0.0. If an older build remains visible, use a hard refresh on desktop or clear the site's stored data on mobile before reopening the game.

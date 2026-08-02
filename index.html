@@ -8,26 +8,43 @@
     <title>حلبة الطلقة الواحدة | One Bullet Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;500;600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="page-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">ABUD FUN / لعبة ويب</p>
+        <div class="brand-lockup">
+          <p class="eyebrow">ABUD FUN / ARCADE WEB GAME</p>
           <h1>حلبة الطلقة الواحدة</h1>
+          <p class="subtitle">طلقة واحدة، زوايا محسوبة، وجولة لا تسمح بالإهدار.</p>
         </div>
-        <a href="https://github.com/3bud-ZC/One-Bullet-Arena" target="_blank" rel="noreferrer">الكود المصدري</a>
+        <nav class="top-actions" aria-label="روابط اللعبة">
+          <span class="build-badge">نسخة تجريبية عربية</span>
+          <a href="https://github.com/3bud-ZC/One-Bullet-Arena" target="_blank" rel="noreferrer">الكود المصدري</a>
+        </nav>
       </header>
 
-      <section class="game-frame" aria-label="لعبة حلبة الطلقة الواحدة">
-        <canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas>
+      <section class="game-stage" id="game-stage" aria-label="لعبة حلبة الطلقة الواحدة">
+        <div class="stage-toolbar">
+          <div class="stage-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="presentation-status" aria-live="polite">جاهز للعب</span>
+          </div>
+          <div class="stage-actions">
+            <span class="shortcut-hint"><kbd>F</kbd> ملء الشاشة</span>
+            <button type="button" id="fullscreen-toggle">ملء الشاشة</button>
+          </div>
+        </div>
+
+        <div class="game-frame">
+          <canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas>
+        </div>
       </section>
 
       <footer>
-        <span>طلقة واحدة. زوايا لا تنتهي.</span>
-        <span>تدعم الكمبيوتر والهاتف — يفضّل استخدام شاشة أفقية على الهاتف.</span>
+        <span>الحركة: WASD أو الأسهم • إطلاق: الماوس • اندفاع: Space / Shift</span>
+        <span>تدعم الكمبيوتر والهاتف — يفضّل الوضع الأفقي على الهاتف.</span>
       </footer>
     </main>
     <script type="module" src="./src/main.js"></script>

@@ -17,6 +17,7 @@ import { installRegionEnemies } from './region-enemies.js';
 import { installRegionBosses } from './region-bosses.js';
 import { installRogueliteRoute } from './roguelite-route.js';
 import { attachAdvancedBuildControls, installAdvancedBuilds } from './advanced-builds.js';
+import { installGameModes } from './game-modes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -36,12 +37,10 @@ installRegionEnemies(OneBulletArena);
 installRegionBosses(OneBulletArena);
 installRogueliteRoute(OneBulletArena);
 installAdvancedBuilds(OneBulletArena);
+installGameModes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-  throw new Error('تعذر العثور على لوحة اللعبة.');
-}
-
+if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 

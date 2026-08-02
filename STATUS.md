@@ -4,71 +4,74 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **38%**
+- Overall project completion: **50%**
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
-- Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
-- Milestone 02 implementation: **100%**
-- State: **Arabic Milestone 02 build is deployed; desktop keyboard hotfix merged and deployment triggered; owner gameplay acceptance is still required before closing the milestone**
+- Milestone 02 gameplay implementation: **100%**
+- Current milestone: **Milestone 02.5 — UI/UX and Anime Presentation Polish**
+- Milestone 02.5 implementation: **100%**
+- State: **Implementation complete on Pull Request #4; automated verification passed; merge and live GitHub Pages review are required before owner acceptance**
 
-## Milestone 02 implemented
+## Core gameplay implemented
 
-- Full Arabic RTL game interface.
-- Arabic Changa display font with system-font fallback.
-- Arabic main menu, tutorial, pause, settings, upgrade, boss-intro, defeat, and victory screens.
-- Five escalating waves and five distinct arena layouts.
-- Solid obstacles, destructible obstacles, damage hazards, and explosive nodes.
-- Eight stackable bullet upgrades.
-- Core Warden boss with three phases.
-- Boss first-phase shield requires a ricocheted shot.
-- Scout, Brute, Sniper, Charger, and Splitter enemy archetypes.
-- Mini enemies and elite enemy variants.
-- Procedural Web Audio music and sound effects.
-- Persistent music volume, SFX volume, and mute settings.
-- Hit-stop, slow motion, knockback, attack telegraphs, floating combat text, boss health bar, particles, and enhanced screen shake.
-- Desktop keyboard/mouse controls.
-- Mobile landscape touch movement, firing, and dash controls.
-- Run statistics for score, time, shots, hits, ricochets, and kills.
-- Updated Arabic public page shell and responsive presentation.
+- Full Arabic RTL game experience.
+- Five escalating waves across five arena layouts.
+- Solid and breakable obstacles, damage hazards, and explosive arena nodes.
+- Eight stackable upgrades that preserve the one-bullet rule.
+- Scout, Brute, Sniper, Charger, and Splitter enemies with mini and elite variants.
+- Three-phase Core Warden boss with a ricochet requirement during phase one.
+- Procedural music and sound effects with persistent volume and mute settings.
+- Desktop keyboard/mouse controls and mobile landscape touch controls.
+- Physical-key desktop input that works with Arabic and English keyboard layouts.
 
-## Desktop keyboard hotfix
+## Milestone 02.5 implemented
 
-- Root cause: the game used `KeyboardEvent.key`, so physical WASD keys reported Arabic characters while the Arabic keyboard layout was active.
-- Fix: controls now normalize physical key positions through `KeyboardEvent.code`.
-- WASD now works with Arabic, English, and other active keyboard layouts.
-- Arrow keys, Space, Shift, Q, P, M, R, Enter, Escape, and upgrade number keys are normalized as well.
-- The canvas now receives focus after pointer interaction.
-- Pull Request #3 was squash-merged to `main`.
-- Hotfix merge commit: `649eaa2224c4dfb7d75a5a89a5a337bdaa59dc86`.
+- Unified anime/arcade presentation system for the Arabic build.
+- Redesigned public page shell and game-stage toolbar.
+- Fullscreen focus mode with responsive 16:9 scaling and `F` shortcut.
+- Compact combat HUD for wave, score, health, bullet, dash, ricochet, combo, and boss states.
+- Direction indicator when the recoverable bullet is far from the player.
+- Redesigned victory and defeat screens.
+- Six result-stat cards: score, time, shots, hits, ricochets, and kills.
+- S/A/B/C run-ranking system based on score, accuracy, time, and victory.
+- Redesigned upgrade cards with icons, categories, current/next level, and numeric effect summaries.
+- Anime speed lines, wave banners, boss warning presentation, and slash-style transitions.
+- Separate Changa Arabic display typography and Inter numeric typography.
+- RTL-safe preference for Latin or Arabic numerals.
+- Presentation settings for screen shake, reduced motion, damage numbers, high contrast, and numeral style.
+- Refined independent controls for music, SFX, mute, and fullscreen.
+- Persistent UI presentation settings stored locally.
+- Responsive desktop, wide-screen, fullscreen, and mobile page layouts.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all runtime modules including the new input module.
-- Automated tests: **10/10 passed**.
-- GitHub Actions Verify: **passed** for Pull Request #3.
-- GitHub Pages deployment: **triggered after the hotfix merge and this status update**.
-- Live desktop retest: pending owner confirmation.
-- Live full-run gameplay review: pending.
+- JavaScript syntax checks: **passed** for all runtime, input, and UI modules.
+- Automated tests: **13/13 passed** on Pull Request #4 implementation commit.
+- UI tests cover run ranking and RTL-safe numeral formatting.
+- Existing tests continue to cover arena content, upgrades, math, collisions, spawning, and physical keyboard mappings.
+- Pull Request #4: **open**.
+- GitHub Pages deployment: pending merge to `main`.
+- Real-browser live UI review: pending.
 
 ## Acceptance gate
 
-Do not close Milestone 02 until:
+Do not close Milestone 02 or Milestone 02.5 until:
 
-1. Desktop movement works using WASD with both Arabic and English keyboard layouts.
-2. Arrow-key movement, dash, pause, recall, restart, mute, and upgrade shortcuts work correctly.
-3. The Arabic menu, tutorial, settings, and upgrade screens render correctly on GitHub Pages.
-4. A full five-wave run reaches and defeats the Core Warden through all three phases.
-5. Each upgrade has a visible and measurable gameplay effect.
-6. Music, SFX, mute, and saved settings work after a page reload.
+1. Desktop movement and shortcuts work with Arabic and English keyboard layouts.
+2. The redesigned menu, HUD, settings, upgrades, boss intro, victory, and defeat screens render correctly.
+3. Fullscreen mode enters, scales correctly, and exits without breaking input.
+4. Reduced motion, screen shake, damage-number, numeral, and high-contrast preferences work and persist after reload.
+5. A full five-wave run reaches and defeats the Core Warden through all three phases.
+6. Music, SFX, mute, and saved audio settings persist correctly.
 7. Mobile landscape controls receive at least one manual device test.
-8. The project owner approves combat feel, progression, Arabic presentation, and boss balance.
+8. The project owner approves gameplay feel, UI hierarchy, Arabic presentation, and boss balance on the live GitHub Pages build.
 
 ## Known limitations
 
-- The Changa font is loaded from Google Fonts; system Arabic fonts are used if the network request fails.
-- Magnetic Recall currently uses the keyboard `Q` shortcut and does not yet have a dedicated mobile button.
-- A real-browser automated gameplay smoke test is still pending.
-- Procedural vector visuals are intentional for this phase; production illustration and character art are not integrated.
-- Combat and boss values are first-pass balance values and require live playtesting.
+- Changa and Inter are loaded from Google Fonts; system fonts are used if loading fails.
+- Magnetic Recall uses `Q` and does not yet have a dedicated mobile button.
+- A real-browser automated gameplay and visual smoke test is still pending.
+- Procedural vector visuals remain intentional; final illustrated character and environment art are not integrated.
+- Combat, ranking, and boss balance values require continued live playtesting.
 
 ## Next milestone after acceptance
 
@@ -77,7 +80,7 @@ Do not close Milestone 02 until:
 Candidate scope:
 
 - Dedicated mobile Magnetic Recall button.
-- Automated browser smoke testing.
+- Automated browser smoke and screenshot regression testing.
 - Additional enemies, bosses, arena themes, and elite modifiers.
 - Persistent unlocks, challenges, achievements, and run history.
 - Gamepad support and control remapping.

@@ -6,104 +6,83 @@ Last updated: 2026-08-02
 
 The active target is **One Bullet Arena: Corebreak Protocol v1.0**.
 
-- Expanded Corebreak Protocol completion: **82%**
+- Expanded Corebreak Protocol completion: **88%**
 - Legacy arena systems through Milestone 04B: **implemented**
 - Corebreak Phase 1 — The Three Guardians: **implemented and merged through Pull Request #14**
-- Corebreak Phase 2 — Branching Route and In-Run Economy: **implemented on Pull Request #15**
-- Browser build: **v0.10.0**
-- Current state: **Pull Request #15 initial verification passed with 79/79 tests; final verification after this status commit is required before merge**
+- Corebreak Phase 2 — Branching Route and In-Run Economy: **implemented and merged through Pull Request #15**
+- Corebreak Phase 3 — Advanced Builds: **implemented on Pull Request #16**
+- Browser build: **v0.11.0**
+- Current state: **Pull Request #16 initial verification passed with 85/85 tests; final verification after this status commit is required before merge**
 
-## Phase 1 — The Three Guardians
+## Phase 3 implemented
 
-- Mirror Guardian for Neon with reflection, decoys, and temporary movement inversion.
-- Bullet Hunter for Reactor Forge with bullet capture, automatic safe release, and bounded vulnerability windows.
-- Rift King for Void Circuit with paired portals, gravity shifts, and arena segmentation.
-- Three phases, intros, region-specific HUDs, mastery statistics, permanent shard rewards, and first-victory bonuses.
+### Bullet Overdrive
 
-## Phase 2 — Branching Roguelite Route
+- Added one Overdrive identity for each of the five bullet Cores.
+- Charge is earned from ricochets, perfect catches, dashes, kills, and combo play.
+- Activation uses `E` on keyboard or a dedicated mobile button.
+- Core-specific effects modify speed, damage, ricochet scaling, shock chains, heavy impacts, or recall damage.
+- Added a dedicated HUD meter, activation banner, timer, VFX, and persistent activation statistics.
 
-### Route structure
+### Relics
 
-- Added a dedicated **Corebreak Protocol** entry from the main menu.
-- Added a deterministic three-act route across Neon, Reactor Forge, and Void Circuit.
-- Each act contains three branching choice rows followed by its region guardian.
-- The active row exposes multiple choices while completed rows remain visible.
+- Added exactly **25 gameplay-changing Relics** across Common, Rare, Epic, and Legendary tiers.
+- Relics modify targeting, distance damage, ricochet scaling, recall pull and speed, area explosions, shock range, healing, enemy projectiles, Broken Energy, first-shot damage, Overdrive duration, and chain extension.
+- Relics drop from Elite, Challenge, and Guardian nodes.
+- Added a random Relic purchase inside Protocol shops.
+- Duplicate Relics are prevented within the same run.
 
-### Node types
+### Advanced Synergies
 
-- Combat.
-- Elite.
-- Forge.
-- Core Shop.
-- Recovery.
-- Mystery Event.
-- Challenge Room.
-- Boss.
+- Added six Core/Relic combinations:
+  - Maze Master;
+  - Storm Ring;
+  - Return Hunter;
+  - Siege Core;
+  - Critical Collapse;
+  - Perfect Engine.
+- Synergies activate only when the correct Core and every required Relic are present.
+- Newly completed Synergies display an Arabic discovery banner.
 
-### In-run economy
+### Build Codex
 
-- Added temporary **Broken Energy** currency.
-- Broken Energy is earned from combat, Elite, Challenge, and Boss nodes.
-- It is spent inside Forge, Shop, and selected Mystery Event decisions.
-- The currency exists only for the active run and does not alter permanent Core Shards.
-
-### Combat and rewards
-
-- Combat nodes use existing regional arenas and enemy compositions.
-- Elite nodes enhance every spawned enemy and increase the reward.
-- Challenge nodes use deterministic no-damage, limited-shot, or ricochet objectives.
-- Cleared combat nodes open a temporary upgrade choice before returning to the route.
-- Region guardians act as chapter gates.
-- Completing the final guardian settles the protocol as a full victory.
-
-### Services and events
-
-- Forge purchases add bounce, damage, or recall upgrades.
-- Shop purchases provide healing, shields, or random upgrades.
-- Recovery nodes offer healing, shielding, or energy salvage.
-- Mystery Events provide safe and risky economy decisions.
-- All purchases prevent negative Broken Energy balances.
+- Added a persistent Arabic Build Codex.
+- Records discovered Relics, pick counts, discovered Synergies, and Overdrive activations.
+- Locked Relics remain hidden until discovered.
+- Added current-run Build inspection with Relics and active Synergies.
+- Data is normalized and repaired when malformed.
 
 ### Offline integration
 
-- Service-worker cache advanced to **v0.10.0**.
-- Route data and runtime modules are available in installed/offline mode.
+- Service-worker cache advanced to **v0.11.0**.
+- Advanced build data and runtime modules are cached for installed/offline play.
 
 ## Verification
 
-- JavaScript syntax checks: **passed** for all existing modules, route modules, and service worker.
-- Automated tests: **79/79 passed** on the initial Pull Request #15 run.
+- JavaScript syntax checks: **passed** for all modules and service worker.
+- Automated tests: **85/85 passed** on the initial Pull Request #16 run.
 - New tests cover:
-  - deterministic three-act generation;
-  - one boss row per act;
-  - active-row exposure;
-  - node completion and route progression;
-  - Broken Energy rewards and safe spending;
-  - act advancement after guardians;
-  - full protocol completion;
-  - deterministic challenge selection.
+  - 25 unique Relics;
+  - five distinct Overdrive configurations;
+  - deterministic non-duplicate Relic choices;
+  - exclusion of owned Relics;
+  - complete Core/Relic Synergy requirements;
+  - Build Codex discovery and accumulated pick counts;
+  - malformed Codex repair.
 
 ## Manual acceptance gate
 
-1. Route nodes remain readable on desktop and phone landscape.
-2. Only nodes in the active row can be selected.
-3. Combat, Elite, and Challenge encounters return to the reward screen after clearing.
-4. Broken Energy rewards and purchases display the correct balance.
-5. Forge and Shop effects apply once and do not duplicate.
-6. Recovery and Mystery nodes always return to the route.
-7. Guardian victories advance to the next region instead of ending the run early.
-8. Final Rift King victory ends the protocol and shows the normal victory result.
-9. Defeat exits the protocol cleanly without preserving temporary currency.
-10. Existing standard Region Missions, Story Route, Daily Challenge, and mobile controls remain intact.
+1. Overdrive charge and activation remain understandable at desktop and mobile sizes.
+2. Every Core-specific Overdrive preserves the one-bullet rule.
+3. Relic drops occur once after eligible Protocol nodes.
+4. Area damage cannot recursively create unbounded kill loops.
+5. Recall pull and speed do not make the bullet unrecoverable.
+6. Shop Relic purchase deducts Broken Energy exactly once.
+7. Build Codex cards remain inside the screen.
+8. Current-run Build inspection returns to the correct state.
+9. Existing route, guardians, region enemies, progression, and mobile controls remain intact.
 
 ## Remaining Corebreak Protocol phases
-
-### Phase 3 — Advanced Builds
-
-- Bullet Overdrive for every Core.
-- Approximately 25 gameplay-changing Relics.
-- Additional Synergies.
-- Relic discovery and Build Codex.
 
 ### Phase 4 — Game Modes
 
@@ -117,10 +96,10 @@ The active target is **One Bullet Arena: Corebreak Protocol v1.0**.
 - Interactive tutorial.
 - Gamepad and remapping.
 - Audio and visual production pass.
-- Unified save export including Enemy Codex and boss mastery.
+- Unified save export including Enemy Codex, guardian mastery, Build Codex, and mode records.
 - Browser gameplay tests, screenshot regression, and performance benchmark.
 - Final PWA/mobile polish and v1.0.0 release.
 
 ## Next execution step
 
-**Corebreak Phase 3 — Bullet Overdrive, Relics, Synergies, and Build Codex**
+**Corebreak Phase 4 — Endless Mode, Boss Rush, Core Contracts, and Mode Records**

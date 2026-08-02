@@ -1,31 +1,37 @@
-# One Bullet Arena
+# One Bullet Arena — حلبة الطلقة الواحدة
 
-A fast 2D top-down browser action game built around a single rule: **you only have one bullet, and every shot must be recovered before you can fire again.**
+A fast Arabic 2D browser action game built around one rule: **you have one bullet, and every shot must be recovered before you can fire again.**
 
-## Current playable build
+## Current build — v0.2.0
 
-The first vertical slice includes:
-
-- Keyboard movement and mouse aiming.
-- One recoverable ricochet bullet.
-- Dash movement with invulnerability frames.
-- Three enemy archetypes: Scout, Brute, and Sniper.
-- Five escalating waves.
-- Health, score, combo, pause, victory, and game-over states.
-- Local high-score and best-wave persistence.
-- Responsive browser presentation.
-- Automated verification and GitHub Pages deployment workflows.
+- Full Arabic RTL interface using the Changa display font.
+- Five escalating waves across five distinct arena layouts.
+- Solid and breakable obstacles, damage hazards, and explosive arena nodes.
+- Eight stackable between-wave upgrades without breaking the one-bullet rule.
+- Five core enemy archetypes plus mini and elite variants.
+- Three-phase **Core Warden** boss encounter.
+- Procedural music and sound effects with persistent music, SFX, and mute settings.
+- Hit-stop, slow motion, telegraphs, knockback, floating combat text, particles, and screen shake.
+- Desktop controls and mobile landscape touch controls.
+- Local high-score, best-wave, and audio-setting persistence.
+- Automated syntax checks and eight deterministic tests.
 
 ## Controls
 
-| Action | Input |
-| --- | --- |
-| Move | `WASD` or arrow keys |
-| Aim | Mouse |
-| Fire | Left click |
-| Dash | `Space` or `Shift` |
-| Pause | `P` |
-| Restart | `R`, `Enter`, or click |
+| Action | Desktop | Mobile |
+| --- | --- | --- |
+| Move | `WASD` or arrow keys | Drag the left virtual stick |
+| Aim | Mouse | Tap the target position |
+| Fire | Left click | Tap on the right side |
+| Dash | `Space` or `Shift` | Tap the dash circle |
+| Magnetic recall | `Q` after unlocking it | Use desktop keyboard for this build |
+| Pause | `P` or `Escape` | Browser back is not intercepted |
+| Select an upgrade | Click or `1`, `2`, `3` | Tap an upgrade card |
+| Mute | `M` or Settings | Settings |
+
+## Boss rule
+
+The Core Warden's first shield phase only takes bullet damage **after the bullet has ricocheted at least once**. Later phases introduce radial attacks, charge attacks, and faster projectile patterns.
 
 ## Run locally
 
@@ -35,7 +41,7 @@ The game has no runtime dependencies and can be served by any static HTTP server
 npx serve .
 ```
 
-Verification uses Node's built-in syntax checker and test runner:
+Run the full verification suite:
 
 ```bash
 npm run verify
@@ -43,4 +49,4 @@ npm run verify
 
 ## Project status
 
-See [`STATUS.md`](./STATUS.md) for the single source of truth on implementation progress and next work.
+[`STATUS.md`](./STATUS.md) is the single source of truth for completion, verification, known limitations, and the next milestone.

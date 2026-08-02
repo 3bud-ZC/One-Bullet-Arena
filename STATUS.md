@@ -4,70 +4,82 @@ Last updated: 2026-08-02
 
 ## Completion
 
-- Overall project completion: **18%**
+- Overall project completion: **38%**
 - Completed milestone: **Milestone 01 — First Playable Vertical Slice**
-- Milestone 01 completion: **100%**
 - Current milestone: **Milestone 02 — Combat Feel and Arena Progression**
-- State: **Milestone 01 accepted by the project owner after live GitHub Pages gameplay review; Milestone 02 is ready to begin**
+- Milestone 02 implementation: **100%**
+- State: **Implementation complete on Pull Request #2; automated verification passed; merge is permitted for GitHub Pages deployment; live gameplay review and owner acceptance are required before closing the milestone**
 
-## Implemented
+## Milestone 02 implemented
 
-- Repository foundation and project documentation.
-- Dependency-free HTML5 Canvas game runtime.
-- Responsive 16:9 game presentation.
-- Main menu, gameplay, pause, defeat, and victory states.
-- Keyboard movement and mouse aiming.
-- Single recoverable bullet with wall ricochets and limited energy.
-- Dash mechanic with cooldown and brief invulnerability.
-- Scout, Brute, and Sniper enemy archetypes.
-- Enemy contact damage and sniper projectiles.
-- Five escalating waves.
-- Health, score, combo, wave, and bullet-state HUD.
-- Particle bursts, bullet trail, glow, screen shake, and damage flash.
-- Local high score and best wave persistence.
-- Node-based syntax and deterministic math tests.
-- GitHub Actions verification workflow.
-- GitHub Pages deployment workflow for `main`.
-- Live GitHub Pages deployment verified by the project owner.
+- Full Arabic RTL game interface.
+- Arabic Changa display font with system-font fallback.
+- Arabic main menu, tutorial, pause, settings, upgrade, boss-intro, defeat, and victory screens.
+- Five escalating waves and five distinct arena layouts.
+- Solid obstacles, destructible obstacles, damage hazards, and explosive nodes.
+- Eight stackable bullet upgrades:
+  - Heavy Core.
+  - Hot Ricochet.
+  - Magnetic Recall.
+  - Shock Impact.
+  - Extended Charge.
+  - Quick Recovery.
+  - Last Heart.
+  - Perfect Catch.
+- Core Warden boss with three phases.
+- Boss first-phase shield requires a ricocheted shot.
+- Scout, Brute, Sniper, Charger, and Splitter enemy archetypes.
+- Mini enemies and elite enemy variants.
+- Procedural Web Audio music and sound effects.
+- Persistent music volume, SFX volume, and mute settings.
+- Hit-stop, slow motion, knockback, attack telegraphs, floating combat text, boss health bar, particles, and enhanced screen shake.
+- Desktop keyboard/mouse controls.
+- Mobile landscape touch movement, firing, and dash controls.
+- Run statistics for score, time, shots, hits, ricochets, and kills.
+- Updated Arabic public page shell and responsive presentation.
+- Updated project documentation and verification scripts.
 
 ## Verification
 
-- Local JavaScript syntax checks: **passed**.
-- Local unit tests: **4/4 passed**.
-- GitHub Actions Verify workflow: **passed** on Pull Request #1.
-- Pull Request #1: **squash-merged to main**.
-- GitHub Pages source: **GitHub Actions enabled**.
-- Public deployment: **opened successfully**.
-- Manual gameplay review: **passed by the project owner on 2026-08-02**.
-- Verified during manual review: live arena load, player movement, firing, bullet recovery, enemy waves, HUD, and playable combat loop.
+- JavaScript syntax checks: **passed** for main, game, math, audio, and content modules.
+- Automated tests: **8/8 passed**.
+- GitHub Actions Verify workflow: **passed** on Pull Request #2 implementation and documentation commits.
+- Pull Request: **#2 open and mergeable**.
+- GitHub Pages deployment: pending merge to `main`.
+- Live full-run gameplay review: pending.
 
-## Known limitations
-
-- Desktop controls only; touch controls are not implemented.
-- No audio, settings screen, accessibility remapping, bosses, upgrades, or level selection yet.
-- Gameplay uses procedural vector visuals; production art is not integrated.
-- Balance values are first-pass defaults and require continued playtesting.
-
-## Current milestone
-
-**Milestone 02 — Combat Feel and Arena Progression**
-
-Target scope:
-
-- Add a dedicated boss encounter.
-- Add bullet modifiers and between-wave upgrade choices.
-- Add multiple arena layouts, obstacles, and hazards.
-- Add audio, music, and volume controls.
-- Improve enemy telegraphs, hit reactions, and collision feedback.
-- Improve HUD clarity and wave transition presentation.
-- Add automated browser smoke testing.
-
-## Milestone 02 acceptance gate
+## Acceptance gate
 
 Do not close Milestone 02 until:
 
-1. All automated verification passes.
-2. The full five-wave run and boss encounter can be completed without blocking defects.
-3. Each upgrade has a visible and measurable gameplay effect.
-4. Audio and settings persist correctly.
-5. The project owner manually approves combat feel, progression, and boss balance on the live GitHub Pages build.
+1. The latest Pull Request #2 commit passes GitHub Actions.
+2. The Arabic menu, tutorial, settings, and upgrade screens render correctly.
+3. A full five-wave run reaches the Core Warden.
+4. The Core Warden can be defeated through all three phases.
+5. Each upgrade has a visible and measurable gameplay effect.
+6. Music, SFX, mute, and saved settings work after a page reload.
+7. Desktop controls pass manual review.
+8. Mobile landscape controls receive at least one manual device test.
+9. The project owner approves combat feel, progression, Arabic presentation, and boss balance on the live GitHub Pages build.
+
+## Known limitations
+
+- The Changa font is loaded from Google Fonts; system Arabic fonts are used if the network request fails.
+- Magnetic Recall currently uses the keyboard `Q` shortcut and does not yet have a dedicated mobile button.
+- Automated tests validate syntax, math, content, arena cloning, and upgrade selection; a real-browser automated gameplay smoke test is still pending.
+- Procedural vector visuals are intentional for this phase; production illustration and character art are not integrated.
+- Combat and boss values are first-pass balance values and require live playtesting.
+
+## Next milestone after acceptance
+
+**Milestone 03 — Content Expansion and Replayability**
+
+Candidate scope:
+
+- Dedicated mobile Magnetic Recall button.
+- Automated browser smoke testing.
+- Additional enemies, bosses, arena themes, and elite modifiers.
+- Persistent unlocks, challenges, achievements, and run history.
+- Gamepad support and control remapping.
+- PWA installation and offline caching.
+- Final art, release presentation, and balancing passes.

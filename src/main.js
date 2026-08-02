@@ -13,6 +13,7 @@ import { installAccuracySemanticsFix } from './accuracy-semantics-fix.js';
 import { installLiveQaRegions } from './live-qa-regions.js';
 import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
 import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
+import { installRegionEnemies } from './region-enemies.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -28,6 +29,7 @@ installAccuracySemanticsFix(OneBulletArena);
 installLiveQaRegions(OneBulletArena);
 installRegionRuntimeFixes(OneBulletArena);
 installMobileBrowser(OneBulletArena);
+installRegionEnemies(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

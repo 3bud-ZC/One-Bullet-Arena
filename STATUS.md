@@ -10,7 +10,7 @@ Last updated: 2026-08-02
 - Milestone 04A — Regions and Run Structure: **100% implemented**
 - Milestone 04A.1 — Mobile Browser Optimization: **100% implemented**
 - Milestone 04B — Region-Specific Enemies and Enemy Codex: **100% implemented**
-- Current state: **Pull Request #13 open; initial GitHub Actions verification passed; final verification and live combat review are required before acceptance**
+- Current state: **Pull Request #13 squash-merged to main after successful final verification; GitHub Pages deployment triggered; live enemy balance and Codex review are required before acceptance**
 - Browser build: **v0.8.0**
 
 ## Milestone 04B implemented
@@ -102,10 +102,11 @@ Last updated: 2026-08-02
   - kill tracking without duplicate encounters;
   - Codex completion values;
   - malformed Codex repair and unsupported-entry removal.
-- Pull Request #13: **open**.
-- Initial GitHub Actions Verify: **passed**.
-- Final verification on this status commit: pending.
-- GitHub Pages deployment: pending merge.
+- Pull Request #13: **squash-merged to main**.
+- Merge commit: `e2830074cef836bf06855e88d142a94ab041fa76`.
+- GitHub Actions Verify: **passed on the final Pull Request #13 status commit**.
+- GitHub Pages deployment: **triggered by the merge and this status update**.
+- Live desktop, mobile, regional combat balance, Codex layout, and offline-cache review: pending.
 
 ## Acceptance gate
 

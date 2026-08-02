@@ -138,6 +138,15 @@ footer {
     max-height: 100%;
   }
 
+  .mobile-runtime[data-game-state="playing"] .game-frame,
+  .mobile-runtime[data-game-state="bossIntro"] .game-frame,
+  .mobile-runtime[data-game-state="upgrade"] .game-frame,
+  .mobile-runtime[data-game-state="paused"] .game-frame,
+  .mobile-runtime[data-game-state="buildInspect"] .game-frame,
+  .mobile-runtime[data-game-state="mobileSettings"] .game-frame {
+    height: 100%;
+  }
+
   .stage-status {
     font-size: 0.78rem;
   }
@@ -154,6 +163,13 @@ footer {
 
 .game-stage:fullscreen .game-frame {
   height: calc(100dvh - var(--toolbar-height));
+}
+
+.mobile-runtime[data-game-state="playing"] .game-stage:fullscreen .game-frame,
+.mobile-runtime[data-game-state="bossIntro"] .game-stage:fullscreen .game-frame,
+.mobile-runtime[data-game-state="upgrade"] .game-stage:fullscreen .game-frame,
+.mobile-runtime[data-game-state="paused"] .game-stage:fullscreen .game-frame {
+  height: 100%;
 }
 
 .game-stage:fullscreen canvas {

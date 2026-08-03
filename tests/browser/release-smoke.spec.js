@@ -137,10 +137,13 @@ test('portrait phone keeps a clean contained game surface without orientation ch
   await page.screenshot({ path: testInfo.outputPath('portrait-clean-shell.png'), fullPage: true });
 });
 
-test('PWA shell and v1.3.0 map overhaul assets are reachable', async ({ request }) => {
+test('PWA shell and v1.3.1 mobile UI assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const directStyles = await request.get('/direct-game.css');
+  const mobileUiStyles = await request.get('/mobile-ui-stabilization.css');
+  const mobileUiLoader = await request.get('/src/mobile-ui-style-loader.js');
+  const mobileUiRuntime = await request.get('/src/mobile-ui-stabilization.js');
   const expansionData = await request.get('/src/v12-expansion-data.js');
   const expansionRuntime = await request.get('/src/v12-expansion.js');
   const progressiveHazards = await request.get('/src/progressive-map-hazards.js');
@@ -149,6 +152,9 @@ test('PWA shell and v1.3.0 map overhaul assets are reachable', async ({ request 
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
   expect(directStyles.ok()).toBeTruthy();
+  expect(mobileUiStyles.ok()).toBeTruthy();
+  expect(mobileUiLoader.ok()).toBeTruthy();
+  expect(mobileUiRuntime.ok()).toBeTruthy();
   expect(expansionData.ok()).toBeTruthy();
   expect(expansionRuntime.ok()).toBeTruthy();
   expect(progressiveHazards.ok()).toBeTruthy();
@@ -158,8 +164,11 @@ test('PWA shell and v1.3.0 map overhaul assets are reachable', async ({ request 
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.3.0');
+  expect(workerText).toContain('one-bullet-arena-v1.3.1');
   expect(workerText).toContain('direct-game.css');
+  expect(workerText).toContain('mobile-ui-stabilization.css');
+  expect(workerText).toContain('mobile-ui-style-loader.js');
+  expect(workerText).toContain('mobile-ui-stabilization.js');
   expect(workerText).toContain('progressive-map-hazards.js');
   expect(workerText).toContain('map-overhaul-data.js');
   expect(workerText).toContain('map-overhaul.js');

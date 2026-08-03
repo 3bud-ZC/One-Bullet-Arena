@@ -26,6 +26,7 @@ import { attachV12ExpansionControls, installV12Expansion } from './v12-expansion
 import { installV12UiFixes } from './v12-ui-fixes.js';
 import { installProgressiveMapHazards } from './progressive-map-hazards.js';
 import { installMapOverhaul } from './map-overhaul.js';
+import { installMapOverhaulSafety } from './map-overhaul-safety.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -54,6 +55,7 @@ installV12Expansion(OneBulletArena);
 installV12UiFixes(OneBulletArena);
 installProgressiveMapHazards(OneBulletArena);
 installMapOverhaul(OneBulletArena);
+installMapOverhaulSafety(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');

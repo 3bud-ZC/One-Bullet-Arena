@@ -6,145 +6,122 @@ Last updated: 2026-08-03
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Current release: **v1.3.0 — Regional Map Overhaul**
+- Release candidate: **v1.3.1 — Mobile & Browser UI Stabilization**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
-- v1.2.0 Combat & Mobile Expansion: **merged through Pull Request #20**
-- v1.2.1 Progressive Hazard Curve: **merged through Pull Request #21**
-- v1.2.2 Clean Mobile Shell: **merged through Pull Request #22**
-- v1.3.0 Map Overhaul: **squash-merged through Pull Request #23**
-- v1.3.0 merge commit: `668ce6b004ea610fc2ae659153a3166061204ff0`
-- GitHub Pages deployment: **triggered by the Pull Request #23 merge and this status update**
-- Current state: **implementation, deterministic verification, Chromium browser verification, viewport checks, and wave-one screenshot review complete; deployed-build, late-wave balance, and physical-device acceptance remain**
+- Combat & Mobile Expansion: **merged through Pull Requests #20–#22**
+- Regional Map Overhaul: **merged through Pull Request #23**
+- v1.3.1 Mobile & Browser UI Stabilization: **implemented in Pull Request #24; final merge pending release gates**
+- Current state: **implementation, deterministic tests, Chromium browser tests, viewport checks, and screenshot review complete; deployed-build and physical-device acceptance remain**
 
-## v1.3.0 delivered
+## v1.3.1 delivered
 
-### Twenty-four arena identities
+### Compact mobile HUD
 
-Each region now owns eight deterministic arena layouts instead of reusing a small group of static maps.
+- Replaced the oversized inherited mobile HUD with three compact top panels.
+- Bullet and dash status remain on the upper left.
+- Core and Overdrive charge remain in the upper center.
+- Region, difficulty, health, score, and wave progress remain on the upper right.
+- Wave progress is forced to the unambiguous `current / total` order, such as `1 / 8`.
+- Combo and challenge feedback use short temporary strips instead of large permanent panels.
+- Opaque final redraws prevent ghost or duplicate HUD panels from older UI layers.
 
-- **Neon District:** Arrival Grid, Signal Crossing, Ricochet Rail, Prism Gate, Dual Circuit, Siege Station, Sector Lockdown, and Core Plaza.
-- **Reactor Forge:** Maintenance Deck, Coolant Channel, Piston Gallery, Smelting Room, Ore Crane, Pressure Grid, Reactor Lock, and Upper Foundry.
-- **Void Circuit:** Rift Edge, Silent Orbit, Phase Corridor, Broken Constellation, Gravity Ring, Fracture Lanes, Singularity Lock, and Void Heart.
+### Touch-control rebuild
 
-Story mode resets the local arena curve when entering each region, so every region introduces its map language before reaching its final lockdown layout.
+- Added a final capture-phase touch-input layer so one touch activates only one intended action.
+- Rebuilt the compact action cluster for:
+  - Dash;
+  - bullet recall;
+  - Kinetic Pulse;
+  - Phase Shift;
+  - Overdrive;
+  - pause;
+  - Build Inspector.
+- Reduced the movement-stick footprint and kept its floating origin inside safe bounds.
+- Right-handed and left-handed layouts remain mirrored and supported.
+- Removed old technique-circle artifacts at their drawing source instead of masking them with black overlays.
+- Kept aim-on-release, multi-touch movement and aiming, haptics, control scale, and opacity settings connected.
 
-### Four-stage arena progression
+### Responsive result screen
 
-- **Waves 1–2 — Introduction:** open geometry, readable ricochet lanes, and at most one slow moving element.
-- **Waves 3–4 — Route control:** moving barriers, boost lanes, and the first interactive fields.
-- **Waves 5–6 — Pressure:** orbiting structures, shutters, multiple fields, and route changes during combat.
-- **Waves 7–8 — Lockdown:** multiple synchronized barriers, control relays, and maximum regional complexity before the Guardian.
+- Rebuilt victory and defeat screens into a contained 1280×720 layout.
+- All eight performance statistics remain visible.
+- Rank, active core, rewards, current balance, and challenge result remain visible.
+- Replay, Core Hub, and Main Menu actions remain fully inside the canvas on short browser and phone-landscape viewports.
+- Terminal screens receive a final opaque redraw so map introductions, combat overlays, or technique notices cannot appear above the result UI.
 
-The environmental hazard curve remains independent and progressive:
+### Browser and safe-area handling
 
-- wave 1 has no active environmental hazard;
-- wave 2 is preview-only;
-- wave 3 begins at low intensity;
-- waves 4–8 increase progressively.
-
-### Moving arena geometry
-
-- Added collision-aware walls that move horizontally, vertically, in orbit, or as side shutters.
-- Player, enemies, and the single bullet use the existing collision system against the moving structures.
-- Lockdown maps change available paths during combat rather than using decorative motion only.
-- Guardian encounters use the final regional layout with reduced structure movement speed for readability.
-- Destroying supported breakable cover temporarily opens a route and displays direct combat feedback.
-
-### Interactive counterplay
-
-- Added **boost pads** that accelerate the free bullet while preserving its direction.
-- Added **control relays** that can be struck by the bullet to:
-  - suspend the active regional hazard temporarily;
-  - move barriers farther away and open paths;
-  - award score and visual feedback.
-- Clearing every relay in an arena grants a full-control bonus.
-- Relay positions are reserved away from desktop HUD panels and mobile touch-control zones.
-
-### Region-specific fields
-
-- **Neon signal fields:** gradually accelerate and steer the bullet.
-- **Forge coolant fields:** reduce enemy movement while they are inside the zone.
-- **Forge steam fields:** cyclically push the player, enemies, and free bullet.
-- **Void slow fields:** reduce bullet velocity.
-- **Void fast fields:** accelerate the bullet and change route planning.
-
-### Visual identity and performance
-
-- Neon receives animated circuit traces and scanning energy marks.
-- Reactor Forge receives industrial plates, rivets, heat sparks, and steam presentation.
-- Void Circuit receives star particles, orbital rings, and phase-field effects.
-- Map ambience scales down automatically in Balanced and Performance modes.
-- Touch devices use reduced decorative density while retaining all gameplay objects and telegraphs.
+- Added final `visualViewport` width and height synchronization.
+- Added short-browser and touch-device compact-mode detection.
+- Added final `100dvh`, iOS, notch, rounded-corner, and gesture-area containment rules.
+- The public route remains fixed, scroll-free, and game-only.
+- Canvas containment remains proportional without horizontal or vertical overflow.
 
 ### Offline integration
 
-- Package version advanced to **1.3.0**.
-- Visible in-game release label advanced to **v1.3.0**.
-- Service-worker cache advanced to `one-bullet-arena-v1.3.0`.
-- Map data, runtime, and relay-safety modules are included in the offline application shell.
+- Package version advanced to **1.3.1**.
+- Service-worker cache advanced to `one-bullet-arena-v1.3.1`.
+- Mobile UI stylesheet, loader, runtime, and visual cleanup modules are included in the offline application shell.
 
 ## Gameplay retained
 
-- Regional missions contain **8 waves**.
-- Story runs contain **24 waves**, with eight waves per region.
-- Daily runs remain compact.
-- Kinetic Pulse, Phase Shift, Overdrive, Relics, Synergies, advanced enemies, Evolutions, three Guardians, Endless, Boss Rush, Core Contracts, Gamepad, unified save, PWA, and clean mobile shell remain connected.
+- Twenty-four regional arena identities remain active.
+- Regional missions remain eight waves and story runs remain twenty-four waves.
+- Progressive hazards, moving geometry, relays, fields, combat techniques, Overdrive, Relics, Synergies, regional enemies, Evolutions, three Guardians, Endless, Boss Rush, Core Contracts, Gamepad, unified save, PWA, and offline support remain connected.
 
 ## Verification
 
 ### Deterministic verification
 
-- JavaScript syntax checks: **passed** for every runtime module, Playwright configuration, and service worker.
-- Automated deterministic tests: **115/115 passed**.
+- JavaScript syntax checks: **passed** for every runtime module, service worker, and Playwright configuration.
+- Automated deterministic tests: **120/120 passed**.
 - Failures: **0**.
-- Final Verify workflow on the Pull Request #23 status commit: **passed**.
-- Coverage includes:
-  - eight unique maps per region;
-  - deterministic map generation;
-  - increasing map complexity;
-  - readable early layouts and interactive late layouts;
-  - distinct regional field types;
-  - bounded moving-wall trajectories;
-  - safe relay positions outside HUD and touch-control zones;
-  - v1.2 environmental-hazard progression and all previous systems.
+- New coverage verifies:
+  - current-first mobile wave progress;
+  - all touch controls remain inside 1280×720;
+  - left-handed mirroring;
+  - compact result containment;
+  - short and touch viewport classification.
 
 ### Browser verification
 
-- Playwright Browser Smoke: **14/14 passed** on the final Pull Request #23 status commit.
-- Desktop Chromium and mobile-landscape Chromium passed.
+- Playwright Browser Smoke: **18/18 passed** on Desktop Chromium and Mobile Landscape Chromium.
 - Coverage confirms:
-  - clean full-viewport public route;
-  - real gameplay entry into the overhauled arena;
-  - combat techniques remain operational;
-  - zero document overflow;
-  - five mobile landscape viewport sizes remain contained;
-  - portrait route remains clean and contained;
-  - v1.3.0 PWA cache and map modules are reachable.
+  - no document overflow;
+  - full canvas containment;
+  - clean direct public route;
+  - five phone-landscape viewport sizes;
+  - clean portrait containment;
+  - real gameplay entry;
+  - compact mobile HUD and controls;
+  - compact result screen and working result actions;
+  - reachable v1.3.1 PWA and mobile UI assets.
 
 ### Visual QA completed
 
-- Desktop and mobile-landscape screenshots of the first Neon arena were reviewed.
+- Reviewed Desktop and Mobile Landscape gameplay screenshots.
+- Reviewed Desktop and Mobile Landscape result screenshots.
 - Confirmed:
-  - boost pads remain visible without masking enemies;
-  - ambient effects do not overpower the HUD;
-  - mobile movement and action controls remain fully contained;
-  - the direct game-only shell remains clean;
-  - no runtime error appears during real gameplay entry.
+  - wave order is `1 / 8`, not `8 / 1`;
+  - no duplicate top-right wave panel;
+  - no black circles behind technique controls;
+  - touch controls remain inside the phone viewport;
+  - result buttons are fully visible;
+  - no map title or combat overlay appears above terminal screens.
 
 ## Remaining live acceptance checks
 
-These require the deployed build, extended play, or physical hardware and are not marked complete:
+These require the deployed build or physical hardware and are not marked complete:
 
-1. Complete an eight-wave mission in each region and review every arena identity.
-2. Review moving-wall speed and route availability in waves 5–8.
-3. Confirm relay positions and interactions on a physical small and large phone.
-4. Review Forge steam/coolant balance and Void phase-field balance.
-5. Test the final lockdown arena during each Guardian fight.
-6. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
-7. Test the installed PWA after an offline restart.
-8. Review sustained performance during late-wave enemy density and maximum map complexity.
+1. Review the deployed GitHub Pages build after deployment completes.
+2. Test the exact physical phone and browser used for the original screenshots.
+3. Test Chrome Android, Samsung Internet, and Safari iOS.
+4. Verify multi-touch movement, aiming, and every action button on physical hardware.
+5. Test browser toolbar expansion and collapse during gameplay.
+6. Test installed PWA launch and offline restart.
+7. Continue late-wave performance and balance review.
 
 ## Live refresh note
 
-The service-worker cache advances from v1.2.2 to v1.3.0. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the old map set remains visible.
+The service-worker cache advances from v1.3.0 to v1.3.1. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the old HUD or result screen remains visible.

@@ -1,3 +1,4 @@
+import './mobile-ui-style-loader.js';
 import { OneBulletArena } from './game.js';
 import { installPhysicalKeyboardBridge } from './input.js';
 import { attachPresentationControls, installUiPolish } from './ui-polish.js';

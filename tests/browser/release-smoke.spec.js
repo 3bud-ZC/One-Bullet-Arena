@@ -83,23 +83,23 @@ test('core hub uses selector plus readable detail panel', async ({ page }, testI
   expect(errors).toEqual([]);
 });
 
-test('keyboard start enters expanded gameplay and techniques run without errors', async ({ page }, testInfo) => {
+test('keyboard start enters the overhauled arena and techniques run without errors', async ({ page }, testInfo) => {
   const errors = await collectErrors(page);
   await page.goto('/');
   await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1900);
+  await page.waitForTimeout(2200);
   await page.keyboard.press('KeyR');
   await page.waitForTimeout(250);
   await page.keyboard.press('KeyC');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(650);
   const { box, viewport } = await expectCanvasContained(page);
   if (testInfo.project.name === 'mobile-landscape') {
     expect(viewport.height - (box.y + box.height)).toBeLessThanOrEqual(2);
   }
   await expectNoExternalChrome(page);
   await expectViewportFit(page);
-  await page.screenshot({ path: testInfo.outputPath('expanded-gameplay.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('map-overhaul-gameplay.png'), fullPage: true });
   expect(errors).toEqual([]);
 });
 
@@ -137,25 +137,30 @@ test('portrait phone keeps a clean contained game surface without orientation ch
   await page.screenshot({ path: testInfo.outputPath('portrait-clean-shell.png'), fullPage: true });
 });
 
-test('PWA shell and v1.2.2 clean-shell assets are reachable', async ({ request }) => {
+test('PWA shell and v1.3.0 map overhaul assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const directStyles = await request.get('/direct-game.css');
   const expansionData = await request.get('/src/v12-expansion-data.js');
   const expansionRuntime = await request.get('/src/v12-expansion.js');
   const progressiveHazards = await request.get('/src/progressive-map-hazards.js');
+  const mapData = await request.get('/src/map-overhaul-data.js');
+  const mapRuntime = await request.get('/src/map-overhaul.js');
   expect(manifest.ok()).toBeTruthy();
   expect(worker.ok()).toBeTruthy();
   expect(directStyles.ok()).toBeTruthy();
   expect(expansionData.ok()).toBeTruthy();
   expect(expansionRuntime.ok()).toBeTruthy();
   expect(progressiveHazards.ok()).toBeTruthy();
+  expect(mapData.ok()).toBeTruthy();
+  expect(mapRuntime.ok()).toBeTruthy();
   const data = await manifest.json();
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.2.2');
+  expect(workerText).toContain('one-bullet-arena-v1.3.0');
   expect(workerText).toContain('direct-game.css');
-  expect(workerText).toContain('v12-expansion.js');
   expect(workerText).toContain('progressive-map-hazards.js');
+  expect(workerText).toContain('map-overhaul-data.js');
+  expect(workerText).toContain('map-overhaul.js');
 });

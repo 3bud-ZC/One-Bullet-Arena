@@ -6,12 +6,14 @@ Last updated: 2026-08-03
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Release candidate: **v1.3.1 — Mobile & Browser UI Stabilization**
+- Current release: **v1.3.1 — Mobile & Browser UI Stabilization**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
 - Combat & Mobile Expansion: **merged through Pull Requests #20–#22**
 - Regional Map Overhaul: **merged through Pull Request #23**
-- v1.3.1 Mobile & Browser UI Stabilization: **implemented in Pull Request #24; final merge pending release gates**
+- v1.3.1 Mobile & Browser UI Stabilization: **squash-merged through Pull Request #24**
+- v1.3.1 merge commit: `1d294ee34f6cbb4ed39156517e37ffa3ba257a5d`
+- GitHub Pages deployment: **triggered by the Pull Request #24 merge and this status update**
 - Current state: **implementation, deterministic tests, Chromium browser tests, viewport checks, and screenshot review complete; deployed-build and physical-device acceptance remain**
 
 ## v1.3.1 delivered
@@ -77,6 +79,7 @@ Last updated: 2026-08-03
 - JavaScript syntax checks: **passed** for every runtime module, service worker, and Playwright configuration.
 - Automated deterministic tests: **120/120 passed**.
 - Failures: **0**.
+- Final Verify workflow on the Pull Request #24 status commit: **passed**.
 - New coverage verifies:
   - current-first mobile wave progress;
   - all touch controls remain inside 1280×720;
@@ -87,6 +90,7 @@ Last updated: 2026-08-03
 ### Browser verification
 
 - Playwright Browser Smoke: **18/18 passed** on Desktop Chromium and Mobile Landscape Chromium.
+- Final Browser Smoke workflow on the Pull Request #24 status commit: **passed**.
 - Coverage confirms:
   - no document overflow;
   - full canvas containment;

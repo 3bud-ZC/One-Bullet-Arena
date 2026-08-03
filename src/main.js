@@ -29,6 +29,7 @@ import { installProgressiveMapHazards } from './progressive-map-hazards.js';
 import { installMapOverhaul } from './map-overhaul.js';
 import { installMapOverhaulSafety } from './map-overhaul-safety.js';
 import { attachMobileUiStabilization, installMobileUiStabilization } from './mobile-ui-stabilization.js';
+import { installMobileUiVisualFixes } from './mobile-ui-visual-fixes.js';
 
 installPhysicalKeyboardBridge();
 installUiPolish(OneBulletArena);
@@ -59,6 +60,7 @@ installProgressiveMapHazards(OneBulletArena);
 installMapOverhaul(OneBulletArena);
 installMapOverhaulSafety(OneBulletArena);
 installMobileUiStabilization(OneBulletArena);
+installMobileUiVisualFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');

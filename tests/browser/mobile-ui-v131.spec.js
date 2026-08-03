@@ -33,6 +33,9 @@ test('v1.3.1 viewport and gameplay UI remain contained', async ({ page }, testIn
     game.touchMode = navigator.maxTouchPoints > 0;
     game.wave = 1;
     game.runTargetWaves = 8;
+    game.banner = null;
+    game.v12TechniqueNotice = null;
+    if (game.mapOverhaulState) game.mapOverhaulState.transition = 0;
     game.draw();
   });
 
@@ -57,6 +60,9 @@ test('compact result screen keeps every action inside the canvas', async ({ page
     const game = window.__ONE_BULLET_ARENA__;
     game.touchMode = navigator.maxTouchPoints > 0;
     game.state = 'gameover';
+    game.banner = null;
+    game.v12TechniqueNotice = null;
+    if (game.mapOverhaulState) game.mapOverhaulState.transition = 0;
     game.score = 12340;
     game.runTime = 129;
     game.stats = {

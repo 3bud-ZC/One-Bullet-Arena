@@ -6,14 +6,16 @@ Last updated: 2026-08-03
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Release candidate: **v1.3.0 — Regional Map Overhaul**
+- Current release: **v1.3.0 — Regional Map Overhaul**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
 - v1.2.0 Combat & Mobile Expansion: **merged through Pull Request #20**
 - v1.2.1 Progressive Hazard Curve: **merged through Pull Request #21**
 - v1.2.2 Clean Mobile Shell: **merged through Pull Request #22**
-- v1.3.0 Map Overhaul: **implemented in Pull Request #23; final merge pending release gates**
-- Current state: **implementation, deterministic verification, Chromium browser verification, viewport checks, and wave-one screenshot review complete; late-wave live balance and physical-device acceptance remain**
+- v1.3.0 Map Overhaul: **squash-merged through Pull Request #23**
+- v1.3.0 merge commit: `668ce6b004ea610fc2ae659153a3166061204ff0`
+- GitHub Pages deployment: **triggered by the Pull Request #23 merge and this status update**
+- Current state: **implementation, deterministic verification, Chromium browser verification, viewport checks, and wave-one screenshot review complete; deployed-build, late-wave balance, and physical-device acceptance remain**
 
 ## v1.3.0 delivered
 
@@ -96,6 +98,7 @@ The environmental hazard curve remains independent and progressive:
 - JavaScript syntax checks: **passed** for every runtime module, Playwright configuration, and service worker.
 - Automated deterministic tests: **115/115 passed**.
 - Failures: **0**.
+- Final Verify workflow on the Pull Request #23 status commit: **passed**.
 - Coverage includes:
   - eight unique maps per region;
   - deterministic map generation;
@@ -108,7 +111,7 @@ The environmental hazard curve remains independent and progressive:
 
 ### Browser verification
 
-- Playwright Browser Smoke: **14/14 passed** on the latest Pull Request #23 implementation commit.
+- Playwright Browser Smoke: **14/14 passed** on the final Pull Request #23 status commit.
 - Desktop Chromium and mobile-landscape Chromium passed.
 - Coverage confirms:
   - clean full-viewport public route;

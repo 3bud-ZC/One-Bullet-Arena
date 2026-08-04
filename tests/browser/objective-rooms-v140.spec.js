@@ -24,6 +24,7 @@ test('wave two starts a real circuit-sequence objective room', async ({ page }, 
     const game = window.__ONE_BULLET_ARENA__;
     game.wave = 1;
     game.spawnNextWave();
+    if (game.banner) game.banner.time = 0;
     game.draw();
     return {
       state: game.state,
@@ -79,6 +80,7 @@ test('mobile objective HUD remains inside the full viewport', async ({ page }, t
     game.touchMode = true;
     game.wave = 1;
     game.spawnNextWave();
+    if (game.banner) game.banner.time = 0;
     game.draw();
   });
 

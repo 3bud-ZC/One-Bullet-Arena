@@ -71,17 +71,20 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
   expect(result.objective.assaultLimit).toBe(2);
   expect(result.runtimeErrors).toEqual([]);
 
-  // Let the real map transition finish, then remove any unrelated challenge toast before capture.
+  // Let the real map transition finish, then remove unrelated queued announcements before capture.
   await page.waitForTimeout(1900);
   const settled = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.banner = null;
+    game.pendingChallengeBanner = null;
+    game.pendingChallengeDelay = 0;
     game.challengeToast = null;
     game.challengeFeedbackState = 'active';
     if (game.mapOverhaulState) game.mapOverhaulState.transition = 0;
     game.draw();
     return {
       banner: game.banner,
+      pendingChallengeBanner: game.pendingChallengeBanner,
       challengeToast: game.challengeToast,
       objectiveId: game.objectiveRoom?.id,
       objectiveStatus: game.objectiveRoom?.status,
@@ -89,6 +92,7 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
     };
   });
   expect(settled.banner).toBeNull();
+  expect(settled.pendingChallengeBanner).toBeNull();
   expect(settled.challengeToast).toBeNull();
   expect(settled.objectiveId).toBe('core-defense');
   expect(settled.objectiveStatus).toBe('active');

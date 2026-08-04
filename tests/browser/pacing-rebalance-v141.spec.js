@@ -50,8 +50,19 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
     const game = window.__ONE_BULLET_ARENA__;
     game.wave = 3;
     game.spawnNextWave();
+
+    // The QA jump skips the real elapsed time between wave one and wave four.
+    // Clear inherited transient notices so the screenshot represents stable wave-four gameplay.
+    for (const key of Object.keys(game)) {
+      if (!/(intro|toast|notice|announcement)/i.test(key)) continue;
+      if (typeof game[key] === 'number') game[key] = 0;
+      else if (game[key] && typeof game[key] === 'object') game[key] = null;
+    }
     if (game.banner) game.banner.time = 0;
+    game.challengeToast = null;
+    game.challengeFeedbackState = 'active';
     game.draw();
+
     return {
       snapshot: game.getPacingSnapshot(),
       objective: {
@@ -59,6 +70,10 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
         duration: game.objectiveRoom?.target,
         health: game.objectiveRoom?.core?.health,
         assaultLimit: game.objectiveRoom?.parameters?.assaultLimit,
+      },
+      transientUi: {
+        challengeToast: game.challengeToast,
+        bannerTime: game.banner?.time || 0,
       },
       runtimeErrors: game.runtime.snapshot().errors,
     };
@@ -71,6 +86,8 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
   expect(result.objective.duration).toBe(14);
   expect(result.objective.health).toBe(4);
   expect(result.objective.assaultLimit).toBe(2);
+  expect(result.transientUi.challengeToast).toBeNull();
+  expect(result.transientUi.bannerTime).toBe(0);
   expect(result.runtimeErrors).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath('balanced-core-defense.png'), fullPage: true });
 });

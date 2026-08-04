@@ -61,7 +61,7 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
       else if (typeof value === 'string') game[key] = '';
       else if (value && typeof value === 'object') game[key] = null;
     }
-    if (game.banner) game.banner.time = 0;
+    game.banner = null;
     game.challengeToast = null;
     game.challengeFeedbackState = 'active';
     game.draw();
@@ -76,7 +76,7 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
       },
       transientUi: {
         challengeToast: game.challengeToast,
-        bannerTime: game.banner?.time || 0,
+        banner: game.banner,
       },
       runtimeErrors: game.runtime.snapshot().errors,
     };
@@ -90,7 +90,7 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
   expect(result.objective.health).toBe(4);
   expect(result.objective.assaultLimit).toBe(2);
   expect(result.transientUi.challengeToast).toBeNull();
-  expect(result.transientUi.bannerTime).toBe(0);
+  expect(result.transientUi.banner).toBeNull();
   expect(result.runtimeErrors).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath('balanced-core-defense.png'), fullPage: true });
 });

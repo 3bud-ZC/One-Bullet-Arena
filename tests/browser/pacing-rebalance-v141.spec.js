@@ -55,8 +55,11 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
     // Clear inherited transient notices so the screenshot represents stable wave-four gameplay.
     for (const key of Object.keys(game)) {
       if (!/(intro|toast|notice|announcement)/i.test(key)) continue;
-      if (typeof game[key] === 'number') game[key] = 0;
-      else if (game[key] && typeof game[key] === 'object') game[key] = null;
+      const value = game[key];
+      if (typeof value === 'number') game[key] = 0;
+      else if (typeof value === 'boolean') game[key] = false;
+      else if (typeof value === 'string') game[key] = '';
+      else if (value && typeof value === 'object') game[key] = null;
     }
     if (game.banner) game.banner.time = 0;
     game.challengeToast = null;

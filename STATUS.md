@@ -6,14 +6,16 @@ Last updated: 2026-08-05
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Release candidate: **v1.4.0 — Runtime Kernel & Objective Rooms**
+- Current release: **v1.4.0 — Runtime Kernel & Objective Rooms**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
 - Combat & Mobile Expansion: **merged through Pull Requests #20–#22**
 - Regional Map Overhaul: **merged through Pull Request #23**
 - Mobile & Browser UI Stabilization: **merged through Pull Request #24**
-- v1.4.0 Runtime Kernel & Objective Rooms: **implemented in Pull Request #25; final merge pending release gates**
-- Current state: **implementation, deterministic verification, Chromium browser verification, containment checks, and screenshot review complete; final documentation-commit gates, deployed-build acceptance, and physical-device acceptance remain**
+- v1.4.0 Runtime Kernel & Objective Rooms: **squash-merged through Pull Request #25**
+- v1.4.0 merge commit: `04cc044fdf22cbc3cea5c119c205b6cbdfd07aa7`
+- GitHub Pages deployment: **triggered by the Pull Request #25 merge and this status update**
+- Current state: **implementation, deterministic verification, Chromium browser verification, containment checks, screenshot review, documentation, and merge complete; deployed-build acceptance and physical-device acceptance remain**
 
 ## v1.4.0 delivered
 
@@ -122,6 +124,7 @@ Story mode resets this schedule when entering the next region, so Neon, Forge, a
 - JavaScript syntax checks: **passed** for every runtime module, service worker, and Playwright configuration.
 - Automated deterministic tests: **131/131 passed**.
 - Failures: **0**.
+- Final Verify workflow on the Pull Request #25 documentation/status commit: **passed**.
 - New Runtime Kernel coverage verifies:
   - stable priority ordering;
   - duplicate-system rejection;
@@ -141,6 +144,7 @@ Story mode resets this schedule when entering the next region, so Neon, Forge, a
 
 - Playwright Browser Smoke: **26/26 passed** on Desktop Chromium and Mobile Landscape Chromium.
 - Failures, flaky tests, and skipped tests: **0**.
+- Final Browser Smoke workflow on the Pull Request #25 documentation/status commit: **passed**.
 - Coverage confirms:
   - Runtime Kernel availability and registered systems;
   - zero runtime diagnostic errors;

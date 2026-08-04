@@ -137,7 +137,7 @@ test('portrait phone keeps a clean contained game surface without orientation ch
   await page.screenshot({ path: testInfo.outputPath('portrait-clean-shell.png'), fullPage: true });
 });
 
-test('PWA shell and v1.4.0 runtime objective assets are reachable', async ({ request }) => {
+test('PWA shell and v1.4.1 runtime pacing assets are reachable', async ({ request }) => {
   const manifest = await request.get('/manifest.webmanifest');
   const worker = await request.get('/sw.js');
   const directStyles = await request.get('/direct-game.css');
@@ -147,6 +147,8 @@ test('PWA shell and v1.4.0 runtime objective assets are reachable', async ({ req
   const runtimeKernel = await request.get('/src/runtime-kernel.js');
   const objectiveData = await request.get('/src/objective-rooms-data.js');
   const objectiveRuntime = await request.get('/src/objective-rooms.js');
+  const pacingData = await request.get('/src/pacing-rebalance-data.js');
+  const pacingRuntime = await request.get('/src/pacing-rebalance.js');
   const expansionData = await request.get('/src/v12-expansion-data.js');
   const expansionRuntime = await request.get('/src/v12-expansion.js');
   const progressiveHazards = await request.get('/src/progressive-map-hazards.js');
@@ -161,6 +163,8 @@ test('PWA shell and v1.4.0 runtime objective assets are reachable', async ({ req
   expect(runtimeKernel.ok()).toBeTruthy();
   expect(objectiveData.ok()).toBeTruthy();
   expect(objectiveRuntime.ok()).toBeTruthy();
+  expect(pacingData.ok()).toBeTruthy();
+  expect(pacingRuntime.ok()).toBeTruthy();
   expect(expansionData.ok()).toBeTruthy();
   expect(expansionRuntime.ok()).toBeTruthy();
   expect(progressiveHazards.ok()).toBeTruthy();
@@ -170,7 +174,7 @@ test('PWA shell and v1.4.0 runtime objective assets are reachable', async ({ req
   expect(data.display).toBe('standalone');
   expect(data.orientation).toBe('landscape');
   const workerText = await worker.text();
-  expect(workerText).toContain('one-bullet-arena-v1.4.0');
+  expect(workerText).toContain('one-bullet-arena-v1.4.1');
   expect(workerText).toContain('direct-game.css');
   expect(workerText).toContain('mobile-ui-stabilization.css');
   expect(workerText).toContain('mobile-ui-style-loader.js');
@@ -178,6 +182,8 @@ test('PWA shell and v1.4.0 runtime objective assets are reachable', async ({ req
   expect(workerText).toContain('runtime-kernel.js');
   expect(workerText).toContain('objective-rooms-data.js');
   expect(workerText).toContain('objective-rooms.js');
+  expect(workerText).toContain('pacing-rebalance-data.js');
+  expect(workerText).toContain('pacing-rebalance.js');
   expect(workerText).toContain('progressive-map-hazards.js');
   expect(workerText).toContain('map-overhaul-data.js');
   expect(workerText).toContain('map-overhaul.js');

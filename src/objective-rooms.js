@@ -7,14 +7,14 @@ import {
 import { registerRuntimeSystem } from './runtime-kernel.js';
 
 const FONT = 'Changa, "Segoe UI", Tahoma, sans-serif';
+const NUMBER_FONT = 'Inter, "Segoe UI", Arial, sans-serif';
 const COLORS = Object.freeze({
   panel: 'rgba(4, 9, 21, 0.94)',
-  panelSoft: 'rgba(9, 16, 34, 0.9)',
+  panelSoft: 'rgba(9, 16, 34, 0.94)',
   text: '#f8f9ff',
   muted: '#aeb7da',
   success: '#53f2a1',
   danger: '#ff526a',
-  yellow: '#ffe66d',
 });
 
 function clamp(value, minimum, maximum) {
@@ -53,6 +53,17 @@ function label(ctx, text, x, y, size, color = COLORS.text, weight = 700, align =
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px ${FONT}`;
+  ctx.fillText(String(text), x, y);
+  ctx.restore();
+}
+
+function metric(ctx, text, x, y, size, color = COLORS.muted, align = 'left') {
+  ctx.save();
+  ctx.direction = 'ltr';
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = color;
+  ctx.font = `800 ${size}px ${NUMBER_FONT}`;
   ctx.fillText(String(text), x, y);
   ctx.restore();
 }
@@ -106,9 +117,7 @@ function safePoint(game, desired) {
 }
 
 function prepareGeometry(game, state) {
-  if (state.relays) {
-    state.relays = state.relays.map((relay) => ({ ...relay, ...safePoint(game, relay) }));
-  }
+  if (state.relays) state.relays = state.relays.map((relay) => ({ ...relay, ...safePoint(game, relay) }));
   if (state.lock) Object.assign(state.lock, safePoint(game, state.lock));
   if (state.core) Object.assign(state.core, safePoint(game, state.core));
 }
@@ -131,12 +140,6 @@ function completeObjective(game, state) {
   feedback(game, `هدف مكتمل +${reward}`, state.definition.color);
 }
 
-function setContact(state, id) {
-  if (state.contactId === id) return false;
-  state.contactId = id;
-  return true;
-}
-
 function releaseContactWhenClear(game, state, targets) {
   if (!state.contactId) return;
   const active = targets.find((target) => target.id === state.contactId);
@@ -148,7 +151,8 @@ function updateCircuitSequence(game, state) {
   releaseContactWhenClear(game, state, targets);
   if (game.bullet?.held) return;
   for (const relay of targets) {
-    if (!circleOverlap(game.bullet, relay, 3) || !setContact(state, relay.id)) continue;
+    if (!circleOverlap(game.bullet, relay, 3) || state.contactId === relay.id) continue;
+    state.contactId = relay.id;
     const expected = targets[state.progress];
     if (relay.id !== expected?.id) {
       state.notice = `المطلوب الآن: النقطة ${state.progress + 1}`;
@@ -191,11 +195,18 @@ function updateRicochetLock(game, state, dt) {
   if (state.progress >= state.target) completeObjective(game, state);
 }
 
+function reinforcementIndex(state) {
+  state.reinforcements = (Number(state.reinforcements) || 0) + 1;
+  return state.reinforcements;
+}
+
 function spawnAssaultEnemy(game, state, type = 'scout') {
   if (typeof game.spawnEnemy !== 'function') return null;
+  const index = reinforcementIndex(state);
   const point = game.findSpawnPoint?.() || { x: 80, y: 80 };
   const before = new Set((game.enemies || []).map((enemy) => enemy.id));
-  game.spawnEnemy(type, { point, elite: state.parameters.localWave >= 7 && Math.random() > 0.72 });
+  const elite = state.parameters.localWave >= 7 && (state.wave + index + state.failures) % 4 === 0;
+  game.spawnEnemy(type, { point, elite });
   const enemy = (game.enemies || []).find((candidate) => !before.has(candidate.id));
   if (enemy) enemy.objectiveAssault = true;
   return enemy || null;
@@ -205,7 +216,8 @@ function maintainPressure(game, state, dt, minimumEnemies = 1) {
   if (state.status === 'complete') return;
   state.reinforcementTimer -= dt;
   if ((game.enemies?.length || 0) >= minimumEnemies || state.reinforcementTimer > 0) return;
-  const type = state.parameters.localWave >= 5 && Math.random() > 0.55 ? 'brute' : 'scout';
+  const nextIndex = (Number(state.reinforcements) || 0) + 1;
+  const type = state.parameters.localWave >= 5 && (state.wave + nextIndex) % 2 === 0 ? 'brute' : 'scout';
   spawnAssaultEnemy(game, state, type);
   state.reinforcementTimer = state.parameters.reinforcementDelay;
 }
@@ -217,7 +229,6 @@ function updateCoreDefense(game, state, dt) {
   state.remaining = Math.max(0, state.remaining - dt);
   state.progress = state.target - state.remaining;
   maintainPressure(game, state, dt, Math.max(2, state.parameters.assaultLimit - 1));
-
   for (const enemy of game.enemies || []) {
     const dx = core.x - enemy.x;
     const dy = core.y - enemy.y;
@@ -236,7 +247,6 @@ function updateCoreDefense(game, state, dt) {
       break;
     }
   }
-
   if (core.health <= 0) {
     state.failures += 1;
     core.health = Math.max(2, core.maxHealth - 1);
@@ -272,18 +282,16 @@ function updateBulletSeparation(game, state, dt) {
   const distance = game.bullet && game.player
     ? Math.hypot(game.bullet.x - game.player.x, game.bullet.y - game.player.y)
     : 0;
-  if (!game.bullet?.held && distance >= state.minimumDistance) {
-    state.progress = Math.min(state.target, state.progress + dt);
-  } else {
-    state.progress = Math.max(0, state.progress - dt * 0.42);
-  }
+  if (!game.bullet?.held && distance >= state.minimumDistance) state.progress = Math.min(state.target, state.progress + dt);
+  else state.progress = Math.max(0, state.progress - dt * 0.42);
   maintainPressure(game, state, dt, 1);
   if (state.progress >= state.target) completeObjective(game, state);
 }
 
 function updateObjective(game, state, dt) {
-  if (!state || state.status !== 'active' || game.state !== 'playing') return;
+  if (!state || game.state !== 'playing') return;
   state.noticeTime = Math.max(0, state.noticeTime - dt);
+  if (state.status !== 'active') return;
   if (state.id === 'circuit-sequence') updateCircuitSequence(game, state);
   else if (state.id === 'ricochet-lock') updateRicochetLock(game, state, dt);
   else if (state.id === 'core-defense') updateCoreDefense(game, state, dt);
@@ -293,10 +301,10 @@ function updateObjective(game, state, dt) {
 }
 
 function progressText(state) {
-  if (state.status === 'complete') return 'مكتمل';
-  if (state.id === 'core-defense') return `${Math.ceil(state.remaining)}ث • سلامة ${state.core.health}/${state.core.maxHealth}`;
-  if (state.id === 'bullet-separation') return `${state.progress.toFixed(1)} / ${state.target.toFixed(1)}ث`;
-  if (state.id === 'ricochet-lock') return `${state.progress} / ${state.target} • ${state.parameters.requiredBounces} ارتداد`;
+  if (state.status === 'complete') return 'COMPLETE';
+  if (state.id === 'core-defense') return `${Math.ceil(state.remaining)}s  ${state.core.health}/${state.core.maxHealth}`;
+  if (state.id === 'bullet-separation') return `${state.progress.toFixed(1)} / ${state.target.toFixed(1)}s`;
+  if (state.id === 'ricochet-lock') return `${state.progress} / ${state.target}  ${state.parameters.requiredBounces}x`;
   return `${Math.floor(state.progress)} / ${state.target}`;
 }
 
@@ -385,31 +393,27 @@ function drawObjectiveWorld(game, state) {
 
 function drawObjectiveHud(game, state) {
   if (!state || !['playing', 'paused'].includes(game.state)) return;
-  const width = game.touchMode ? 284 : 330;
-  const x = 12;
-  const y = game.touchMode ? 72 : 82;
+  if ((Number(game.banner?.time) || 0) > 0.1) return;
+  const width = game.touchMode ? 300 : 330;
+  const x = WIDTH / 2 - width / 2;
+  const y = 72;
   const accent = state.status === 'complete' ? COLORS.success : state.definition.color;
   panel(game.ctx, x, y, width, 42, accent, state.status === 'complete' ? 'rgba(9,35,28,0.93)' : COLORS.panelSoft, 11);
   label(game.ctx, `${state.definition.icon} ${state.definition.shortName}`, x + width - 14, y + 18, 10.5, accent, 900, 'right');
-  label(game.ctx, progressText(state), x + width - 14, y + 35, 9, COLORS.muted, 700, 'right');
+  metric(game.ctx, progressText(state), x + 14, y + 34, 9.5, state.status === 'complete' ? COLORS.success : COLORS.muted, 'left');
   if (state.noticeTime > 0 && state.notice) {
-    panel(game.ctx, WIDTH / 2 - 190, 118, 380, 38, accent, COLORS.panel, 12);
-    label(game.ctx, state.notice, WIDTH / 2, 143, 10.5, accent, 800);
+    panel(game.ctx, WIDTH / 2 - 190, 122, 380, 38, accent, COLORS.panel, 12);
+    label(game.ctx, state.notice, WIDTH / 2, 147, 10.5, accent, 800);
   }
 }
 
 function initializeObjective(game) {
-  const objectiveId = objectiveIdForWave({
-    wave: game.wave,
-    boss: objectiveDisabled(game),
-  });
-  const state = createObjectiveRoomState({
-    objectiveId,
-    wave: game.wave,
-    regionId: regionIdFor(game),
-  });
+  const objectiveId = objectiveIdForWave({ wave: game.wave, boss: objectiveDisabled(game) });
+  const state = createObjectiveRoomState({ objectiveId, wave: game.wave, regionId: regionIdFor(game) });
   game.objectiveRoom = state;
   if (!state) return;
+  state.noticeTime = 0;
+  state.reinforcements = 0;
   prepareGeometry(game, state);
   if (state.id === 'marked-hunt') chooseMarkedEnemy(game, state);
   if (game.stats) game.stats.objectivesSeen = (Number(game.stats.objectivesSeen) || 0) + 1;

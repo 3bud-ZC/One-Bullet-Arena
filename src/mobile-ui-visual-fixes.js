@@ -1,4 +1,5 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './content.js';
+import { registerRuntimeSystem } from './runtime-kernel.js';
 import { mobileTechniqueLayout } from './v12-expansion-data.js';
 
 const FONT = 'Changa, "Segoe UI", Tahoma, sans-serif';
@@ -55,74 +56,75 @@ function isLegacyTechniqueLabel(text, x, y, controls) {
   return [controls.pulse, controls.phase].some((control) => near(x, control.x, 6) && near(y, control.y + 5, 8));
 }
 
-export function installMobileUiVisualFixes(GameClass) {
-  const prototype = GameClass.prototype;
-  if (prototype.__mobileUiVisualFixesInstalled) return;
-  prototype.__mobileUiVisualFixesInstalled = true;
+function beginLegacyFilter(game) {
+  const touch = Boolean(game.touchMode);
+  if (!touch) return () => {};
+  const settings = game.mobileSettings || {};
+  const controls = mobileTechniqueLayout({
+    leftHanded: Boolean(settings.leftHanded),
+    scale: Number(settings.controlScale) || 1,
+  });
+  const originalOpacity = settings.opacity;
+  const originalNotice = game.v12TechniqueNotice;
+  const ctx = game.ctx;
+  const originalArc = ctx.arc;
+  const originalFill = ctx.fill;
+  const originalFillText = ctx.fillText;
+  let lastArc = null;
 
-  const previousDraw = prototype.draw;
-  prototype.draw = function drawWithoutLegacyMobileArtifacts(...args) {
-    const touch = Boolean(this.touchMode);
-    const settings = this.mobileSettings || {};
-    const controls = mobileTechniqueLayout({
-      leftHanded: Boolean(settings.leftHanded),
-      scale: Number(settings.controlScale) || 1,
-    });
-    const originalOpacity = settings.opacity;
-    const originalNotice = this.v12TechniqueNotice;
-    const ctx = this.ctx;
-    const originalArc = ctx.arc;
-    const originalFill = ctx.fill;
-    const originalFillText = ctx.fillText;
-    let lastArc = null;
-
-    if (touch) {
-      settings.opacity = 0;
-      this.v12TechniqueNotice = null;
-      ctx.arc = function trackedArc(x, y, radius, startAngle, endAngle, counterclockwise) {
-        lastArc = { x, y, radius };
-        return originalArc.call(this, x, y, radius, startAngle, endAngle, counterclockwise);
-      };
-      ctx.fill = function filteredFill(...fillArgs) {
-        if (isLegacyTechniqueArc(lastArc, controls)) {
-          lastArc = null;
-          return undefined;
-        }
-        lastArc = null;
-        return originalFill.apply(this, fillArgs);
-      };
-      ctx.fillText = function filteredFillText(text, x, y, maxWidth) {
-        if (isLegacyTechniqueLabel(text, x, y, controls)) return undefined;
-        return maxWidth === undefined
-          ? originalFillText.call(this, text, x, y)
-          : originalFillText.call(this, text, x, y, maxWidth);
-      };
-    }
-
-    let result;
-    try {
-      result = previousDraw.apply(this, args);
-    } finally {
-      if (touch) {
-        settings.opacity = originalOpacity;
-        this.v12TechniqueNotice = originalNotice;
-        ctx.arc = originalArc;
-        ctx.fill = originalFill;
-        ctx.fillText = originalFillText;
-      }
-    }
-
-    if (this.state === 'gameover' || this.state === 'victory') {
-      this.uiRegions = [];
-      ctx.save();
-      ctx.fillStyle = '#010309';
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-      ctx.restore();
-      this.drawResult(this.state === 'victory');
-    } else if (touch && ['playing', 'bossIntro'].includes(this.state)) {
-      drawTechniqueNotice(this, originalNotice);
-    }
-
-    return result;
+  settings.opacity = 0;
+  game.v12TechniqueNotice = null;
+  ctx.arc = function trackedArc(x, y, radius, startAngle, endAngle, counterclockwise) {
+    lastArc = { x, y, radius };
+    return originalArc.call(this, x, y, radius, startAngle, endAngle, counterclockwise);
   };
+  ctx.fill = function filteredFill(...fillArgs) {
+    if (isLegacyTechniqueArc(lastArc, controls)) {
+      lastArc = null;
+      return undefined;
+    }
+    lastArc = null;
+    return originalFill.apply(this, fillArgs);
+  };
+  ctx.fillText = function filteredFillText(text, x, y, maxWidth) {
+    if (isLegacyTechniqueLabel(text, x, y, controls)) return undefined;
+    return maxWidth === undefined
+      ? originalFillText.call(this, text, x, y)
+      : originalFillText.call(this, text, x, y, maxWidth);
+  };
+
+  game.__runtimeMobileVisualNotice = originalNotice;
+  return () => {
+    settings.opacity = originalOpacity;
+    game.v12TechniqueNotice = originalNotice;
+    ctx.arc = originalArc;
+    ctx.fill = originalFill;
+    ctx.fillText = originalFillText;
+  };
+}
+
+function finalizeMobileVisuals(game) {
+  const notice = game.__runtimeMobileVisualNotice;
+  game.__runtimeMobileVisualNotice = null;
+  if (game.state === 'gameover' || game.state === 'victory') {
+    game.uiRegions = [];
+    game.ctx.save();
+    game.ctx.fillStyle = '#010309';
+    game.ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    game.ctx.restore();
+    game.drawResult(game.state === 'victory');
+  } else if (game.touchMode && ['playing', 'bossIntro'].includes(game.state)) {
+    drawTechniqueNotice(game, notice);
+  }
+}
+
+export function installMobileUiVisualFixes(GameClass) {
+  registerRuntimeSystem(GameClass, {
+    id: 'mobile-ui-visual-fixes',
+    priority: 1000,
+    hooks: {
+      beforeRender: ({ game }) => beginLegacyFilter(game),
+      afterRender: ({ game }) => finalizeMobileVisuals(game),
+    },
+  });
 }

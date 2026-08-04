@@ -50,22 +50,6 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
     const game = window.__ONE_BULLET_ARENA__;
     game.wave = 3;
     game.spawnNextWave();
-
-    // The QA jump skips the real elapsed time between wave one and wave four.
-    // Clear inherited transient notices so the screenshot represents stable wave-four gameplay.
-    for (const key of Object.keys(game)) {
-      if (!/(intro|toast|notice|announcement)/i.test(key)) continue;
-      const value = game[key];
-      if (typeof value === 'number') game[key] = 0;
-      else if (typeof value === 'boolean') game[key] = false;
-      else if (typeof value === 'string') game[key] = '';
-      else if (value && typeof value === 'object') game[key] = null;
-    }
-    game.banner = null;
-    game.challengeToast = null;
-    game.challengeFeedbackState = 'active';
-    game.draw();
-
     return {
       snapshot: game.getPacingSnapshot(),
       objective: {
@@ -73,10 +57,6 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
         duration: game.objectiveRoom?.target,
         health: game.objectiveRoom?.core?.health,
         assaultLimit: game.objectiveRoom?.parameters?.assaultLimit,
-      },
-      transientUi: {
-        challengeToast: game.challengeToast,
-        banner: game.banner,
       },
       runtimeErrors: game.runtime.snapshot().errors,
     };
@@ -89,9 +69,30 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
   expect(result.objective.duration).toBe(14);
   expect(result.objective.health).toBe(4);
   expect(result.objective.assaultLimit).toBe(2);
-  expect(result.transientUi.challengeToast).toBeNull();
-  expect(result.transientUi.banner).toBeNull();
   expect(result.runtimeErrors).toEqual([]);
+
+  // Let the real map transition finish, then remove any unrelated challenge toast before capture.
+  await page.waitForTimeout(1900);
+  const settled = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.banner = null;
+    game.challengeToast = null;
+    game.challengeFeedbackState = 'active';
+    if (game.mapOverhaulState) game.mapOverhaulState.transition = 0;
+    game.draw();
+    return {
+      banner: game.banner,
+      challengeToast: game.challengeToast,
+      objectiveId: game.objectiveRoom?.id,
+      objectiveStatus: game.objectiveRoom?.status,
+      runtimeErrors: game.runtime.snapshot().errors,
+    };
+  });
+  expect(settled.banner).toBeNull();
+  expect(settled.challengeToast).toBeNull();
+  expect(settled.objectiveId).toBe('core-defense');
+  expect(settled.objectiveStatus).toBe('active');
+  expect(settled.runtimeErrors).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath('balanced-core-defense.png'), fullPage: true });
 });
 

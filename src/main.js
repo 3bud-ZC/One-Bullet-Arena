@@ -29,6 +29,8 @@ import { installProgressiveMapHazards } from './progressive-map-hazards.js';
 import { installMapOverhaul } from './map-overhaul.js';
 import { installMapOverhaulSafety } from './map-overhaul-safety.js';
 import { attachMobileUiStabilization, installMobileUiStabilization } from './mobile-ui-stabilization.js';
+import { installRuntimeKernel } from './runtime-kernel.js';
+import { installObjectiveRooms } from './objective-rooms.js';
 import { installMobileUiVisualFixes } from './mobile-ui-visual-fixes.js';
 
 installPhysicalKeyboardBridge();
@@ -60,6 +62,10 @@ installProgressiveMapHazards(OneBulletArena);
 installMapOverhaul(OneBulletArena);
 installMapOverhaulSafety(OneBulletArena);
 installMobileUiStabilization(OneBulletArena);
+
+// New systems register through one outer runtime pipeline instead of adding more prototype wrappers.
+installRuntimeKernel(OneBulletArena);
+installObjectiveRooms(OneBulletArena);
 installMobileUiVisualFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');

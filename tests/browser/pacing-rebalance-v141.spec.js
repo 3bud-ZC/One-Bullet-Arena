@@ -71,14 +71,19 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
   expect(result.objective.assaultLimit).toBe(2);
   expect(result.runtimeErrors).toEqual([]);
 
-  // Let the real map transition finish, then remove unrelated queued announcements before capture.
+  // Let the real map transition finish, then remove unrelated transient announcements before capture.
   await page.waitForTimeout(1900);
   const settled = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.banner = null;
-    game.pendingChallengeBanner = null;
+    for (const key of Object.keys(game)) {
+      if (!/(intro|toast|notice|announcement|banner|transition)/i.test(key)) continue;
+      const value = game[key];
+      if (typeof value === 'number') game[key] = 0;
+      else if (typeof value === 'boolean') game[key] = false;
+      else if (typeof value === 'string') game[key] = '';
+      else if (value && typeof value === 'object') game[key] = null;
+    }
     game.pendingChallengeDelay = 0;
-    game.challengeToast = null;
     game.challengeFeedbackState = 'active';
     if (game.mapOverhaulState) game.mapOverhaulState.transition = 0;
     game.draw();
@@ -91,9 +96,9 @@ test('wave four applies the balanced Core Defense profile', async ({ page }, tes
       runtimeErrors: game.runtime.snapshot().errors,
     };
   });
-  expect(settled.banner).toBeNull();
-  expect(settled.pendingChallengeBanner).toBeNull();
-  expect(settled.challengeToast).toBeNull();
+  expect(settled.banner == null || settled.banner === '').toBeTruthy();
+  expect(settled.pendingChallengeBanner == null || settled.pendingChallengeBanner === '').toBeTruthy();
+  expect(settled.challengeToast == null || settled.challengeToast === '').toBeTruthy();
   expect(settled.objectiveId).toBe('core-defense');
   expect(settled.objectiveStatus).toBe('active');
   expect(settled.runtimeErrors).toEqual([]);

@@ -2,7 +2,7 @@
 
 **حلبة الطلقة الواحدة** is a focused Arabic wave-survival action game built around one rule:
 
-> You have one recoverable bullet. Clear the wave, choose one upgrade, and continue until defeat.
+> Fight every enemy, clear the wave, choose one upgrade, and enter a harder wave in the same expanding arena.
 
 ## Play
 
@@ -12,16 +12,33 @@
 
 ## Core loop
 
-There is one game mode and no mode-selection screen:
+There is one game only and no mode-selection screen:
 
 1. Start the run.
 2. Defeat every enemy in the current wave.
-3. Recover the bullet.
-4. Choose one of three upgrades.
-5. Begin the next wave.
-6. Repeat until the player is defeated.
+3. Recover the single bullet.
+4. Choose one of three abilities.
+5. Enter the next, harder wave.
+6. Continue until defeat.
 
-The game contains no regions, difficulty presets, story route, daily challenge, objectives, bosses, contracts, codices, persistent builds, or meta progression.
+There are no puzzles, ordered targets, hit-count objectives, relay sequences, alternate win conditions, regions, difficulty presets, bosses, contracts, currencies, hubs, or meta progression.
+
+## One expanding arena
+
+The entire run takes place in one map. New space opens automatically through normal wave progression:
+
+| Wave | Playable space |
+| --- | --- |
+| 1–2 | Central combat room |
+| 3–5 | Side wings opened |
+| 6–8 | Outer corridors opened |
+| 9+ | Complete arena opened |
+
+No action is required to unlock an area other than clearing the previous wave and choosing an ability.
+
+After Wave 9 the full map remains open. Difficulty continues increasing through enemy population, enemy variety, health, movement speed, and projectile speed.
+
+On mobile, invisible combat-safe zones keep the player and enemies from being hidden under the movement stick, Recall, Dash, or Pause controls.
 
 ## Combat
 
@@ -36,6 +53,7 @@ The game contains no regions, difficulty presets, story route, daily challenge, 
   - Charger
   - Splitter
 - Gradually increasing wave population, enemy health, movement speed, and projectile speed.
+- Enemy population capped at fourteen active enemies.
 - Endless wave progression until defeat.
 
 ## Run upgrades
@@ -90,11 +108,12 @@ npm run test:browser
 
 ## Active architecture
 
-The production runtime is intentionally small:
+The production runtime remains intentionally small:
 
 - `src/main.js` — boot, fullscreen, and service-worker registration.
 - `src/simple-game.js` — gameplay, rendering, input, waves, and upgrade flow.
 - `src/simple-data.js` — enemy, wave, scaling, and upgrade data.
+- `src/expanding-arena.js` — automatic arena unlocks, active boundaries, and mobile control-safe zones.
 - `src/simple-ui-cleanup.js` — final menu and upgrade-card presentation fixes.
 - `src/audio.js` — generated music and sound effects.
 

@@ -72,10 +72,10 @@ test('sub-stepped bullet movement cannot tunnel through an enemy', async ({ page
     game.startRun();
     game.enemies = [];
     game.player.x = 400;
-    game.player.y = 360;
+    game.player.y = 200;
     game.pointer.x = 900;
-    game.pointer.y = 360;
-    const enemy = game.spawnEnemy('scout', 0, { point: { x: 700, y: 360 } });
+    game.pointer.y = 200;
+    const enemy = game.spawnEnemy('scout', 0, { point: { x: 700, y: 200 } });
     enemy.spawnTime = 0;
     game.fireBullet();
     game.updateBullet(0.45);

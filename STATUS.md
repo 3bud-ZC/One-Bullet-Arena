@@ -5,10 +5,11 @@ Last updated: 2026-08-06
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v2.4.0 — Modular Runtime and UX Stabilization**
-- Pull Request: **#31**
-- Working branch: `refactor/v2.3-complete-stabilization`
-- Current state: **implementation, deterministic verification, cross-browser verification, PWA packaging, gameplay reliability fixes, and UI/UX restructuring complete; physical-device and deployed-build acceptance remain**
+- Current release: **v2.4.0 — Modular Runtime and UX Stabilization**
+- Pull Request #31: **squash-merged into `main`**
+- v2.4.0 merge commit: `cd4676c01aa40fe306cb303b053d6c3b38f9bc5e`
+- GitHub Pages deployment: **triggered from `main` by the merge and this status update**
+- Current state: **implementation, deterministic verification, cross-browser verification, PWA packaging, gameplay reliability fixes, UI/UX restructuring, and merge complete; physical-device and externally observed deployed-build acceptance remain**
 
 ## Product definition
 
@@ -99,7 +100,7 @@ The active runtime does not use constructor-time installers, prototype monkey pa
 
 - JavaScript syntax checks: **passed**.
 - Deterministic tests: **13/13 passed**.
-- Verify workflow run **606**: **passed**.
+- Final Pull Request Verify workflow run **608**: **passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
 
 Coverage includes:
@@ -115,7 +116,7 @@ Coverage includes:
 
 ### Browser verification
 
-- Browser Smoke workflow run **113**: **passed**.
+- Final Pull Request Browser Smoke workflow run **114**: **passed**.
 - Playwright tests: **36/36 passed** across four projects.
 - Projects:
   - Desktop Chromium at `1440×900`.
@@ -139,14 +140,14 @@ Browser coverage confirms:
 
 ## Remaining acceptance checks
 
-These checks require the merged/deployed build or physical hardware and are not marked complete:
+These checks require the deployed build or physical hardware and are not marked complete:
 
 1. Play a normal run through at least Wave 15 without QA shortcuts.
 2. Confirm subjective pacing at Waves 8–15 and near the fourteen-enemy cap.
 3. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
 4. Test simultaneous movement, aiming, firing, recall, and Dash on a real multi-touch device.
 5. Install the PWA, launch it offline, and confirm cache replacement from v2.2/v2.3 to v2.4.
-6. Verify the final GitHub Pages deployment after Pull Request #31 is merged.
+6. Verify the final GitHub Pages deployment from an external network after the `main` workflow completes.
 
 ## Refresh note
 

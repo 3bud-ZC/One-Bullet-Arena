@@ -5,52 +5,73 @@ async function loadGame(page) {
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));
 }
 
-test('touch controls reserve clear combat space in the fully opened arena', async ({ page }) => {
+test('touch controls and HUD reserve clear combat space in the fully opened arena', async ({ page }) => {
   await loadGame(page);
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
-    game.touchMode = true;
+    game.input.touchMode = true;
     game.wave = 8;
-    game.spawnNextWave();
+    game.startNextWave();
+    game.draw();
     const zones = game.getSnapshot().touchSafeZones;
-
-    game.player.x = zones[0].x;
-    game.player.y = zones[0].y;
-    game.updatePlayer(0);
-
-    game.enemies = zones.map((zone, index) => ({
-      id: 9000 + index,
-      type: 'scout',
-      x: zone.x,
-      y: zone.y,
-      radius: 17,
-      speed: 0,
-      health: 1,
-      maxHealth: 1,
-      score: 0,
-      color: '#ff5f78',
-      attackCooldown: 99,
-      chargeTelegraph: 0,
-      chargeRemaining: 0,
-      chargeDirection: { x: 0, y: 0 },
-      phase: 0,
-      spawnTime: 0,
-      hitFlash: 0,
-      slowTimer: 0,
-      mini: false,
-    }));
-    game.updateEnemies(0);
-
-    const clear = (entity, zone) => Math.hypot(entity.x - zone.x, entity.y - zone.y) >= zone.radius + entity.radius - 0.01;
+    const checks = [];
+    for (const zone of zones) {
+      const entity = { x: zone.x + zone.w / 2, y: zone.y + zone.h / 2, radius: 18 };
+      game.constrainCombatCircle(entity);
+      const overlaps = entity.x + entity.radius >= zone.x
+        && entity.x - entity.radius <= zone.x + zone.w
+        && entity.y + entity.radius >= zone.y
+        && entity.y - entity.radius <= zone.y + zone.h;
+      checks.push({ id: zone.id, overlaps });
+    }
     return {
-      playerClear: zones.every((zone) => clear(game.player, zone)),
-      enemiesClear: game.enemies.every((enemy) => zones.every((zone) => clear(enemy, zone))),
-      zones: zones.length,
+      checks,
+      touchMode: game.getSnapshot().touchMode,
+      uiRegions: game.getSnapshot().uiRegions,
     };
   });
+  expect(result.touchMode).toBe(true);
+  expect(result.checks.every((item) => item.overlaps === false)).toBe(true);
+  expect(result.uiRegions).toBeGreaterThanOrEqual(3);
+});
 
-  expect(result.zones).toBe(4);
-  expect(result.playerClear).toBe(true);
-  expect(result.enemiesClear).toBe(true);
+test('touch movement starts only from the visible joystick hit area', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'), 'Touchscreen interaction is validated on the mobile project.');
+  await loadGame(page);
+  await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.input.touchMode = true;
+    game.draw();
+  });
+
+  const canvas = page.locator('#game-canvas');
+  const box = await canvas.boundingBox();
+  const toClient = (x, y) => ({ x: box.x + x / 1280 * box.width, y: box.y + y / 720 * box.height });
+
+  const outside = toClient(400, 500);
+  await page.touchscreen.tap(outside.x, outside.y);
+  let snapshot = await page.evaluate(() => ({
+    moveActive: Boolean(window.__ONE_BULLET_ARENA__.input.moveTouch),
+    shots: window.__ONE_BULLET_ARENA__.stats.shots,
+  }));
+  expect(snapshot.moveActive).toBe(false);
+  expect(snapshot.shots).toBe(1);
+
+  const inside = toClient(118, 608);
+  await page.dispatchEvent('#game-canvas', 'pointerdown', {
+    pointerId: 7,
+    pointerType: 'touch',
+    clientX: inside.x,
+    clientY: inside.y,
+    isPrimary: true,
+    buttons: 1,
+  });
+  snapshot = await page.evaluate(() => ({
+    moveActive: Boolean(window.__ONE_BULLET_ARENA__.input.moveTouch),
+    shots: window.__ONE_BULLET_ARENA__.stats.shots,
+  }));
+  expect(snapshot.moveActive).toBe(true);
+  expect(snapshot.shots).toBe(1);
 });

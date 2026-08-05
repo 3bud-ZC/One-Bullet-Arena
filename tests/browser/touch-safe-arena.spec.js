@@ -5,52 +5,39 @@ async function loadGame(page) {
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));
 }
 
-test('touch controls reserve clear combat space in the fully opened arena', async ({ page }) => {
+test('touch controls reserve clear rectangular combat zones', async ({ page }) => {
   await loadGame(page);
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
     game.touchMode = true;
     game.wave = 8;
-    game.spawnNextWave();
+    game.startNextWave();
     const zones = game.getSnapshot().touchSafeZones;
+    const overlaps = (entity, zone) => entity.x + entity.radius >= zone.x
+      && entity.x - entity.radius <= zone.x + zone.w
+      && entity.y + entity.radius >= zone.y
+      && entity.y - entity.radius <= zone.y + zone.h;
 
-    game.player.x = zones[0].x;
-    game.player.y = zones[0].y;
-    game.updatePlayer(0);
+    for (const zone of zones) {
+      game.player.x = zone.x + zone.w / 2;
+      game.player.y = zone.y + zone.h / 2;
+      game.constrainCombatCircle(game.player);
+    }
 
     game.enemies = zones.map((zone, index) => ({
-      id: 9000 + index,
-      type: 'scout',
-      x: zone.x,
-      y: zone.y,
-      radius: 17,
-      speed: 0,
-      health: 1,
-      maxHealth: 1,
-      score: 0,
-      color: '#ff5f78',
-      attackCooldown: 99,
-      chargeTelegraph: 0,
-      chargeRemaining: 0,
-      chargeDirection: { x: 0, y: 0 },
-      phase: 0,
-      spawnTime: 0,
-      hitFlash: 0,
-      slowTimer: 0,
-      mini: false,
+      id: 9000 + index, type: 'scout', x: zone.x + zone.w / 2, y: zone.y + zone.h / 2,
+      radius: 17, speed: 0, health: 1, maxHealth: 1, score: 0, color: '#ff5f78',
+      attackCooldown: 99, shotTelegraph: 0, chargeTelegraph: 0, chargeRemaining: 0,
+      chargeDirection: { x: 0, y: 0 }, phase: 0, spawnTime: 0, hitFlash: 0, mini: false,
     }));
     game.updateEnemies(0);
 
-    const clear = (entity, zone) => Math.hypot(entity.x - zone.x, entity.y - zone.y) >= zone.radius + entity.radius - 0.01;
     return {
-      playerClear: zones.every((zone) => clear(game.player, zone)),
-      enemiesClear: game.enemies.every((enemy) => zones.every((zone) => clear(enemy, zone))),
       zones: zones.length,
+      playerClear: zones.every((zone) => !overlaps(game.player, zone)),
+      enemiesClear: game.enemies.every((enemy) => zones.every((zone) => !overlaps(enemy, zone))),
     };
   });
-
-  expect(result.zones).toBe(4);
-  expect(result.playerClear).toBe(true);
-  expect(result.enemiesClear).toBe(true);
+  expect(result).toEqual({ zones: 4, playerClear: true, enemiesClear: true });
 });

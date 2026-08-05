@@ -5,12 +5,13 @@ Last updated: 2026-08-05
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v2.2.0 — Clean Core Stabilization**
-- Pull Request: **#29**
-- Working branch: `refactor/v2.2-clean-core`
+- Current release: **v2.2.0 — Clean Core Stabilization**
+- Pull Request #29: **squash-merged into `main`**
+- v2.2.0 merge commit: `93767ce997b4d4569bd52e7c5fa79bb300c68380`
 - Previous release: **v2.1.0**
 - Previous full release preserved at: `archive/v1.4.1-full`
-- Current state: **implementation, repository cleanup, deterministic verification, Chromium verification, PWA update, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
+- GitHub Pages deployment: **triggered by the Pull Request #29 merge and this status update**
+- Current state: **implementation, repository cleanup, deterministic verification, Chromium verification, PWA update, documentation, desktop/mobile visual review, and merge complete; deployed-build and physical-device acceptance remain**
 
 ## Product definition
 
@@ -86,6 +87,7 @@ There are no constructor-time gameplay installers or prototype monkey patches. A
 - JavaScript syntax checks: **passed**.
 - Deterministic tests: **15/15 passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
+- Final Verify workflow on the Pull Request #29 documentation commit: **passed**.
 - Coverage includes:
   - release version;
   - readable Scout-only opening waves;
@@ -109,6 +111,7 @@ There are no constructor-time gameplay installers or prototype monkey patches. A
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Failures, flaky tests, and skipped tests: **0**.
+- Final Browser Smoke workflow on the Pull Request #29 documentation commit: **passed**.
 - Coverage confirms:
   - only the clean runtime boots;
   - no mode, hub, puzzle, or objective state exists;
@@ -145,7 +148,7 @@ Confirmed:
 
 ## Remaining acceptance checks
 
-These require the merged/deployed build or physical hardware and are not marked complete:
+These require the deployed build or physical hardware and are not marked complete:
 
 1. Complete a normal run through Wave 10 without QA shortcuts.
 2. Confirm the slower enemy unlock curve feels correct during real play.

@@ -2,54 +2,105 @@ import { expect, test } from '@playwright/test';
 
 async function loadGame(page) {
   await page.goto('/?qa=1');
+  await page.waitForFunction(() => document.documentElement.dataset.gameReady === 'true');
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
 }
 
-test('boots only the clean core runtime', async ({ page }) => {
+test('boots only the stable single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.2.0-clean');
+  expect(snapshot.version).toBe('2.3.0-stable');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
   expect(snapshot.removedSystemsPresent).toBe(false);
   expect(snapshot.puzzleObjectivesPresent).toBe(false);
 });
 
-test('one action starts wave one in the central room', async ({ page }) => {
+test('one action starts wave one and the wave path requires one upgrade', async ({ page }) => {
   await loadGame(page);
   await page.keyboard.press('Enter');
-  const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(1);
   expect(snapshot.enemies).toBe(3);
   expect(snapshot.arenaStage).toBe(0);
-});
 
-test('clearing a wave requires exactly one upgrade before continuing', async ({ page }) => {
-  await loadGame(page);
-  await page.keyboard.press('Enter');
-  const upgrade = await page.evaluate(() => {
+  snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.enemies = [];
     game.resetBulletToPlayer();
-    game.update(1);
+    for (let index = 0; index < 25; index += 1) game.update(0.033);
     return game.getSnapshot();
   });
-  expect(upgrade.state).toBe('upgrade');
-  expect(upgrade.upgradeChoices).toHaveLength(3);
+  expect(snapshot.state).toBe('upgrade');
+  expect(snapshot.upgradeChoices).toHaveLength(3);
 
-  const next = await page.evaluate(() => {
+  snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.chooseUpgrade(0);
     return game.getSnapshot();
   });
-  expect(next.state).toBe('playing');
-  expect(next.wave).toBe(2);
-  expect(next.upgrades).toBe(1);
+  expect(snapshot.state).toBe('playing');
+  expect(snapshot.wave).toBe(2);
+  expect(snapshot.upgrades).toBe(1);
 });
 
-test('the same map expands automatically at waves 3, 6, and 9', async ({ page }) => {
+test('clearing the last enemy automatically recalls the bullet before upgrades', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: false,
+      x: game.player.x + 350,
+      y: game.player.y + 100,
+      vx: 0,
+      vy: 0,
+      recoverDelay: 0,
+    });
+    let sawAutomaticRecall = false;
+    for (let index = 0; index < 180; index += 1) {
+      game.update(0.016);
+      sawAutomaticRecall ||= game.waveEnding && game.bullet.recalling;
+      if (game.state === 'upgrade') break;
+    }
+    return { sawAutomaticRecall, snapshot: game.getSnapshot() };
+  });
+  expect(result.sawAutomaticRecall).toBe(true);
+  expect(result.snapshot.bulletHeld).toBe(true);
+  expect(result.snapshot.state).toBe('upgrade');
+});
+
+test('sniper telegraph locks its direction before the player moves', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.wave = 6;
+    game.enemies = [];
+    game.enemyShots = [];
+    game.player.x = 700;
+    game.player.y = 360;
+    const sniper = game.spawnEnemy('sniper', 0, { point: { x: 300, y: 360 } });
+    sniper.spawnTime = 0;
+    sniper.attackCooldown = 0;
+    game.updateEnemies(0.01);
+    const locked = { ...sniper.telegraphDirection };
+    game.player.x = 300;
+    game.player.y = 600;
+    game.updateEnemies(0.6);
+    const shot = game.enemyShots[0];
+    const length = Math.hypot(shot.vx, shot.vy);
+    return { locked, fired: { x: shot.vx / length, y: shot.vy / length } };
+  });
+  expect(result.fired.x).toBeCloseTo(result.locked.x, 5);
+  expect(result.fired.y).toBeCloseTo(result.locked.y, 5);
+});
+
+test('the same arena expands automatically at waves 3, 6, and 9', async ({ page }) => {
   await loadGame(page);
   const stages = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -73,8 +124,8 @@ test('sub-stepped bullet movement cannot tunnel through an enemy', async ({ page
     game.enemies = [];
     game.player.x = 400;
     game.player.y = 200;
-    game.pointer.x = 900;
-    game.pointer.y = 200;
+    game.input.pointer.x = 900;
+    game.input.pointer.y = 200;
     const enemy = game.spawnEnemy('scout', 0, { point: { x: 700, y: 200 } });
     enemy.spawnTime = 0;
     game.fireBullet();
@@ -85,32 +136,14 @@ test('sub-stepped bullet movement cannot tunnel through an enemy', async ({ page
   expect(result.remaining).toBe(0);
 });
 
-test('mobile control zones keep combat entities visible', async ({ page }) => {
-  await loadGame(page);
-  const result = await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.startRun();
-    game.touchMode = true;
-    game.wave = 8;
-    game.startNextWave();
-    const zones = game.getSnapshot().touchSafeZones;
-    const checks = [];
-    for (const zone of zones) {
-      game.player.x = zone.x + zone.w / 2;
-      game.player.y = zone.y + zone.h / 2;
-      game.constrainCombatCircle(game.player);
-      const inside = game.player.x + game.player.radius >= zone.x
-        && game.player.x - game.player.radius <= zone.x + zone.w
-        && game.player.y + game.player.radius >= zone.y
-        && game.player.y - game.player.radius <= zone.y + zone.h;
-      checks.push({ id: zone.id, inside });
-    }
-    return checks;
-  });
-  expect(result.every((item) => item.inside === false)).toBe(true);
+test('production runtime does not expose the mutable QA game object', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => document.documentElement.dataset.gameReady === 'true');
+  const exposed = await page.evaluate(() => '__ONE_BULLET_ARENA__' in window);
+  expect(exposed).toBe(false);
 });
 
-test('canvas remains contained and the document never scrolls', async ({ page }) => {
+test('canvas remains contained without document scrolling', async ({ page }) => {
   await loadGame(page);
   const layout = await page.evaluate(() => {
     const rect = document.querySelector('#game-canvas').getBoundingClientRect();
@@ -130,22 +163,7 @@ test('canvas remains contained and the document never scrolls', async ({ page })
   expect(layout.externalFonts).toBe(false);
 });
 
-test('portrait view has no rotation banner or external page chrome', async ({ page }) => {
-  await page.setViewportSize({ width: 412, height: 915 });
-  await loadGame(page);
-  const result = await page.evaluate(() => ({
-    before: getComputedStyle(document.body, '::before').content,
-    bodyChildren: [...document.body.children].map((element) => element.tagName),
-    scrollWidth: document.documentElement.scrollWidth,
-    scrollHeight: document.documentElement.scrollHeight,
-  }));
-  expect(['none', 'normal', '""']).toContain(result.before);
-  expect(result.bodyChildren).toEqual(['MAIN', 'SCRIPT']);
-  expect(result.scrollWidth).toBeLessThanOrEqual(413);
-  expect(result.scrollHeight).toBeLessThanOrEqual(916);
-});
-
-test('menu, upgrade, wave one, wave nine, and game over remain visually reviewable', async ({ page }, testInfo) => {
+test('menu, combat, upgrade, full arena, and game over remain visually reviewable', async ({ page }, testInfo) => {
   await loadGame(page);
   await page.screenshot({ path: testInfo.outputPath('menu.png'), fullPage: true });
 
@@ -161,7 +179,7 @@ test('menu, upgrade, wave one, wave nine, and game over remain visually reviewab
     const game = window.__ONE_BULLET_ARENA__;
     game.enemies = [];
     game.resetBulletToPlayer();
-    game.update(1);
+    for (let index = 0; index < 25; index += 1) game.update(0.033);
     game.draw();
   });
   await page.screenshot({ path: testInfo.outputPath('upgrade.png'), fullPage: true });

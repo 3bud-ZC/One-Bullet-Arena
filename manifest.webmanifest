@@ -1,8 +1,8 @@
 {
   "id": "./?source=pwa",
-  "name": "حلبة الطلقة الواحدة: بروتوكول الكسر",
+  "name": "حلبة الطلقة الواحدة",
   "short_name": "One Bullet",
-  "description": "لعبة Roguelite أكشن عربية تعتمد على طلقة واحدة قابلة للاستعادة والارتداد.",
+  "description": "اهزم كل موجة واختر قدرة جديدة حتى تنتهي الجولة.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
@@ -10,10 +10,15 @@
   "display": "standalone",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
-  "background_color": "#03050a",
-  "theme_color": "#050711",
+  "background_color": "#02040a",
+  "theme_color": "#02040a",
   "categories": ["games", "entertainment"],
   "icons": [
-    { "src": "./icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "./icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }

@@ -5,80 +5,88 @@ Last updated: 2026-08-05
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current release: **v2.0.0 — Simple Core Loop Reset**
-- Pull Request #27: **squash-merged into `main`**
-- v2.0.0 merge commit: `c1f77c6adff44823506e3561e05a81643fe8b737`
+- Release candidate: **v2.1.0 — Automatic Expanding Arena**
+- Pull Request: **#28**
+- Working branch: `feature/expanding-arena-core-loop`
+- Previous simple release: **v2.0.0**
 - Previous full release preserved at: `archive/v1.4.1-full`
-- Repository cleanup commit: `6a05e52ac0a9980328ee5da1978498fe0ea9cc83`
-- GitHub Pages deployment: **triggered by the Pull Request #27 merge and this status update**
-- Current state: **implementation, active-repository cleanup, deterministic verification, Chromium verification, PWA integration, documentation, visual review, and merge complete; deployed-build and physical-device acceptance remain**
+- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
 
-## Product reset
+## Final game definition
 
-The active game has returned to one explicit loop:
+The active game contains one explicit loop:
 
 1. Start one run.
-2. Clear the current wave.
+2. Fight every enemy in the current wave.
 3. Recover the single bullet.
 4. Choose one of three abilities.
-5. Start the next wave.
+5. Enter the next, harder wave.
 6. Continue until defeat.
 
-There is no alternate mode or progression route.
+There is one map and one game. No alternate mode, objective route, or puzzle can block normal wave progression.
 
-## Removed from the active release
+## Automatic arena expansion
+
+The same arena opens automatically according to the current wave:
+
+| Waves | Arena stage |
+| --- | --- |
+| 1–2 | Central combat room |
+| 3–5 | Side wings opened |
+| 6–8 | Outer corridors opened |
+| 9+ | Complete arena opened |
+
+- Clearing enemies and choosing an ability are the only requirements for entering the next wave.
+- Expansion never requires ordered hits, relay activation, hit counters, target sequences, survival timers, or any other objective.
+- Player, enemies, bullet ricochets, and enemy projectiles are constrained to the currently unlocked combat space.
+- New geometry is ordinary combat cover only.
+- After Wave 9, the complete arena remains active for all later waves.
+
+## Difficulty progression
+
+Difficulty increases through combat pressure only:
+
+- enemy population grows gradually from three enemies;
+- population remains capped at fourteen active enemies;
+- Brute, Sniper, Charger, and Splitter enemies enter the roster gradually;
+- enemy health increases within a bounded scale;
+- enemy movement and projectile speed increase within bounded scales;
+- the player receives one ability choice after every cleared wave.
+
+There are no mode-specific modifiers or separate difficulty settings.
+
+## Mobile combat visibility
+
+The complete arena reaches underneath the touch-control layer, so dedicated combat-safe zones are enforced around:
+
+- the movement stick;
+- Recall;
+- Dash;
+- Pause.
+
+Enemy spawn points avoid these zones. The player and enemies are moved out of them during gameplay so combat entities do not become hidden behind the controls. The bullet and visual effects may pass beneath the controls without blocking player readability.
+
+## Removed systems remain absent
 
 - Region and difficulty selection.
 - Story Route and Corebreak Protocol.
 - Daily Challenge, Endless, Boss Rush, and Contracts.
 - Objective Rooms and Guardians.
-- Bullet Cores, Relics, Synergies, Overdrive, and combat techniques.
-- Command Center, Codices, mastery systems, achievements, cosmetics, and run history.
-- Persistent build progression, currencies, and unified backup UI.
-- Legacy runtime installers, UI layers, data modules, and their obsolete tests.
+- Hit-order puzzles, relay sequences, marked targets, defense timers, and separation objectives.
+- Bullet Cores, Relics, Synergies, Overdrive, and active combat techniques.
+- Command Center, Codices, mastery systems, achievements, cosmetics, currencies, and run history.
+- Persistent build progression and unified backup UI.
 
 The complete v1.4.1 implementation remains available only in the archive branch.
 
-## Active gameplay
-
-- One fixed arena.
-- One recoverable bullet.
-- Wall and obstacle ricochets.
-- Manual recall using `Q` or the mobile Recall button.
-- Dash using `Space`, `Shift`, or the mobile Dash button.
-- Five enemy archetypes introduced gradually.
-- Wave population capped at fourteen enemies.
-- Bounded scaling for enemy health, speed, and projectile speed.
-- Endless wave progression until player defeat.
-- Highest score and highest wave stored locally.
-
-## Upgrade flow
-
-- Every cleared wave enters the upgrade screen.
-- The next wave cannot begin until one ability is selected.
-- Three unique available abilities are offered.
-- Maxed abilities are removed from later selections.
-- Thirteen run abilities cover:
-  - damage;
-  - bullet velocity;
-  - ricochets;
-  - shock damage;
-  - recall;
-  - movement;
-  - dash cooldown;
-  - perfect catches;
-  - health;
-  - shields;
-  - one second chance.
-- All selected abilities reset when a new run starts.
-
-## Active runtime and repository
+## Active runtime
 
 The browser loads only:
 
 - `src/main.js`
 - `src/simple-game.js`
 - `src/simple-data.js`
+- `src/expanding-arena.js`
 - `src/simple-ui-cleanup.js`
 - `src/audio.js`
 - `simple-game.css`
@@ -86,75 +94,83 @@ The browser loads only:
 The service worker caches only the active game shell and uses:
 
 ```text
-one-bullet-arena-v2.0.0-simple
+one-bullet-arena-v2.1.0-simple
 ```
-
-Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser specs have been deleted from `main`.
 
 ## Verification
 
 ### Deterministic verification
 
 - JavaScript syntax checks: **passed**.
-- Automated deterministic tests: **10/10 passed**.
+- Automated deterministic tests: **16/16 passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
-- Final Verify workflow on the Pull Request #27 documentation commit: **passed**.
 - Coverage verifies:
-  - release version;
+  - release version `2.1.0-simple`;
   - readable three-enemy first wave;
   - gradual enemy-roster introduction;
   - monotonic capped population growth;
   - bounded enemy scaling;
-  - unique run-upgrade catalog;
-  - stack normalization;
-  - removal of maxed abilities;
-  - three unique upgrade choices;
-  - empty choices after all abilities are maxed.
+  - unique run-upgrade catalog and upgrade-choice behavior;
+  - arena stages at Waves 1, 3, 6, and 9;
+  - strictly increasing playable area;
+  - all arena stages contained inside the fixed Canvas;
+  - combat geometry contains no objective or puzzle fields;
+  - four isolated mobile touch-control safety zones;
+  - returned progression data is protected from external mutation.
 
 ### Browser verification
 
-- Playwright Browser Smoke: **12/12 passed**.
+- Playwright Browser Smoke: **18/18 passed**.
 - Browsers/viewports:
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Failures, flaky tests, and skipped tests: **0**.
-- Final Browser Smoke workflow on the Pull Request #27 documentation commit: **passed**.
 - Coverage confirms:
-  - only the simple runtime boots;
-  - allowed states contain no mode or hub screens;
+  - only the simple expanding-arena runtime boots;
+  - allowed states contain no mode, hub, objective, or puzzle screens;
   - one action starts Wave 1;
-  - Wave 1 contains three enemies;
-  - clearing a wave forces an upgrade selection;
-  - choosing an upgrade starts Wave 2;
+  - clearing a wave forces one upgrade selection;
+  - choosing the upgrade starts the next wave;
+  - arena stages advance automatically at Waves 3, 6, and 9;
+  - playable area grows at every unlock;
+  - the player and bullet remain inside the active boundaries;
+  - mobile touch controls reserve clear combat space;
   - the document does not scroll;
-  - the Canvas remains inside both viewports;
-  - no legacy UI stylesheet is loaded.
+  - the Canvas remains contained on desktop and mobile.
 
 ### Visual QA completed
 
-Reviewed the menu, upgrade selection, and active gameplay on desktop and mobile landscape.
+Reviewed:
+
+- Wave 1 central room on Desktop Chromium.
+- Wave 9 complete arena on Desktop Chromium.
+- Wave 1 central room on Mobile Landscape Chromium.
+- Wave 9 complete arena on Mobile Landscape Chromium.
+- Menu and upgrade selection on both projects.
 
 Confirmed:
 
-- the menu contains only Play and How to Play;
-- arena geometry is hidden behind menu screens;
-- the upgrade screen shows three large readable cards;
-- Arabic upgrade levels render as `current level X of Y` rather than reversed slash values;
-- the gameplay HUD contains only wave, score, health, bullet, dash, recall, and upgrade count;
-- mobile movement, Recall, Dash, and Pause controls remain inside the viewport;
-- no old hub, mode selector, objective panel, region banner, or meta-progression UI appears.
+- Wave 1 visibly begins in a smaller central combat room;
+- Wave 9 visibly uses the complete arena;
+- locked space is dark and does not look like an interactive puzzle;
+- the expansion border clearly defines the current playable space;
+- combat cover remains simple and readable;
+- no objective panel, sequence marker, puzzle instruction, region banner, or mode UI appears;
+- mobile enemies no longer overlap the movement stick, Recall, Dash, or Pause buttons;
+- HUD and controls remain inside the viewport.
 
 ## Remaining acceptance checks
 
-These require the deployed build or extended physical play and are not marked complete:
+These require merged/deployed play or physical hardware and are not marked complete:
 
-1. Complete several runs through at least Wave 10 using normal player input.
-2. Review upgrade balance and repeated-choice variety during long runs.
-3. Review enemy pressure and arena readability near the fourteen-enemy cap.
-4. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
-5. Test installed PWA launch and offline restart with cache v2.0.0.
-6. Verify the GitHub Pages deployment after deployment completes.
+1. Complete a normal run from Wave 1 through Wave 10 without QA shortcuts.
+2. Confirm the expansions at Waves 3, 6, and 9 feel correctly timed during real play.
+3. Review whether the central room is comfortable with the first two waves.
+4. Review enemy pressure and readability near the fourteen-enemy cap.
+5. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
+6. Test installed PWA launch and offline restart with cache v2.1.0.
+7. Verify the GitHub Pages deployment after Pull Request #28 is merged.
 
 ## Refresh note
 
-The service-worker cache changes from `one-bullet-arena-v1.4.1` to `one-bullet-arena-v2.0.0-simple`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the previous Corebreak build remains visible.
+The service-worker cache changes from `one-bullet-arena-v2.0.0-simple` to `one-bullet-arena-v2.1.0-simple`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the previous map remains visible.

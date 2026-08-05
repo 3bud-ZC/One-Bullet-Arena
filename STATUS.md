@@ -5,12 +5,13 @@ Last updated: 2026-08-05
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v2.1.0 — Automatic Expanding Arena**
-- Pull Request: **#28**
-- Working branch: `feature/expanding-arena-core-loop`
+- Current release: **v2.1.0 — Automatic Expanding Arena**
+- Pull Request #28: **squash-merged into `main`**
+- v2.1.0 merge commit: `3303ec1ce8402af000bd79f077db41aa45684845`
 - Previous simple release: **v2.0.0**
 - Previous full release preserved at: `archive/v1.4.1-full`
-- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
+- GitHub Pages deployment: **triggered by the Pull Request #28 merge and this status update**
+- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, documentation, desktop/mobile visual review, and merge complete; deployed-build and physical-device acceptance remain**
 
 ## Final game definition
 
@@ -104,6 +105,7 @@ one-bullet-arena-v2.1.0-simple
 - JavaScript syntax checks: **passed**.
 - Automated deterministic tests: **16/16 passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
+- Final Verify workflow on the Pull Request #28 documentation commit: **passed**.
 - Coverage verifies:
   - release version `2.1.0-simple`;
   - readable three-enemy first wave;
@@ -125,6 +127,7 @@ one-bullet-arena-v2.1.0-simple
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Failures, flaky tests, and skipped tests: **0**.
+- Final Browser Smoke workflow on the Pull Request #28 documentation commit: **passed**.
 - Coverage confirms:
   - only the simple expanding-arena runtime boots;
   - allowed states contain no mode, hub, objective, or puzzle screens;
@@ -161,7 +164,7 @@ Confirmed:
 
 ## Remaining acceptance checks
 
-These require merged/deployed play or physical hardware and are not marked complete:
+These require the deployed build or physical hardware and are not marked complete:
 
 1. Complete a normal run from Wave 1 through Wave 10 without QA shortcuts.
 2. Confirm the expansions at Waves 3, 6, and 9 feel correctly timed during real play.
@@ -169,7 +172,7 @@ These require merged/deployed play or physical hardware and are not marked compl
 4. Review enemy pressure and readability near the fourteen-enemy cap.
 5. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
 6. Test installed PWA launch and offline restart with cache v2.1.0.
-7. Verify the GitHub Pages deployment after Pull Request #28 is merged.
+7. Verify the deployed GitHub Pages build after deployment completes.
 
 ## Refresh note
 

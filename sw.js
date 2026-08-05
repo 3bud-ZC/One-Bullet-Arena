@@ -1,4 +1,4 @@
-const CACHE_NAME = 'one-bullet-arena-v2.0.0-simple';
+const CACHE_NAME = 'one-bullet-arena-v2.1.0-simple';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './src/main.js',
   './src/simple-game.js',
   './src/simple-data.js',
+  './src/expanding-arena.js',
   './src/simple-ui-cleanup.js',
   './src/audio.js',
 ];

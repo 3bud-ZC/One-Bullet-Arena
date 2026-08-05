@@ -1,24 +1,19 @@
-const CACHE_NAME = 'one-bullet-arena-v2.1.0-simple';
+const CACHE_NAME = 'one-bullet-arena-v2.2.0-clean';
 const APP_SHELL = [
   './',
   './index.html',
-  './simple-game.css',
+  './game.css',
   './manifest.webmanifest',
   './icons/app-icon.svg',
   './src/main.js',
-  './src/simple-game.js',
-  './src/simple-data.js',
-  './src/expanding-arena.js',
-  './src/simple-ui-cleanup.js',
+  './src/game.js',
+  './src/game-data.js',
+  './src/arena.js',
   './src/audio.js',
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting()),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {

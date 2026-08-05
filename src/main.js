@@ -1,16 +1,15 @@
-import { SimpleOneBulletArena } from './simple-game.js';
-import { installExpandingArena } from './expanding-arena.js';
-import { installSimpleUiCleanup } from './simple-ui-cleanup.js';
+import { OneBulletGame } from './game.js';
+
+migrateLegacyStorage();
 
 const canvas = document.querySelector('#game-canvas');
+const liveRegion = document.querySelector('#game-status');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
 
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new SimpleOneBulletArena(canvas);
-installExpandingArena(game);
-installSimpleUiCleanup(game);
+const game = new OneBulletGame(canvas, liveRegion);
 window.__ONE_BULLET_ARENA__ = game;
 
 document.addEventListener('keydown', async (event) => {
@@ -19,10 +18,27 @@ document.addEventListener('keydown', async (event) => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch {
-    // Fullscreen support is optional and does not affect gameplay.
+    // Fullscreen is optional and never blocks gameplay.
   }
 });
 
 if ('serviceWorker' in navigator && !location.search.includes('qa=1')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+function migrateLegacyStorage() {
+  const migrations = [
+    ['one-bullet-simple-high-score', 'one-bullet-clean-high-score'],
+    ['one-bullet-simple-high-wave', 'one-bullet-clean-high-wave'],
+    ['one-bullet-arena-audio-settings', 'one-bullet-clean-audio'],
+  ];
+  try {
+    for (const [legacyKey, currentKey] of migrations) {
+      if (localStorage.getItem(currentKey) !== null) continue;
+      const legacyValue = localStorage.getItem(legacyKey);
+      if (legacyValue !== null) localStorage.setItem(currentKey, legacyValue);
+    }
+  } catch {
+    // Restricted storage must never prevent the game from starting.
+  }
 }

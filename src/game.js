@@ -2,23 +2,38 @@ import { AudioEngine } from './audio.js';
 import {
   ENEMY_TYPES,
   GAME_HEIGHT as HEIGHT,
+  GAME_VERSION,
   GAME_WIDTH as WIDTH,
-  SIMPLE_GAME_VERSION,
+  MAX_ACTIVE_ENEMIES,
   buildWaveComposition,
   enemyScaleForWave,
   pickUpgradeChoices,
-} from './simple-data.js';
+} from './game-data.js';
+import {
+  ARENA_STAGE_COUNT,
+  arenaStageForWave,
+  circleOverlap,
+  circleRectOverlap,
+  clamp,
+  clampCircleToBounds,
+  distance,
+  mobileSafeZones,
+  normalize,
+  pointInsideBounds,
+  pointInsideRect,
+  pushCircleOutOfSafeZones,
+  resolveCircleAgainstRects,
+} from './arena.js';
 
-const FONT = 'Changa, "Segoe UI", Tahoma, sans-serif';
+const FONT = 'Tahoma, Arial, sans-serif';
 const STORAGE = Object.freeze({
-  highScore: 'one-bullet-simple-high-score',
-  highWave: 'one-bullet-simple-high-wave',
+  highScore: 'one-bullet-clean-high-score',
+  highWave: 'one-bullet-clean-high-wave',
 });
-
 const COLORS = Object.freeze({
   background: '#050711',
-  panel: 'rgba(12, 18, 38, 0.96)',
-  panelSoft: 'rgba(19, 27, 53, 0.94)',
+  panel: 'rgba(10, 16, 34, 0.94)',
+  panelSoft: 'rgba(18, 26, 50, 0.93)',
   border: '#35416e',
   grid: 'rgba(98, 122, 190, 0.08)',
   text: '#f8f9ff',
@@ -28,21 +43,25 @@ const COLORS = Object.freeze({
   danger: '#ff526a',
   success: '#53f2a1',
   electric: '#58a6ff',
-  purple: '#b983ff',
 });
-
 const BASE_PLAYER_SPEED = 285;
 const DASH_SPEED = 760;
-const BASE_BULLET_SPEED = 920;
+const BASE_BULLET_SPEED = 900;
+const BULLET_STEP = 9;
 
-export class SimpleOneBulletArena {
-  constructor(canvas) {
+export class OneBulletGame {
+  constructor(canvas, liveRegion = null) {
+    if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError('A canvas element is required.');
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas 2D is unavailable.');
+
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+    this.ctx = context;
+    this.liveRegion = liveRegion;
     this.canvas.width = WIDTH;
     this.canvas.height = HEIGHT;
-    this.version = SIMPLE_GAME_VERSION;
-    this.allowedStates = ['menu', 'howto', 'playing', 'upgrade', 'paused', 'gameover'];
+    this.version = GAME_VERSION;
+    this.allowedStates = ['menu', 'playing', 'upgrade', 'paused', 'gameover'];
     this.audio = new AudioEngine();
     this.keys = new Set();
     this.pointer = { x: WIDTH / 2, y: HEIGHT / 2, down: false };
@@ -51,17 +70,13 @@ export class SimpleOneBulletArena {
     this.state = 'menu';
     this.lastTime = 0;
     this.elapsed = 0;
-    this.shake = 0;
-    this.flash = 0;
-    this.hitStop = 0;
-    this.slowMotion = 0;
     this.uiRegions = [];
     this.nextEnemyId = 1;
-    this.banner = null;
-    this.highScore = Number(localStorage.getItem(STORAGE.highScore) || 0);
-    this.highWave = Number(localStorage.getItem(STORAGE.highWave) || 0);
+    this.highScore = readNumber(STORAGE.highScore);
+    this.highWave = readNumber(STORAGE.highWave);
     this.bindInput();
     this.resetRun();
+    this.audio.setScene('menu');
     requestAnimationFrame((time) => this.loop(time));
   }
 
@@ -71,14 +86,13 @@ export class SimpleOneBulletArena {
       this.keys.add(key);
       this.audio.ensure();
       if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) event.preventDefault();
-      if (key === 'escape') {
+
+      if (key === 'escape' || key === 'p') {
         if (this.state === 'playing') this.pause();
         else if (this.state === 'paused') this.resume();
-        else if (this.state === 'howto' || this.state === 'gameover') this.goToMenu();
+        else if (this.state === 'gameover') this.goToMenu();
         return;
       }
-      if (key === 'p' && this.state === 'playing') { this.pause(); return; }
-      if (key === 'p' && this.state === 'paused') { this.resume(); return; }
       if ((key === ' ' || key === 'shift') && this.state === 'playing') this.dashRequested = true;
       if (key === 'q' && this.state === 'playing') this.recallBullet();
       if (key === 'm') this.audio.toggleMute();
@@ -90,6 +104,7 @@ export class SimpleOneBulletArena {
 
     const updatePointer = (event) => {
       const rect = this.canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
       this.pointer.x = ((event.clientX - rect.left) / rect.width) * WIDTH;
       this.pointer.y = ((event.clientY - rect.top) / rect.height) * HEIGHT;
     };
@@ -110,9 +125,10 @@ export class SimpleOneBulletArena {
       this.canvas.setPointerCapture?.(event.pointerId);
       if (this.handleUiClick(this.pointer.x, this.pointer.y)) return;
       if (this.state !== 'playing') return;
+
       if (event.pointerType === 'touch') {
         this.touchMode = true;
-        if (this.pointer.x < WIDTH * 0.44 && this.pointer.y > HEIGHT * 0.34) {
+        if (this.pointer.x < WIDTH * 0.42 && this.pointer.y > HEIGHT * 0.34) {
           this.touchMove = {
             id: event.pointerId,
             originX: this.pointer.x,
@@ -166,6 +182,7 @@ export class SimpleOneBulletArena {
       hitEnemyIds: new Set(),
       trail: [],
     };
+    this.arenaStage = arenaStageForWave(1);
     this.enemies = [];
     this.enemyShots = [];
     this.particles = [];
@@ -178,100 +195,159 @@ export class SimpleOneBulletArena {
     this.runTime = 0;
     this.upgradeStacks = {};
     this.upgradeChoices = [];
+    this.previousUpgradeChoices = [];
     this.secondChanceUsed = false;
     this.dashRequested = false;
     this.banner = null;
-    this.arena = createSimpleArena();
+    this.shake = 0;
+    this.flash = 0;
     this.stats = { shots: 0, hits: 0, kills: 0, upgrades: 0, damageTaken: 0 };
   }
 
   startRun() {
     this.audio.play('click');
     this.resetRun();
-    this.state = 'playing';
+    this.setState('playing');
     this.audio.setScene('combat');
-    this.spawnNextWave();
+    this.startNextWave();
   }
 
   goToMenu() {
     this.audio.play('click');
     this.resetRun();
-    this.state = 'menu';
+    this.setState('menu');
     this.audio.setScene('menu');
   }
 
   pause() {
     if (this.state !== 'playing') return;
-    this.state = 'paused';
+    this.setState('paused');
     this.audio.setScene('menu');
   }
 
   resume() {
     if (this.state !== 'paused') return;
-    this.state = 'playing';
+    this.setState('playing');
     this.audio.setScene('combat');
+  }
+
+  setState(state) {
+    if (!this.allowedStates.includes(state)) throw new Error(`Unknown state: ${state}`);
+    this.state = state;
+    const messages = {
+      menu: 'القائمة الرئيسية',
+      playing: `الموجة ${this.wave || 1}`,
+      upgrade: 'اختر قدرة واحدة',
+      paused: 'اللعبة متوقفة مؤقتًا',
+      gameover: `انتهت الجولة عند الموجة ${this.wave}`,
+    };
+    this.announce(messages[state]);
+  }
+
+  announce(message) {
+    if (!this.liveRegion || !message) return;
+    this.liveRegion.textContent = '';
+    requestAnimationFrame(() => { this.liveRegion.textContent = message; });
   }
 
   stack(id) {
     return Math.max(0, Number(this.upgradeStacks[id]) || 0);
   }
 
-  spawnNextWave() {
+  startNextWave() {
     this.wave += 1;
+    const previousStageId = this.arenaStage.id;
+    this.arenaStage = arenaStageForWave(this.wave);
     this.highWave = Math.max(this.highWave, this.wave);
-    localStorage.setItem(STORAGE.highWave, String(this.highWave));
+    writeNumber(STORAGE.highWave, this.highWave);
     this.enemies = [];
     this.enemyShots = [];
     this.waveClearTimer = 0;
     this.player.shield = Math.max(this.player.shield, this.stack('wave-shield') > 0 ? 1 : 0);
+    clampCircleToBounds(this.player, this.arenaStage.bounds);
+    resolveCircleAgainstRects(this.player, this.arenaStage.obstacles);
     this.resetBulletToPlayer();
+
     const composition = buildWaveComposition(this.wave);
     composition.forEach((type, index) => this.spawnEnemy(type, index));
-    this.banner = { title: `الموجة ${this.wave}`, subtitle: 'اهزم الجميع ثم اختر قدرة جديدة', time: 1.8 };
-    this.createBurst(this.player.x, this.player.y, COLORS.player, 22, 250);
+    const expanded = this.arenaStage.id > previousStageId;
+    this.banner = {
+      title: `الموجة ${this.wave}`,
+      subtitle: expanded ? `${this.arenaStage.name} — مساحة جديدة اتفتحت` : 'اهزم كل الأعداء',
+      time: expanded ? 2.2 : 1.45,
+    };
+    if (expanded) this.createRing(WIDTH / 2, HEIGHT / 2, COLORS.player, 220);
+    this.createBurst(this.player.x, this.player.y, COLORS.player, 18, 220);
+    this.announce(`بدأت الموجة ${this.wave}. ${composition.length} أعداء.`);
   }
 
   spawnEnemy(type, index = 0, options = {}) {
+    if (this.enemies.length >= MAX_ACTIVE_ENEMIES && !options.mini) return null;
     const definition = ENEMY_TYPES[type] || ENEMY_TYPES.scout;
     const scale = enemyScaleForWave(this.wave);
-    const point = options.point || this.findSpawnPoint(index);
-    const miniScale = options.mini ? 0.68 : 1;
-    const health = definition.health * scale.health * (options.mini ? 0.65 : 1);
-    this.enemies.push({
+    const point = options.point ? this.sanitizeSpawnPoint(options.point, 34) : this.findSpawnPoint(index);
+    const miniScale = options.mini ? 0.66 : 1;
+    const health = definition.health * scale.health * (options.mini ? 0.62 : 1);
+    const enemy = {
       id: this.nextEnemyId++,
       type: definition.id,
       x: point.x,
       y: point.y,
       radius: definition.radius * miniScale,
-      speed: definition.speed * scale.speed * (options.mini ? 1.18 : 1),
+      speed: definition.speed * scale.speed * (options.mini ? 1.16 : 1),
       health,
       maxHealth: health,
-      score: Math.round(definition.score * (1 + this.wave * 0.03) * (options.mini ? 0.5 : 1)),
+      score: Math.round(definition.score * (1 + this.wave * 0.025) * (options.mini ? 0.45 : 1)),
       color: definition.color,
-      attackCooldown: 0.9 + (index % 4) * 0.22,
+      attackCooldown: 1 + (index % 4) * 0.2,
+      shotTelegraph: 0,
       chargeTelegraph: 0,
       chargeRemaining: 0,
       chargeDirection: { x: 0, y: 0 },
       phase: index * 0.77,
-      spawnTime: 0.42,
+      spawnTime: 0.55,
       hitFlash: 0,
-      slowTimer: 0,
       mini: Boolean(options.mini),
-    });
+    };
+    this.enemies.push(enemy);
+    return enemy;
   }
 
   findSpawnPoint(seed = 0) {
-    const positions = [
-      { x: 90, y: 110 }, { x: WIDTH - 90, y: 110 },
-      { x: 90, y: HEIGHT - 110 }, { x: WIDTH - 90, y: HEIGHT - 110 },
-      { x: WIDTH / 2, y: 90 }, { x: WIDTH / 2, y: HEIGHT - 90 },
-      { x: 120, y: HEIGHT / 2 }, { x: WIDTH - 120, y: HEIGHT / 2 },
+    const bounds = this.arenaStage.bounds;
+    const padding = 66;
+    const left = bounds.x + padding;
+    const right = bounds.x + bounds.w - padding;
+    const top = bounds.y + padding;
+    const bottom = bounds.y + bounds.h - padding;
+    const centerX = bounds.x + bounds.w / 2;
+    const centerY = bounds.y + bounds.h / 2;
+    const points = [
+      { x: left, y: top }, { x: right, y: top },
+      { x: left, y: bottom }, { x: right, y: bottom },
+      { x: centerX, y: top }, { x: centerX, y: bottom },
+      { x: left, y: centerY }, { x: right, y: centerY },
+      { x: left + bounds.w * 0.25, y: top }, { x: right - bounds.w * 0.25, y: bottom },
+      { x: right - bounds.w * 0.25, y: top }, { x: left + bounds.w * 0.25, y: bottom },
     ];
-    for (let attempt = 0; attempt < positions.length; attempt += 1) {
-      const point = positions[(seed + attempt + this.wave) % positions.length];
-      if (distance(point, this.player) > 250 && !this.arena.obstacles.some((item) => circleRectOverlap({ ...point, radius: 34 }, item))) return { ...point };
+
+    for (let attempt = 0; attempt < points.length; attempt += 1) {
+      const point = points[(seed + attempt + this.wave * 2) % points.length];
+      if (distance(point, this.player) < 230) continue;
+      if (this.arenaStage.obstacles.some((rect) => circleRectOverlap({ ...point, radius: 34 }, rect))) continue;
+      if (this.touchMode && mobileSafeZones().some((rect) => pointInsideRect(point, rect))) continue;
+      return { ...point };
     }
-    return { x: 80, y: 80 };
+    return this.sanitizeSpawnPoint({ x: left, y: top }, 34);
+  }
+
+  sanitizeSpawnPoint(point, radius = 34) {
+    const candidate = { x: point.x, y: point.y, radius };
+    clampCircleToBounds(candidate, this.arenaStage.bounds);
+    resolveCircleAgainstRects(candidate, this.arenaStage.obstacles);
+    if (this.touchMode) pushCircleOutOfSafeZones(candidate);
+    clampCircleToBounds(candidate, this.arenaStage.bounds);
+    return { x: candidate.x, y: candidate.y };
   }
 
   resetBulletToPlayer() {
@@ -293,8 +369,8 @@ export class SimpleOneBulletArena {
   fireBullet() {
     if (this.state !== 'playing' || !this.bullet.held) return false;
     const direction = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
-    if (direction.x === 0 && direction.y === 0) return false;
-    const speed = BASE_BULLET_SPEED * (1 + this.stack('bullet-velocity') * 0.08);
+    if (!direction.x && !direction.y) return false;
+    const speed = BASE_BULLET_SPEED * (1 + this.stack('bullet-velocity') * 0.07);
     Object.assign(this.bullet, {
       x: this.player.x + direction.x * 30,
       y: this.player.y + direction.y * 30,
@@ -302,7 +378,7 @@ export class SimpleOneBulletArena {
       vy: direction.y * speed,
       held: false,
       recalling: false,
-      recoverDelay: 0.22,
+      recoverDelay: 0.2,
       bounceCount: 0,
       bouncesRemaining: 4 + this.stack('extended-ricochet') * 2,
       trail: [],
@@ -310,8 +386,8 @@ export class SimpleOneBulletArena {
     this.bullet.hitEnemyIds.clear();
     this.stats.shots += 1;
     this.audio.play('shoot');
-    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 10, 160);
-    this.shake = 5;
+    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 9, 155);
+    this.shake = Math.max(this.shake, 4);
     return true;
   }
 
@@ -319,39 +395,39 @@ export class SimpleOneBulletArena {
     if (this.state !== 'playing' || this.bullet.held || this.bullet.recalling || this.bullet.recallCooldown > 0) return false;
     this.bullet.recalling = true;
     this.bullet.hitEnemyIds.clear();
-    this.bullet.recallCooldown = Math.max(1.2, 4 - this.stack('magnetic-recall') * 0.42);
+    this.bullet.recallCooldown = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
     this.audio.play('recover');
     return true;
   }
 
-  getMovementDirection() {
-    let horizontal = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft'));
-    let vertical = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup'));
+  movementDirection() {
+    let x = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft'));
+    let y = Number(this.keys.has('s') || this.keys.has('arrowdown')) - Number(this.keys.has('w') || this.keys.has('arrowup'));
     if (this.touchMove) {
       const dx = clamp(this.touchMove.x - this.touchMove.originX, -72, 72);
       const dy = clamp(this.touchMove.y - this.touchMove.originY, -72, 72);
       if (Math.hypot(dx, dy) > 8) {
-        horizontal += dx / 72;
-        vertical += dy / 72;
+        x += dx / 72;
+        y += dy / 72;
       }
     }
-    return normalize(horizontal, vertical);
+    return normalize(x, y);
   }
 
   tryDash() {
     if (!this.dashRequested) return;
     this.dashRequested = false;
     if (this.player.dashCooldown > 0 || this.player.dashRemaining > 0) return;
-    const movement = this.getMovementDirection();
-    const fallback = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
-    const direction = movement.x || movement.y ? movement : fallback;
+    const movement = this.movementDirection();
+    const aim = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
+    const direction = movement.x || movement.y ? movement : aim;
     if (!direction.x && !direction.y) return;
     this.player.dashDirection = direction;
     this.player.dashRemaining = 0.15;
-    this.player.dashCooldown = Math.max(0.38, 1.15 * Math.pow(0.86, this.stack('quick-dash')));
+    this.player.dashCooldown = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
     this.player.invulnerability = Math.max(this.player.invulnerability, 0.22);
     this.audio.play('dash');
-    this.createBurst(this.player.x, this.player.y, COLORS.player, 12, 190);
+    this.createBurst(this.player.x, this.player.y, COLORS.player, 11, 185);
   }
 
   update(dt) {
@@ -365,6 +441,7 @@ export class SimpleOneBulletArena {
     this.comboTimer = Math.max(0, this.comboTimer - dt);
     if (this.comboTimer <= 0) this.combo = 0;
     if (this.banner && (this.banner.time -= dt) <= 0) this.banner = null;
+
     this.tryDash();
     this.updatePlayer(dt);
     this.updateBullet(dt);
@@ -372,26 +449,27 @@ export class SimpleOneBulletArena {
     this.updateEnemyShots(dt);
     this.updateParticles(dt);
     this.updateFloatingTexts(dt);
-    if (this.enemies.length === 0 && this.state === 'playing') {
+
+    if (this.enemies.length === 0) {
       this.waveClearTimer += dt;
-      if (this.waveClearTimer >= 0.75 && this.bullet.held) this.openUpgradeSelection();
+      if (this.waveClearTimer >= 0.7 && this.bullet.held) this.openUpgradeSelection();
     } else {
       this.waveClearTimer = 0;
     }
   }
 
   updatePlayer(dt) {
-    let direction = this.getMovementDirection();
-    let speed = BASE_PLAYER_SPEED * (1 + this.stack('swift-steps') * 0.08);
+    let direction = this.movementDirection();
+    let speed = BASE_PLAYER_SPEED * (1 + this.stack('swift-steps') * 0.07);
     if (this.player.dashRemaining > 0) {
       this.player.dashRemaining -= dt;
       direction = this.player.dashDirection;
       speed = DASH_SPEED;
-      if (Math.random() > 0.35) this.createParticle(this.player.x, this.player.y, COLORS.player, 75);
+      if (Math.random() > 0.42) this.createParticle(this.player.x, this.player.y, COLORS.player, 75);
     }
-    this.player.x = clamp(this.player.x + direction.x * speed * dt, 28, WIDTH - 28);
-    this.player.y = clamp(this.player.y + direction.y * speed * dt, 28, HEIGHT - 28);
-    this.resolveObstacle(this.player);
+    this.player.x += direction.x * speed * dt;
+    this.player.y += direction.y * speed * dt;
+    this.constrainCombatCircle(this.player);
   }
 
   updateBullet(dt) {
@@ -402,41 +480,57 @@ export class SimpleOneBulletArena {
       this.bullet.trail = [];
       return;
     }
+
     this.bullet.recoverDelay = Math.max(0, this.bullet.recoverDelay - dt);
     this.bullet.trail.unshift({ x: this.bullet.x, y: this.bullet.y });
-    this.bullet.trail.length = Math.min(18, this.bullet.trail.length);
+    this.bullet.trail.length = Math.min(16, this.bullet.trail.length);
     if (this.bullet.recalling) {
       const direction = normalize(this.player.x - this.bullet.x, this.player.y - this.bullet.y);
-      const speed = 700 + this.stack('magnetic-recall') * 105;
+      const speed = 720 + this.stack('magnetic-recall') * 95;
       this.bullet.vx = direction.x * speed;
       this.bullet.vy = direction.y * speed;
     }
-    const previous = { x: this.bullet.x, y: this.bullet.y };
-    this.bullet.x += this.bullet.vx * dt;
-    this.bullet.y += this.bullet.vy * dt;
-    if (!this.bullet.recalling) {
-      this.handleOuterRicochet();
-      this.handleObstacleRicochet(previous);
+
+    const travel = Math.hypot(this.bullet.vx * dt, this.bullet.vy * dt);
+    const steps = Math.max(1, Math.ceil(travel / BULLET_STEP));
+    const stepDt = dt / steps;
+    for (let step = 0; step < steps && !this.bullet.held; step += 1) {
+      const previous = { x: this.bullet.x, y: this.bullet.y };
+      this.bullet.x += this.bullet.vx * stepDt;
+      this.bullet.y += this.bullet.vy * stepDt;
+      if (!this.bullet.recalling) {
+        this.handleArenaRicochet();
+        this.handleObstacleRicochet(previous);
+      }
+      this.handleBulletEnemyHits();
+      if (this.bullet.recoverDelay <= 0 && circleOverlap(this.bullet, this.player, 11)) this.catchBullet();
     }
-    for (const enemy of [...this.enemies]) {
-      if (this.bullet.hitEnemyIds.has(enemy.id) || !circleOverlap(this.bullet, enemy)) continue;
-      this.bullet.hitEnemyIds.add(enemy.id);
-      this.damageEnemy(enemy, this.currentBulletDamage(), true);
-      this.bullet.vx *= 0.9;
-      this.bullet.vy *= 0.9;
-    }
-    if (this.bullet.recoverDelay <= 0 && circleOverlap(this.bullet, this.player, 11)) this.catchBullet();
   }
 
-  handleOuterRicochet() {
+  handleBulletEnemyHits() {
+    for (const enemy of [...this.enemies]) {
+      if (enemy.spawnTime > 0 || this.bullet.hitEnemyIds.has(enemy.id) || !circleOverlap(this.bullet, enemy)) continue;
+      this.bullet.hitEnemyIds.add(enemy.id);
+      this.damageEnemy(enemy, this.currentBulletDamage(), true);
+      this.bullet.vx *= 0.91;
+      this.bullet.vy *= 0.91;
+    }
+  }
+
+  handleArenaRicochet() {
+    const bounds = this.arenaStage.bounds;
+    const minX = bounds.x + this.bullet.radius;
+    const maxX = bounds.x + bounds.w - this.bullet.radius;
+    const minY = bounds.y + this.bullet.radius;
+    const maxY = bounds.y + bounds.h - this.bullet.radius;
     let bounced = false;
-    if (this.bullet.x <= this.bullet.radius || this.bullet.x >= WIDTH - this.bullet.radius) {
-      this.bullet.x = clamp(this.bullet.x, this.bullet.radius, WIDTH - this.bullet.radius);
+    if (this.bullet.x <= minX || this.bullet.x >= maxX) {
+      this.bullet.x = clamp(this.bullet.x, minX, maxX);
       this.bullet.vx *= -1;
       bounced = true;
     }
-    if (this.bullet.y <= this.bullet.radius || this.bullet.y >= HEIGHT - this.bullet.radius) {
-      this.bullet.y = clamp(this.bullet.y, this.bullet.radius, HEIGHT - this.bullet.radius);
+    if (this.bullet.y <= minY || this.bullet.y >= maxY) {
+      this.bullet.y = clamp(this.bullet.y, minY, maxY);
       this.bullet.vy *= -1;
       bounced = true;
     }
@@ -444,7 +538,7 @@ export class SimpleOneBulletArena {
   }
 
   handleObstacleRicochet(previous) {
-    for (const obstacle of this.arena.obstacles) {
+    for (const obstacle of this.arenaStage.obstacles) {
       if (!circleRectOverlap(this.bullet, obstacle)) continue;
       const fromLeft = previous.x + this.bullet.radius <= obstacle.x;
       const fromRight = previous.x - this.bullet.radius >= obstacle.x + obstacle.w;
@@ -452,16 +546,16 @@ export class SimpleOneBulletArena {
       const fromBottom = previous.y - this.bullet.radius >= obstacle.y + obstacle.h;
       if (fromLeft || fromRight) {
         this.bullet.vx *= -1;
-        this.bullet.x = fromLeft ? obstacle.x - this.bullet.radius - 1 : obstacle.x + obstacle.w + this.bullet.radius + 1;
+        this.bullet.x = fromLeft ? obstacle.x - this.bullet.radius - 0.5 : obstacle.x + obstacle.w + this.bullet.radius + 0.5;
       } else if (fromTop || fromBottom) {
         this.bullet.vy *= -1;
-        this.bullet.y = fromTop ? obstacle.y - this.bullet.radius - 1 : obstacle.y + obstacle.h + this.bullet.radius + 1;
+        this.bullet.y = fromTop ? obstacle.y - this.bullet.radius - 0.5 : obstacle.y + obstacle.h + this.bullet.radius + 0.5;
       } else {
         this.bullet.vx *= -1;
         this.bullet.vy *= -1;
       }
       this.onRicochet();
-      break;
+      return;
     }
   }
 
@@ -470,72 +564,75 @@ export class SimpleOneBulletArena {
     this.bullet.bouncesRemaining -= 1;
     this.bullet.hitEnemyIds.clear();
     this.audio.play('ricochet');
-    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 7, 125);
+    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 6, 115);
     if (this.bullet.bouncesRemaining <= 0) {
-      this.bullet.vx *= 0.25;
-      this.bullet.vy *= 0.25;
+      const speed = Math.hypot(this.bullet.vx, this.bullet.vy);
+      if (speed > 260) {
+        const direction = normalize(this.bullet.vx, this.bullet.vy);
+        this.bullet.vx = direction.x * Math.max(260, speed * 0.62);
+        this.bullet.vy = direction.y * Math.max(260, speed * 0.62);
+      }
     }
   }
 
   currentBulletDamage() {
-    let damage = 1 + this.stack('heavy-shot') * 0.45;
-    damage += this.bullet.bounceCount * this.stack('hot-ricochet') * 0.3;
-    if (this.bullet.recalling) damage *= 1 + this.stack('recall-strike') * 0.35;
+    let damage = 1 + this.stack('heavy-shot') * 0.35;
+    damage += this.bullet.bounceCount * this.stack('hot-ricochet') * 0.24;
+    if (this.bullet.recalling) damage *= 1 + this.stack('recall-strike') * 0.3;
     return damage;
   }
 
   catchBullet() {
-    const speed = Math.hypot(this.bullet.vx, this.bullet.vy);
-    const perfect = speed > 420 && this.stack('perfect-catch') > 0 && !this.bullet.recalling;
     this.resetBulletToPlayer();
     this.audio.play('recover');
-    this.createBurst(this.player.x, this.player.y, COLORS.bullet, perfect ? 22 : 13, perfect ? 230 : 160);
-    if (perfect) {
-      this.player.shield = Math.max(1, this.player.shield);
-      const bonus = 180 * this.stack('perfect-catch');
-      this.score += bonus;
-      this.addFloatingText(this.player.x, this.player.y - 38, `التقاط مثالي +${bonus}`, COLORS.bullet);
-    }
+    this.createBurst(this.player.x, this.player.y, COLORS.bullet, 12, 150);
   }
 
   damageEnemy(enemy, damage, fromBullet = false) {
+    if (!this.enemies.includes(enemy)) return;
     enemy.health -= damage;
-    enemy.hitFlash = 0.15;
+    enemy.hitFlash = 0.14;
     if (fromBullet) this.stats.hits += 1;
     this.audio.play(enemy.health <= 0 ? 'kill' : 'hit');
-    this.createBurst(enemy.x, enemy.y, enemy.color, enemy.health <= 0 ? 20 : 10, enemy.health <= 0 ? 300 : 180);
+    this.createBurst(enemy.x, enemy.y, enemy.color, enemy.health <= 0 ? 17 : 8, enemy.health <= 0 ? 270 : 150);
     this.addFloatingText(enemy.x, enemy.y - enemy.radius - 12, `-${formatDamage(damage)}`, COLORS.text);
     if (fromBullet && this.stack('shock-impact') > 0) this.applyShock(enemy);
     if (enemy.health <= 0) this.killEnemy(enemy);
   }
 
   applyShock(origin) {
-    const radius = 88 + this.stack('shock-impact') * 22;
-    const damage = 0.22 + this.stack('shock-impact') * 0.22;
+    const radius = 82 + this.stack('shock-impact') * 20;
+    const damage = 0.18 + this.stack('shock-impact') * 0.2;
     this.createRing(origin.x, origin.y, COLORS.electric, radius);
     for (const enemy of [...this.enemies]) {
       if (enemy.id === origin.id || distance(enemy, origin) > radius) continue;
       enemy.health -= damage;
       enemy.hitFlash = 0.12;
-      this.createBurst(enemy.x, enemy.y, COLORS.electric, 7, 130);
       if (enemy.health <= 0) this.killEnemy(enemy);
     }
   }
 
   killEnemy(enemy) {
-    if (!this.enemies.some((candidate) => candidate.id === enemy.id)) return;
+    if (!this.enemies.includes(enemy)) return;
     this.enemies = this.enemies.filter((candidate) => candidate.id !== enemy.id);
     this.combo += 1;
-    this.comboTimer = 2.2;
-    const gained = Math.round(enemy.score * Math.max(1, this.combo));
+    this.comboTimer = 2.15;
+    const gained = Math.round(enemy.score * Math.max(1, Math.min(8, this.combo)));
     this.score += gained;
     this.stats.kills += 1;
     this.highScore = Math.max(this.highScore, this.score);
-    localStorage.setItem(STORAGE.highScore, String(this.highScore));
+    writeNumber(STORAGE.highScore, this.highScore);
     this.addFloatingText(enemy.x, enemy.y, `+${gained}`, COLORS.bullet);
+
     if (enemy.type === 'splitter' && !enemy.mini) {
-      this.spawnEnemy('scout', 0, { mini: true, point: { x: clamp(enemy.x - 32, 45, WIDTH - 45), y: enemy.y } });
-      this.spawnEnemy('scout', 1, { mini: true, point: { x: clamp(enemy.x + 32, 45, WIDTH - 45), y: enemy.y } });
+      const availableSlots = Math.max(0, MAX_ACTIVE_ENEMIES - this.enemies.length);
+      const children = Math.min(2, availableSlots);
+      for (let index = 0; index < children; index += 1) {
+        this.spawnEnemy('scout', index, {
+          mini: true,
+          point: { x: enemy.x + (index === 0 ? -30 : 30), y: enemy.y },
+        });
+      }
     }
   }
 
@@ -547,56 +644,85 @@ export class SimpleOneBulletArena {
       enemy.attackCooldown -= dt;
       enemy.phase += dt * 2;
       const toPlayer = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
-      if (enemy.type === 'sniper') {
-        const currentDistance = distance(enemy, this.player);
-        const desired = currentDistance < 260 ? -1 : currentDistance > 430 ? 1 : 0;
-        const strafe = { x: -toPlayer.y, y: toPlayer.x };
-        enemy.x += (toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.45) * enemy.speed * dt;
-        enemy.y += (toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.45) * enemy.speed * dt;
-        if (enemy.attackCooldown <= 0) {
-          this.fireEnemyShot(enemy, toPlayer, 350 * scale.shotSpeed);
-          enemy.attackCooldown = Math.max(0.85, 1.8 - this.wave * 0.025);
-        }
-      } else if (enemy.type === 'charger') {
-        if (enemy.chargeRemaining > 0) {
-          enemy.chargeRemaining -= dt;
-          enemy.x += enemy.chargeDirection.x * 520 * dt;
-          enemy.y += enemy.chargeDirection.y * 520 * dt;
-        } else if (enemy.chargeTelegraph > 0) {
-          enemy.chargeTelegraph -= dt;
-          if (enemy.chargeTelegraph <= 0) {
-            enemy.chargeDirection = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
-            enemy.chargeRemaining = 0.34;
-          }
-        } else {
-          enemy.x += toPlayer.x * enemy.speed * dt;
-          enemy.y += toPlayer.y * enemy.speed * dt;
-          if (enemy.attackCooldown <= 0) {
-            enemy.chargeTelegraph = 0.55;
-            enemy.attackCooldown = Math.max(1.6, 3 - this.wave * 0.035);
-          }
-        }
-      } else {
+
+      if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
+      else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
+      else {
         const orbit = enemy.type === 'scout' ? Math.sin(enemy.phase) * 0.18 : 0;
         enemy.x += (toPlayer.x - toPlayer.y * orbit) * enemy.speed * dt;
         enemy.y += (toPlayer.y + toPlayer.x * orbit) * enemy.speed * dt;
       }
-      enemy.x = clamp(enemy.x, enemy.radius, WIDTH - enemy.radius);
-      enemy.y = clamp(enemy.y, enemy.radius, HEIGHT - enemy.radius);
-      this.resolveObstacle(enemy);
-      if (circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);
+      this.constrainCombatCircle(enemy);
+      if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);
+    }
+    this.separateEnemies();
+  }
+
+  updateSniper(enemy, toPlayer, scale, dt) {
+    if (enemy.shotTelegraph > 0) {
+      enemy.shotTelegraph -= dt;
+      if (enemy.shotTelegraph <= 0) {
+        const direction = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
+        this.fireEnemyShot(enemy, direction, 340 * scale.shotSpeed);
+        enemy.attackCooldown = Math.max(1.05, 1.9 - this.wave * 0.022);
+      }
+      return;
+    }
+    const currentDistance = distance(enemy, this.player);
+    const desired = currentDistance < 270 ? -1 : currentDistance > 440 ? 1 : 0;
+    const strafe = { x: -toPlayer.y, y: toPlayer.x };
+    enemy.x += (toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
+    enemy.y += (toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
+    if (enemy.attackCooldown <= 0) enemy.shotTelegraph = 0.42;
+  }
+
+  updateCharger(enemy, toPlayer, dt) {
+    if (enemy.chargeRemaining > 0) {
+      enemy.chargeRemaining -= dt;
+      enemy.x += enemy.chargeDirection.x * 500 * dt;
+      enemy.y += enemy.chargeDirection.y * 500 * dt;
+      return;
+    }
+    if (enemy.chargeTelegraph > 0) {
+      enemy.chargeTelegraph -= dt;
+      if (enemy.chargeTelegraph <= 0) {
+        enemy.chargeDirection = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
+        enemy.chargeRemaining = 0.32;
+      }
+      return;
+    }
+    enemy.x += toPlayer.x * enemy.speed * dt;
+    enemy.y += toPlayer.y * enemy.speed * dt;
+    if (enemy.attackCooldown <= 0) {
+      enemy.chargeTelegraph = 0.58;
+      enemy.attackCooldown = Math.max(1.8, 3.1 - this.wave * 0.03);
+    }
+  }
+
+  separateEnemies() {
+    for (let i = 0; i < this.enemies.length; i += 1) {
+      for (let j = i + 1; j < this.enemies.length; j += 1) {
+        const first = this.enemies[i];
+        const second = this.enemies[j];
+        const dx = second.x - first.x;
+        const dy = second.y - first.y;
+        const length = Math.hypot(dx, dy) || 1;
+        const minimum = first.radius + second.radius + 4;
+        if (length >= minimum) continue;
+        const push = (minimum - length) * 0.5;
+        first.x -= dx / length * push;
+        first.y -= dy / length * push;
+        second.x += dx / length * push;
+        second.y += dy / length * push;
+        this.constrainCombatCircle(first);
+        this.constrainCombatCircle(second);
+      }
     }
   }
 
   fireEnemyShot(enemy, direction, speed) {
-    this.enemyShots.push({
-      x: enemy.x,
-      y: enemy.y,
-      vx: direction.x * speed,
-      vy: direction.y * speed,
-      radius: 7,
-      life: 4,
-    });
+    this.enemyShots.push({ x: enemy.x, y: enemy.y, vx: direction.x * speed, vy: direction.y * speed, radius: 7, life: 4 });
+    this.audio.play('enemy-shot');
   }
 
   updateEnemyShots(dt) {
@@ -604,12 +730,13 @@ export class SimpleOneBulletArena {
       shot.x += shot.vx * dt;
       shot.y += shot.vy * dt;
       shot.life -= dt;
-      if (circleOverlap(shot, this.player)) {
+      if (this.arenaStage.obstacles.some((rect) => circleRectOverlap(shot, rect))) shot.life = 0;
+      if (shot.life > 0 && circleOverlap(shot, this.player)) {
         shot.life = 0;
         this.damagePlayer(shot.x, shot.y);
       }
     }
-    this.enemyShots = this.enemyShots.filter((shot) => shot.life > 0 && shot.x > -20 && shot.x < WIDTH + 20 && shot.y > -20 && shot.y < HEIGHT + 20);
+    this.enemyShots = this.enemyShots.filter((shot) => shot.life > 0 && pointInsideBounds(shot, this.arenaStage.bounds, 20));
   }
 
   damagePlayer(sourceX, sourceY) {
@@ -617,20 +744,23 @@ export class SimpleOneBulletArena {
     if (this.player.shield > 0) {
       this.player.shield -= 1;
       this.player.invulnerability = 0.55;
-      this.audio.play('hit');
+      this.audio.play('shield');
       this.createRing(this.player.x, this.player.y, COLORS.electric, 62);
       this.addFloatingText(this.player.x, this.player.y - 38, 'تم صد الضربة', COLORS.electric);
       return;
     }
+
     this.player.health -= 1;
     this.stats.damageTaken += 1;
     this.player.invulnerability = 1.05;
     const push = normalize(this.player.x - sourceX, this.player.y - sourceY);
-    this.player.x = clamp(this.player.x + push.x * 44, 30, WIDTH - 30);
-    this.player.y = clamp(this.player.y + push.y * 44, 30, HEIGHT - 30);
+    this.player.x += push.x * 44;
+    this.player.y += push.y * 44;
+    this.constrainCombatCircle(this.player);
     this.audio.play('damage');
-    this.shake = 16;
+    this.shake = 15;
     this.flash = 0.5;
+
     if (this.player.health > 0) return;
     if (this.stack('second-chance') > 0 && !this.secondChanceUsed) {
       this.secondChanceUsed = true;
@@ -644,24 +774,26 @@ export class SimpleOneBulletArena {
   }
 
   finishRun() {
-    this.state = 'gameover';
+    this.setState('gameover');
     this.audio.setScene('menu');
     this.audio.play('damage');
     this.highScore = Math.max(this.highScore, this.score);
     this.highWave = Math.max(this.highWave, this.wave);
-    localStorage.setItem(STORAGE.highScore, String(this.highScore));
-    localStorage.setItem(STORAGE.highWave, String(this.highWave));
+    writeNumber(STORAGE.highScore, this.highScore);
+    writeNumber(STORAGE.highWave, this.highWave);
   }
 
   openUpgradeSelection() {
     if (this.state !== 'playing') return;
-    this.upgradeChoices = pickUpgradeChoices(this.upgradeStacks, 3);
+    this.upgradeChoices = pickUpgradeChoices(this.upgradeStacks, 3, Math.random, this.previousUpgradeChoices);
     if (this.upgradeChoices.length === 0) {
-      this.score += 1000;
-      this.spawnNextWave();
+      this.score += 750;
+      this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
+      this.startNextWave();
       return;
     }
-    this.state = 'upgrade';
+    this.previousUpgradeChoices = this.upgradeChoices.map((upgrade) => upgrade.id);
+    this.setState('upgrade');
     this.audio.setScene('menu');
     this.audio.play('upgrade');
   }
@@ -678,24 +810,17 @@ export class SimpleOneBulletArena {
     if (upgrade.id === 'wave-shield') this.player.shield = Math.max(1, this.player.shield);
     this.stats.upgrades += 1;
     this.upgradeChoices = [];
-    this.state = 'playing';
+    this.setState('playing');
     this.audio.setScene('combat');
-    this.spawnNextWave();
+    this.startNextWave();
     return true;
   }
 
-  resolveObstacle(entity) {
-    for (const obstacle of this.arena.obstacles) {
-      if (!circleRectOverlap(entity, obstacle)) continue;
-      const nearestX = clamp(entity.x, obstacle.x, obstacle.x + obstacle.w);
-      const nearestY = clamp(entity.y, obstacle.y, obstacle.y + obstacle.h);
-      const dx = entity.x - nearestX;
-      const dy = entity.y - nearestY;
-      const length = Math.hypot(dx, dy) || 1;
-      const overlap = entity.radius - length + 1;
-      entity.x += dx / length * overlap;
-      entity.y += dy / length * overlap;
-    }
+  constrainCombatCircle(circle) {
+    clampCircleToBounds(circle, this.arenaStage.bounds);
+    resolveCircleAgainstRects(circle, this.arenaStage.obstacles);
+    if (this.touchMode) pushCircleOutOfSafeZones(circle);
+    clampCircleToBounds(circle, this.arenaStage.bounds);
   }
 
   updateParticles(dt) {
@@ -711,7 +836,7 @@ export class SimpleOneBulletArena {
   updateFloatingTexts(dt) {
     for (const item of this.floatingTexts) {
       item.life -= dt;
-      item.y -= 36 * dt;
+      item.y -= 34 * dt;
     }
     this.floatingTexts = this.floatingTexts.filter((item) => item.life > 0);
   }
@@ -722,10 +847,11 @@ export class SimpleOneBulletArena {
       type: 'particle', x, y, color,
       vx: Math.cos(angle) * speed * (0.35 + Math.random()),
       vy: Math.sin(angle) * speed * (0.35 + Math.random()),
-      size: 3 + Math.random() * 4,
-      life: 0.4 + Math.random() * 0.35,
-      maxLife: 0.75,
+      size: 3 + Math.random() * 3,
+      life: 0.38 + Math.random() * 0.3,
+      maxLife: 0.68,
     });
+    if (this.particles.length > 220) this.particles.splice(0, this.particles.length - 220);
   }
 
   createBurst(x, y, color, count = 12, speed = 180) {
@@ -737,19 +863,12 @@ export class SimpleOneBulletArena {
   }
 
   addFloatingText(x, y, text, color) {
-    this.floatingTexts.push({ x, y, text, color, life: 0.9, maxLife: 0.9 });
+    this.floatingTexts.push({ x, y, text, color, life: 0.85, maxLife: 0.85 });
   }
 
   loop(time) {
-    let dt = Math.min(0.033, (time - this.lastTime) / 1000 || 0);
+    const dt = Math.min(0.033, Math.max(0, (time - this.lastTime) / 1000 || 0));
     this.lastTime = time;
-    if (this.hitStop > 0) {
-      this.hitStop -= dt;
-      dt = 0;
-    } else if (this.slowMotion > 0) {
-      this.slowMotion -= dt;
-      dt *= 0.3;
-    }
     if (this.state === 'playing') this.update(dt);
     else {
       this.elapsed += dt;
@@ -767,7 +886,6 @@ export class SimpleOneBulletArena {
     if (this.shake > 0) ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
     this.drawArena();
     if (this.state === 'menu') this.drawMenu();
-    else if (this.state === 'howto') this.drawHowTo();
     else {
       this.drawBullet();
       this.drawEnemies();
@@ -796,22 +914,49 @@ export class SimpleOneBulletArena {
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
     const grid = 48;
-    const offset = this.elapsed * 7 % grid;
+    const offset = this.elapsed * 6 % grid;
     for (let x = -grid + offset; x <= WIDTH + grid; x += grid) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke();
     }
     for (let y = -grid + offset; y <= HEIGHT + grid; y += grid) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WIDTH, y); ctx.stroke();
     }
-    const glow = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 70, WIDTH / 2, HEIGHT / 2, 650);
-    glow.addColorStop(0, 'rgba(45, 76, 150, 0.16)');
+    const glow = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 80, WIDTH / 2, HEIGHT / 2, 640);
+    glow.addColorStop(0, 'rgba(45, 76, 150, 0.15)');
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    for (const obstacle of this.arena.obstacles) this.drawObstacle(obstacle);
-    ctx.strokeStyle = COLORS.border;
+
+    if (this.state !== 'menu') {
+      this.drawLockedSpace();
+      for (const obstacle of this.arenaStage.obstacles) this.drawObstacle(obstacle);
+      this.drawArenaBorder();
+    }
+  }
+
+  drawLockedSpace() {
+    const ctx = this.ctx;
+    const bounds = this.arenaStage.bounds;
+    ctx.save();
+    ctx.fillStyle = 'rgba(1, 3, 10, 0.92)';
+    ctx.fillRect(0, 0, WIDTH, bounds.y);
+    ctx.fillRect(0, bounds.y + bounds.h, WIDTH, HEIGHT - bounds.y - bounds.h);
+    ctx.fillRect(0, bounds.y, bounds.x, bounds.h);
+    ctx.fillRect(bounds.x + bounds.w, bounds.y, WIDTH - bounds.x - bounds.w, bounds.h);
+    ctx.restore();
+  }
+
+  drawArenaBorder() {
+    const ctx = this.ctx;
+    const bounds = this.arenaStage.bounds;
+    const pulse = 0.56 + Math.sin(this.elapsed * 3.1) * 0.12;
+    ctx.save();
+    ctx.strokeStyle = `rgba(98, 243, 255, ${pulse})`;
+    ctx.shadowColor = COLORS.player;
+    ctx.shadowBlur = 12;
     ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, WIDTH - 4, HEIGHT - 4);
+    ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
+    ctx.restore();
   }
 
   drawObstacle(obstacle) {
@@ -821,8 +966,8 @@ export class SimpleOneBulletArena {
     ctx.strokeStyle = '#465482';
     ctx.lineWidth = 3;
     ctx.shadowColor = '#465482';
-    ctx.shadowBlur = 8;
-    roundedRect(ctx, obstacle.x, obstacle.y, obstacle.w, obstacle.h, 10);
+    ctx.shadowBlur = 7;
+    roundedRect(ctx, obstacle.x, obstacle.y, obstacle.w, obstacle.h, 9);
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -834,17 +979,14 @@ export class SimpleOneBulletArena {
     if (this.player.shield > 0) {
       ctx.strokeStyle = COLORS.electric;
       ctx.lineWidth = 4;
-      ctx.shadowColor = COLORS.electric;
-      ctx.shadowBlur = 18;
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, this.player.radius + 11 + Math.sin(this.elapsed * 7) * 2, 0, Math.PI * 2);
+      ctx.arc(this.player.x, this.player.y, this.player.radius + 10 + Math.sin(this.elapsed * 7) * 2, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.shadowBlur = 0;
     }
     ctx.save();
     ctx.fillStyle = COLORS.player;
     ctx.shadowColor = COLORS.player;
-    ctx.shadowBlur = 28;
+    ctx.shadowBlur = 24;
     ctx.beginPath();
     ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -863,9 +1005,9 @@ export class SimpleOneBulletArena {
     for (let index = this.bullet.trail.length - 1; index >= 0; index -= 1) {
       const point = this.bullet.trail[index];
       const alpha = (this.bullet.trail.length - index) / Math.max(1, this.bullet.trail.length);
-      ctx.fillStyle = `rgba(255, 230, 109, ${alpha * 0.3})`;
+      ctx.fillStyle = `rgba(255, 230, 109, ${alpha * 0.28})`;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 2 + alpha * 5, 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, 2 + alpha * 4, 0, Math.PI * 2);
       ctx.fill();
     }
     if (this.bullet.recalling) {
@@ -881,7 +1023,7 @@ export class SimpleOneBulletArena {
     ctx.save();
     ctx.fillStyle = COLORS.bullet;
     ctx.shadowColor = COLORS.bullet;
-    ctx.shadowBlur = 26;
+    ctx.shadowBlur = 24;
     ctx.beginPath();
     ctx.arc(this.bullet.x, this.bullet.y, this.bullet.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -892,14 +1034,14 @@ export class SimpleOneBulletArena {
     const ctx = this.ctx;
     for (const enemy of this.enemies) {
       const color = enemy.hitFlash > 0 ? COLORS.text : enemy.color;
-      const scale = 1 - enemy.spawnTime * 0.6;
+      const spawnScale = 1 - enemy.spawnTime * 0.65;
       ctx.save();
       ctx.translate(enemy.x, enemy.y);
-      ctx.scale(scale, scale);
+      ctx.scale(spawnScale, spawnScale);
       ctx.rotate(enemy.phase * 0.24);
       ctx.fillStyle = color;
       ctx.shadowColor = color;
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 15;
       if (enemy.type === 'scout') polygon(ctx, 4, enemy.radius, Math.PI / 4);
       else if (enemy.type === 'brute') {
         ctx.fillRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
@@ -909,11 +1051,12 @@ export class SimpleOneBulletArena {
       else if (enemy.type === 'charger') polygon(ctx, 3, enemy.radius + 3, Math.PI / 2);
       else polygon(ctx, 5, enemy.radius, -Math.PI / 2);
       ctx.restore();
+
       if (enemy.maxHealth > 1.1) {
         ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.fillRect(enemy.x - enemy.radius, enemy.y + enemy.radius + 10, enemy.radius * 2, 5);
+        ctx.fillRect(enemy.x - enemy.radius, enemy.y + enemy.radius + 9, enemy.radius * 2, 5);
         ctx.fillStyle = COLORS.text;
-        ctx.fillRect(enemy.x - enemy.radius, enemy.y + enemy.radius + 10, enemy.radius * 2 * Math.max(0, enemy.health / enemy.maxHealth), 5);
+        ctx.fillRect(enemy.x - enemy.radius, enemy.y + enemy.radius + 9, enemy.radius * 2 * Math.max(0, enemy.health / enemy.maxHealth), 5);
       }
       if (enemy.type === 'charger' && enemy.chargeTelegraph > 0) {
         ctx.strokeStyle = COLORS.danger;
@@ -921,6 +1064,17 @@ export class SimpleOneBulletArena {
         ctx.beginPath();
         ctx.arc(enemy.x, enemy.y, enemy.radius + 10 + Math.sin(this.elapsed * 20) * 4, 0, Math.PI * 2);
         ctx.stroke();
+      }
+      if (enemy.type === 'sniper' && enemy.shotTelegraph > 0) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 82, 106, ${0.35 + enemy.shotTelegraph})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 7]);
+        ctx.beginPath();
+        ctx.moveTo(enemy.x, enemy.y);
+        ctx.lineTo(this.player.x, this.player.y);
+        ctx.stroke();
+        ctx.restore();
       }
     }
   }
@@ -931,7 +1085,7 @@ export class SimpleOneBulletArena {
       ctx.save();
       ctx.fillStyle = '#ffd0dc';
       ctx.shadowColor = '#ffd0dc';
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = 13;
       ctx.beginPath();
       ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -964,7 +1118,7 @@ export class SimpleOneBulletArena {
     for (const item of this.floatingTexts) {
       ctx.globalAlpha = Math.max(0, item.life / item.maxLife);
       ctx.fillStyle = item.color;
-      ctx.font = `700 21px ${FONT}`;
+      ctx.font = `700 20px ${FONT}`;
       ctx.fillText(item.text, item.x, item.y);
     }
     ctx.globalAlpha = 1;
@@ -972,113 +1126,100 @@ export class SimpleOneBulletArena {
 
   drawHud() {
     const ctx = this.ctx;
-    panel(ctx, WIDTH - 330, 18, 312, 88, COLORS.player);
-    label(ctx, `الموجة ${this.wave}`, WIDTH - 42, 51, 21, COLORS.text, 900, 'right');
-    label(ctx, `النقاط ${this.score.toLocaleString('en-US')}`, WIDTH - 42, 80, 14, COLORS.muted, 600, 'right');
+    panel(ctx, WIDTH - 306, 18, 288, 80, COLORS.player);
+    label(ctx, `الموجة ${this.wave}`, WIDTH - 38, 49, 20, COLORS.text, 900, 'right');
+    label(ctx, `${this.enemies.length} أعداء  •  ${this.score.toLocaleString('en-US')} نقطة`, WIDTH - 38, 77, 13, COLORS.muted, 600, 'right');
+
+    panel(ctx, 18, 18, 300, 80, this.bullet.held ? COLORS.bullet : COLORS.border);
+    label(ctx, this.bullet.held ? 'الطلقة جاهزة' : this.bullet.recalling ? 'الطلقة عائدة' : 'استرجع الطلقة', 294, 48, 18, this.bullet.held ? COLORS.bullet : COLORS.text, 900, 'right');
+    const dash = this.player.dashCooldown <= 0 ? 'جاهز' : `${this.player.dashCooldown.toFixed(1)}ث`;
+    const recall = this.bullet.recallCooldown <= 0 ? 'جاهز' : `${this.bullet.recallCooldown.toFixed(1)}ث`;
+    label(ctx, `اندفاع ${dash}  •  استدعاء ${recall}`, 294, 76, 12, COLORS.muted, 600, 'right');
+
+    panel(ctx, WIDTH / 2 - 112, 18, 224, 48, COLORS.border, 'rgba(10,15,31,0.88)', 4);
+    label(ctx, `${this.stats.upgrades} قدرات  •  ${this.arenaStage.id + 1}/${ARENA_STAGE_COUNT}`, WIDTH / 2, 49, 13, COLORS.muted, 700);
+
+    const healthX = WIDTH - 282;
     for (let index = 0; index < this.player.maxHealth; index += 1) {
       ctx.fillStyle = index < this.player.health ? COLORS.danger : '#252b42';
       ctx.beginPath();
-      ctx.arc(WIDTH - 296 + index * 28, 83, 8, 0, Math.PI * 2);
+      ctx.arc(healthX + index * 25, 91, 7, 0, Math.PI * 2);
       ctx.fill();
     }
     if (this.player.shield > 0) {
       ctx.strokeStyle = COLORS.electric;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(WIDTH - 165, 82, 10, 0, Math.PI * 2);
+      ctx.arc(WIDTH - 105, 90, 9, 0, Math.PI * 2);
       ctx.stroke();
     }
-
-    panel(ctx, 18, 18, 326, 88, this.bullet.held ? COLORS.bullet : COLORS.border);
-    label(ctx, this.bullet.held ? 'الطلقة جاهزة' : this.bullet.recalling ? 'الطلقة عائدة' : 'استعد الطلقة', 320, 52, 19, this.bullet.held ? COLORS.bullet : COLORS.text, 900, 'right');
-    const dashText = this.player.dashCooldown <= 0 ? 'جاهز' : `${this.player.dashCooldown.toFixed(1)}ث`;
-    const recallText = this.bullet.recallCooldown <= 0 ? 'جاهز' : `${this.bullet.recallCooldown.toFixed(1)}ث`;
-    label(ctx, `اندفاع ${dashText}  •  استدعاء ${recallText}`, 320, 80, 13, COLORS.muted, 600, 'right');
-
-    panel(ctx, WIDTH / 2 - 118, 18, 236, 50, COLORS.border, 'rgba(10,15,31,0.88)', 4);
-    label(ctx, `${this.stats.upgrades} قدرات`, WIDTH / 2, 51, 14, COLORS.muted, 700);
   }
 
   drawMenu() {
     const ctx = this.ctx;
-    const pulse = 1 + Math.sin(this.elapsed * 2.1) * 0.018;
+    const pulse = 1 + Math.sin(this.elapsed * 2) * 0.016;
     ctx.save();
-    ctx.translate(WIDTH / 2, 185);
+    ctx.translate(WIDTH / 2, 176);
     ctx.scale(pulse, pulse);
-    label(ctx, 'حلبة الطلقة', 0, 0, 70, COLORS.text, 900);
-    label(ctx, 'الواحدة', 0, 75, 70, COLORS.bullet, 900);
+    label(ctx, 'حلبة الطلقة', 0, 0, 68, COLORS.text, 900);
+    label(ctx, 'الواحدة', 0, 72, 68, COLORS.bullet, 900);
     ctx.restore();
-    label(ctx, 'وضع واحد فقط: اهزم الموجة، اختر قدرة، وواصل حتى تسقط.', WIDTH / 2, 310, 20, COLORS.muted, 500);
-    this.drawButton('ابدأ اللعب', WIDTH / 2 - 180, 365, 360, 62, () => this.startRun(), true);
-    this.drawButton('طريقة اللعب', WIDTH / 2 - 180, 443, 360, 58, () => { this.audio.play('click'); this.state = 'howto'; });
-    label(ctx, `أعلى موجة ${this.highWave}  •  أعلى نتيجة ${this.highScore.toLocaleString('en-US')}`, WIDTH / 2, 550, 15, COLORS.muted, 600);
-    label(ctx, `v${SIMPLE_GAME_VERSION}`, WIDTH / 2, 675, 12, '#68739a', 600);
-  }
-
-  drawHowTo() {
-    const ctx = this.ctx;
-    dim(ctx, 0.82);
-    label(ctx, 'طريقة اللعب', WIDTH / 2, 90, 48, COLORS.text, 900);
-    panel(ctx, 235, 135, 810, 420, COLORS.player);
-    const lines = [
-      'حرّك اللاعب بـ WASD أو الأسهم.',
-      'وجّه بالماوس واضغط لإطلاق الطلقة الوحيدة.',
-      'استعد الطلقة بلمسها أو اضغط Q لاستدعائها.',
-      'استخدم Space أو Shift للاندفاع وتفادي الضربات.',
-      'بعد إنهاء كل موجة اختر قدرة واحدة من ثلاث.',
-      'لا توجد أوضاع أخرى، ولا خرائط، ولا مهام جانبية.',
-    ];
-    lines.forEach((text, index) => label(ctx, `• ${text}`, 980, 195 + index * 52, 19, index === 4 ? COLORS.bullet : COLORS.text, index === 4 ? 800 : 600, 'right'));
-    this.drawButton('العودة', WIDTH / 2 - 165, 590, 330, 58, () => this.goToMenu());
+    label(ctx, 'اهزم الموجة، اختر قدرة، وادخل موجة أصعب في نفس الساحة.', WIDTH / 2, 300, 19, COLORS.muted, 500);
+    this.drawButton('ابدأ اللعب', WIDTH / 2 - 190, 350, 380, 66, () => this.startRun(), true);
+    panel(ctx, WIDTH / 2 - 300, 440, 600, 112, COLORS.border, 'rgba(10,15,31,0.78)', 4);
+    label(ctx, 'WASD حركة  •  ماوس إطلاق  •  Q استدعاء  •  Space اندفاع', WIDTH / 2, 480, 16, COLORS.text, 700);
+    label(ctx, 'M كتم الصوت  •  F ملء الشاشة  •  P إيقاف', WIDTH / 2, 520, 14, COLORS.muted, 600);
+    label(ctx, `أعلى موجة ${this.highWave}  •  أعلى نتيجة ${this.highScore.toLocaleString('en-US')}`, WIDTH / 2, 602, 15, COLORS.muted, 600);
+    label(ctx, `v${GAME_VERSION}`, WIDTH / 2, 676, 12, '#68739a', 600);
   }
 
   drawUpgradeSelection() {
     const ctx = this.ctx;
-    dim(ctx, 0.84);
-    label(ctx, `انتهت الموجة ${this.wave}`, WIDTH / 2, 78, 22, COLORS.success, 800);
-    label(ctx, 'اختر قدرة واحدة', WIDTH / 2, 125, 42, COLORS.bullet, 900);
-    const cardWidth = 330;
+    dim(ctx, 0.86);
+    label(ctx, `انتهت الموجة ${this.wave}`, WIDTH / 2, 76, 22, COLORS.success, 800);
+    label(ctx, 'اختر قدرة واحدة', WIDTH / 2, 122, 40, COLORS.bullet, 900);
+    const cardWidth = 328;
     const gap = 28;
     const total = this.upgradeChoices.length * cardWidth + Math.max(0, this.upgradeChoices.length - 1) * gap;
     const start = WIDTH / 2 - total / 2;
-    this.upgradeChoices.forEach((upgrade, index) => this.drawUpgradeCard(upgrade, index, start + index * (cardWidth + gap), 175, cardWidth, 320));
-    label(ctx, 'اضغط على بطاقة أو استخدم 1 / 2 / 3', WIDTH / 2, 555, 15, COLORS.muted, 600);
+    this.upgradeChoices.forEach((upgrade, index) => this.drawUpgradeCard(upgrade, index, start + index * (cardWidth + gap), 170, cardWidth, 326));
+    label(ctx, 'اضغط على بطاقة أو استخدم 1 / 2 / 3', WIDTH / 2, 554, 15, COLORS.muted, 600);
   }
 
   drawUpgradeCard(upgrade, index, x, y, width, height) {
-    const hovered = pointInRect(this.pointer, { x, y, w: width, h: height });
+    const hovered = pointInsideRect(this.pointer, { x, y, w: width, h: height });
     const ctx = this.ctx;
-    panel(ctx, x, y, width, height, hovered ? COLORS.bullet : COLORS.border, hovered ? '#1b2440' : COLORS.panel, hovered ? 18 : 7);
+    panel(ctx, x, y, width, height, hovered ? COLORS.bullet : COLORS.border, hovered ? '#1b2440' : COLORS.panel, hovered ? 17 : 7);
     label(ctx, `${index + 1}  •  ${upgrade.tag}`, x + width - 24, y + 42, 14, COLORS.bullet, 800, 'right');
-    wrapRtl(ctx, upgrade.name, x + width - 24, y + 94, width - 48, 34, 28, COLORS.text, 900, 2);
+    wrapRtl(ctx, upgrade.name, x + width - 24, y + 94, width - 48, 34, 27, COLORS.text, 900, 2);
     wrapRtl(ctx, upgrade.description, x + width - 24, y + 168, width - 48, 29, 17, COLORS.muted, 500, 3);
-    label(ctx, `المستوى ${this.stack(upgrade.id)} / ${upgrade.maxStacks}`, x + width - 24, y + height - 30, 14, this.stack(upgrade.id) ? COLORS.electric : COLORS.muted, 700, 'right');
+    label(ctx, `المستوى الحالي: ${this.stack(upgrade.id)} من ${upgrade.maxStacks}`, x + width - 24, y + height - 30, 14, this.stack(upgrade.id) ? COLORS.electric : COLORS.muted, 700, 'right');
     this.addUiRegion(x, y, width, height, () => this.chooseUpgrade(index));
   }
 
   drawPause() {
-    dim(this.ctx, 0.82);
-    label(this.ctx, 'متوقف مؤقتًا', WIDTH / 2, 210, 52, COLORS.text, 900);
-    this.drawButton('استكمال', WIDTH / 2 - 170, 285, 340, 58, () => this.resume(), true);
-    this.drawButton('إعادة الجولة', WIDTH / 2 - 170, 360, 340, 58, () => this.startRun());
-    this.drawButton('القائمة الرئيسية', WIDTH / 2 - 170, 435, 340, 58, () => this.goToMenu());
+    dim(this.ctx, 0.84);
+    label(this.ctx, 'متوقف مؤقتًا', WIDTH / 2, 205, 50, COLORS.text, 900);
+    this.drawButton('استكمال', WIDTH / 2 - 170, 280, 340, 58, () => this.resume(), true);
+    this.drawButton('إعادة الجولة', WIDTH / 2 - 170, 355, 340, 58, () => this.startRun());
+    this.drawButton('القائمة الرئيسية', WIDTH / 2 - 170, 430, 340, 58, () => this.goToMenu());
   }
 
   drawGameOver() {
-    dim(this.ctx, 0.86);
-    label(this.ctx, 'انتهت الجولة', WIDTH / 2, 160, 58, COLORS.danger, 900);
-    label(this.ctx, `وصلت إلى الموجة ${this.wave}`, WIDTH / 2, 220, 24, COLORS.text, 700);
-    label(this.ctx, `النتيجة ${this.score.toLocaleString('en-US')}  •  القدرات ${this.stats.upgrades}`, WIDTH / 2, 260, 18, COLORS.muted, 600);
-    this.drawButton('العب من جديد', WIDTH / 2 - 180, 330, 360, 62, () => this.startRun(), true);
-    this.drawButton('القائمة الرئيسية', WIDTH / 2 - 180, 410, 360, 58, () => this.goToMenu());
+    dim(this.ctx, 0.88);
+    label(this.ctx, 'انتهت الجولة', WIDTH / 2, 150, 56, COLORS.danger, 900);
+    label(this.ctx, `الموجة ${this.wave}`, WIDTH / 2, 215, 26, COLORS.text, 800);
+    label(this.ctx, `${this.score.toLocaleString('en-US')} نقطة  •  ${this.stats.kills} عدو  •  ${this.stats.upgrades} قدرات`, WIDTH / 2, 255, 17, COLORS.muted, 600);
+    this.drawButton('العب من جديد', WIDTH / 2 - 180, 325, 360, 62, () => this.startRun(), true);
+    this.drawButton('القائمة الرئيسية', WIDTH / 2 - 180, 405, 360, 58, () => this.goToMenu());
   }
 
   drawBanner() {
     const ctx = this.ctx;
-    const alpha = clamp(this.banner.time * 1.7, 0, 1);
+    const alpha = clamp(this.banner.time * 1.6, 0, 1);
     ctx.globalAlpha = alpha;
-    label(ctx, this.banner.title, WIDTH / 2, HEIGHT / 2 - 22, 44, COLORS.text, 900);
-    label(ctx, this.banner.subtitle, WIDTH / 2, HEIGHT / 2 + 22, 18, COLORS.bullet, 600);
+    label(ctx, this.banner.title, WIDTH / 2, HEIGHT / 2 - 20, 42, COLORS.text, 900);
+    label(ctx, this.banner.subtitle, WIDTH / 2, HEIGHT / 2 + 24, 18, COLORS.bullet, 600);
     ctx.globalAlpha = 1;
   }
 
@@ -1086,33 +1227,33 @@ export class SimpleOneBulletArena {
     const ctx = this.ctx;
     const origin = this.touchMove ? { x: this.touchMove.originX, y: this.touchMove.originY } : { x: 118, y: HEIGHT - 112 };
     ctx.save();
-    ctx.globalAlpha = 0.72;
-    ctx.fillStyle = 'rgba(98,243,255,0.12)';
+    ctx.globalAlpha = 0.66;
+    ctx.fillStyle = 'rgba(98,243,255,0.10)';
     ctx.strokeStyle = COLORS.player;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(origin.x, origin.y, 66, 0, Math.PI * 2);
+    ctx.arc(origin.x, origin.y, 64, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     const knob = this.touchMove ? {
-      x: origin.x + clamp(this.touchMove.x - origin.x, -48, 48),
-      y: origin.y + clamp(this.touchMove.y - origin.y, -48, 48),
+      x: origin.x + clamp(this.touchMove.x - origin.x, -47, 47),
+      y: origin.y + clamp(this.touchMove.y - origin.y, -47, 47),
     } : origin;
-    ctx.fillStyle = 'rgba(98,243,255,0.42)';
+    ctx.fillStyle = 'rgba(98,243,255,0.4)';
     ctx.beginPath();
-    ctx.arc(knob.x, knob.y, 25, 0, Math.PI * 2);
+    ctx.arc(knob.x, knob.y, 24, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    this.drawCircleButton(WIDTH - 92, HEIGHT - 92, 55, 'اندفاع', COLORS.player, () => { this.dashRequested = true; });
-    this.drawCircleButton(WIDTH - 92, HEIGHT - 222, 48, 'استدعاء', COLORS.electric, () => this.recallBullet());
-    this.drawCircleButton(WIDTH - 220, HEIGHT - 92, 42, 'إيقاف', COLORS.muted, () => this.pause());
+    this.drawCircleButton(WIDTH - 92, HEIGHT - 92, 53, 'اندفاع', COLORS.player, () => { this.dashRequested = true; });
+    this.drawCircleButton(WIDTH - 92, HEIGHT - 216, 46, 'استدعاء', COLORS.electric, () => this.recallBullet());
+    this.drawCircleButton(WIDTH - 216, HEIGHT - 92, 40, 'إيقاف', COLORS.muted, () => this.pause());
   }
 
   drawCircleButton(x, y, radius, text, color, action) {
     const ctx = this.ctx;
     ctx.save();
-    ctx.fillStyle = 'rgba(10,16,35,0.82)';
+    ctx.fillStyle = 'rgba(10,16,35,0.76)';
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -1125,7 +1266,7 @@ export class SimpleOneBulletArena {
   }
 
   drawButton(text, x, y, width, height, action, primary = false) {
-    const hovered = pointInRect(this.pointer, { x, y, w: width, h: height });
+    const hovered = pointInsideRect(this.pointer, { x, y, w: width, h: height });
     panel(this.ctx, x, y, width, height, primary || hovered ? COLORS.bullet : COLORS.border, primary ? 'rgba(56,48,17,0.94)' : hovered ? '#1a2441' : COLORS.panelSoft, primary || hovered ? 13 : 5);
     label(this.ctx, text, x + width / 2, y + height / 2 + 7, 18, primary ? COLORS.bullet : COLORS.text, 800);
     this.addUiRegion(x, y, width, height, action);
@@ -1138,7 +1279,7 @@ export class SimpleOneBulletArena {
   handleUiClick(x, y) {
     for (let index = this.uiRegions.length - 1; index >= 0; index -= 1) {
       const region = this.uiRegions[index];
-      if (!pointInRect({ x, y }, region)) continue;
+      if (!pointInsideRect({ x, y }, region)) continue;
       region.action?.();
       return true;
     }
@@ -1158,48 +1299,30 @@ export class SimpleOneBulletArena {
       bulletHeld: this.bullet.held,
       health: this.player.health,
       maxHealth: this.player.maxHealth,
-      removedSystemsPresent: Boolean(this.runtime || this.selectedMission || this.protocolRun || this.endlessRun || this.bossRushRun || this.objectiveRoom),
+      arenaStage: this.arenaStage.id,
+      arenaName: this.arenaStage.name,
+      arenaBounds: { ...this.arenaStage.bounds },
+      arenaFullyUnlocked: this.arenaStage.id === ARENA_STAGE_COUNT - 1,
+      arenaProgressionAutomatic: true,
+      puzzleObjectivesPresent: false,
+      removedSystemsPresent: false,
+      touchSafeZones: this.touchMode ? mobileSafeZones() : [],
     };
   }
 }
 
-function createSimpleArena() {
-  return {
-    obstacles: [
-      { x: 280, y: 205, w: 90, h: 310 },
-      { x: WIDTH - 370, y: 205, w: 90, h: 310 },
-      { x: WIDTH / 2 - 105, y: 110, w: 210, h: 64 },
-      { x: WIDTH / 2 - 105, y: HEIGHT - 174, w: 210, h: 64 },
-    ],
-  };
+function readNumber(key) {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
+  } catch {
+    return 0;
+  }
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function normalize(x, y) {
-  const length = Math.hypot(x, y);
-  if (length < 0.0001) return { x: 0, y: 0 };
-  return { x: x / length, y: y / length };
-}
-
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function circleOverlap(a, b, padding = 0) {
-  return distance(a, b) <= (a.radius || 0) + (b.radius || 0) + padding;
-}
-
-function circleRectOverlap(circle, rect) {
-  const nearestX = clamp(circle.x, rect.x, rect.x + rect.w);
-  const nearestY = clamp(circle.y, rect.y, rect.y + rect.h);
-  return (circle.x - nearestX) ** 2 + (circle.y - nearestY) ** 2 <= (circle.radius || 0) ** 2;
-}
-
-function pointInRect(point, rect) {
-  return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+function writeNumber(key, value) {
+  try { localStorage.setItem(key, String(Math.max(0, Math.trunc(Number(value) || 0)))); }
+  catch { /* Storage can be unavailable in private or restricted contexts. */ }
 }
 
 function roundedRect(ctx, x, y, width, height, radius = 14) {

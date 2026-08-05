@@ -5,175 +5,155 @@ Last updated: 2026-08-05
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current release: **v2.1.0 — Automatic Expanding Arena**
-- Pull Request #28: **squash-merged into `main`**
-- v2.1.0 merge commit: `3303ec1ce8402af000bd79f077db41aa45684845`
-- Previous simple release: **v2.0.0**
+- Release candidate: **v2.2.0 — Clean Core Stabilization**
+- Pull Request: **#29**
+- Working branch: `refactor/v2.2-clean-core`
+- Previous release: **v2.1.0**
 - Previous full release preserved at: `archive/v1.4.1-full`
-- GitHub Pages deployment: **triggered by the Pull Request #28 merge and this status update**
-- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, documentation, desktop/mobile visual review, and merge complete; deployed-build and physical-device acceptance remain**
+- Current state: **implementation, repository cleanup, deterministic verification, Chromium verification, PWA update, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
 
-## Final game definition
+## Product definition
 
-The active game contains one explicit loop:
+The active game keeps one explicit loop:
 
 1. Start one run.
-2. Fight every enemy in the current wave.
+2. Defeat every enemy in the current wave.
 3. Recover the single bullet.
 4. Choose one of three abilities.
 5. Enter the next, harder wave.
 6. Continue until defeat.
 
-There is one map and one game. No alternate mode, objective route, or puzzle can block normal wave progression.
+There is one map and one game. No alternate mode, puzzle, objective route, or meta progression can block the wave loop.
 
-## Automatic arena expansion
+## Clean runtime architecture
 
-The same arena opens automatically according to the current wave:
+The active game now boots directly into one `OneBulletGame` runtime.
 
-| Waves | Arena stage |
-| --- | --- |
-| 1–2 | Central combat room |
-| 3–5 | Side wings opened |
-| 6–8 | Outer corridors opened |
-| 9+ | Complete arena opened |
-
-- Clearing enemies and choosing an ability are the only requirements for entering the next wave.
-- Expansion never requires ordered hits, relay activation, hit counters, target sequences, survival timers, or any other objective.
-- Player, enemies, bullet ricochets, and enemy projectiles are constrained to the currently unlocked combat space.
-- New geometry is ordinary combat cover only.
-- After Wave 9, the complete arena remains active for all later waves.
-
-## Difficulty progression
-
-Difficulty increases through combat pressure only:
-
-- enemy population grows gradually from three enemies;
-- population remains capped at fourteen active enemies;
-- Brute, Sniper, Charger, and Splitter enemies enter the roster gradually;
-- enemy health increases within a bounded scale;
-- enemy movement and projectile speed increase within bounded scales;
-- the player receives one ability choice after every cleared wave.
-
-There are no mode-specific modifiers or separate difficulty settings.
-
-## Mobile combat visibility
-
-The complete arena reaches underneath the touch-control layer, so dedicated combat-safe zones are enforced around:
-
-- the movement stick;
-- Recall;
-- Dash;
-- Pause.
-
-Enemy spawn points avoid these zones. The player and enemies are moved out of them during gameplay so combat entities do not become hidden behind the controls. The bullet and visual effects may pass beneath the controls without blocking player readability.
-
-## Removed systems remain absent
-
-- Region and difficulty selection.
-- Story Route and Corebreak Protocol.
-- Daily Challenge, Endless, Boss Rush, and Contracts.
-- Objective Rooms and Guardians.
-- Hit-order puzzles, relay sequences, marked targets, defense timers, and separation objectives.
-- Bullet Cores, Relics, Synergies, Overdrive, and active combat techniques.
-- Command Center, Codices, mastery systems, achievements, cosmetics, currencies, and run history.
-- Persistent build progression and unified backup UI.
-
-The complete v1.4.1 implementation remains available only in the archive branch.
-
-## Active runtime
-
-The browser loads only:
+Active files:
 
 - `src/main.js`
+- `src/game.js`
+- `src/game-data.js`
+- `src/arena.js`
+- `src/audio.js`
+- `game.css`
+
+Removed from the active branch:
+
 - `src/simple-game.js`
 - `src/simple-data.js`
 - `src/expanding-arena.js`
 - `src/simple-ui-cleanup.js`
-- `src/audio.js`
 - `simple-game.css`
+- their superseded Node and browser tests
 
-The service worker caches only the active game shell and uses:
+There are no constructor-time gameplay installers or prototype monkey patches. Arena progression and UI behavior are part of the direct runtime.
 
-```text
-one-bullet-arena-v2.1.0-simple
-```
+## Gameplay and stability changes
 
-## Verification
+- First two waves use Scouts only.
+- Brute unlocks at Wave 3, Sniper at Wave 4, Charger at Wave 6, and Splitter at Wave 8.
+- Active enemy population grows gradually and remains capped at fourteen.
+- Enemy health, movement speed, and projectile speed use bounded scaling.
+- The arena still opens automatically at Waves 3, 6, and 9.
+- High-speed bullet motion is sub-stepped to prevent tunneling through enemies and cover.
+- Circle/rectangle resolution now recovers correctly when an entity center is inside geometry.
+- Enemy projectiles collide with cover.
+- Snipers display a firing telegraph before releasing a projectile.
+- Chargers retain a visible charge telegraph.
+- Overlapping enemies separate from each other.
+- Splitter children respect the global active-enemy cap.
+- Particle count is bounded.
+- Ability selection avoids repeating the previous three cards when alternatives exist.
+- Twelve active in-run abilities remain; no mode-specific or persistent build abilities exist.
 
-### Deterministic verification
+## Browser, mobile, accessibility, and PWA
+
+- External Google Fonts were removed.
+- The portrait rotation banner was removed completely.
+- The document contains only the game shell, Canvas, script, and an invisible accessibility live region.
+- The responsive shell uses `100dvh`, safe areas, and no document scrolling.
+- Four mobile combat-safe zones keep entities out from underneath Move, Recall, Dash, and Pause controls.
+- State changes and wave starts are announced through `aria-live` without adding visible page chrome.
+- Existing v2.1 highest score, highest wave, and audio preferences are migrated automatically.
+- The offline application shell caches only active v2.2 files.
+- Service-worker cache: `one-bullet-arena-v2.2.0-clean`.
+
+## Automated verification
+
+### Deterministic tests
 
 - JavaScript syntax checks: **passed**.
-- Automated deterministic tests: **16/16 passed**.
+- Deterministic tests: **15/15 passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
-- Final Verify workflow on the Pull Request #28 documentation commit: **passed**.
-- Coverage verifies:
-  - release version `2.1.0-simple`;
-  - readable three-enemy first wave;
-  - gradual enemy-roster introduction;
-  - monotonic capped population growth;
+- Coverage includes:
+  - release version;
+  - readable Scout-only opening waves;
+  - gradual enemy unlocks;
+  - monotonic capped population;
   - bounded enemy scaling;
-  - unique run-upgrade catalog and upgrade-choice behavior;
-  - arena stages at Waves 1, 3, 6, and 9;
-  - strictly increasing playable area;
-  - all arena stages contained inside the fixed Canvas;
-  - combat geometry contains no objective or puzzle fields;
-  - four isolated mobile touch-control safety zones;
-  - returned progression data is protected from external mutation.
+  - active ability catalog and stack normalization;
+  - upgrade-card repeat avoidance;
+  - automatic arena expansion;
+  - increasing playable area;
+  - absence of objective data;
+  - isolated arena data;
+  - recovery from center-inside-obstacle collisions;
+  - non-overlapping touch safe zones;
+  - combat-entity removal from every touch zone.
 
-### Browser verification
+### Browser tests
 
 - Playwright Browser Smoke: **18/18 passed**.
-- Browsers/viewports:
+- Projects:
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Failures, flaky tests, and skipped tests: **0**.
-- Final Browser Smoke workflow on the Pull Request #28 documentation commit: **passed**.
 - Coverage confirms:
-  - only the simple expanding-arena runtime boots;
-  - allowed states contain no mode, hub, objective, or puzzle screens;
-  - one action starts Wave 1;
-  - clearing a wave forces one upgrade selection;
-  - choosing the upgrade starts the next wave;
-  - arena stages advance automatically at Waves 3, 6, and 9;
-  - playable area grows at every unlock;
-  - the player and bullet remain inside the active boundaries;
-  - mobile touch controls reserve clear combat space;
-  - the document does not scroll;
-  - the Canvas remains contained on desktop and mobile.
+  - only the clean runtime boots;
+  - no mode, hub, puzzle, or objective state exists;
+  - Wave 1 starts with three enemies;
+  - one ability is required between waves;
+  - the arena expands at Waves 3, 6, and 9;
+  - high-speed bullets cannot tunnel through an enemy;
+  - mobile safe zones keep combat entities visible;
+  - the Canvas remains contained without document scrolling;
+  - no external font is loaded;
+  - Portrait contains no rotation banner or external page chrome.
 
-### Visual QA completed
+## Visual QA completed
 
-Reviewed:
+Reviewed on both desktop and mobile landscape:
 
-- Wave 1 central room on Desktop Chromium.
-- Wave 9 complete arena on Desktop Chromium.
-- Wave 1 central room on Mobile Landscape Chromium.
-- Wave 9 complete arena on Mobile Landscape Chromium.
-- Menu and upgrade selection on both projects.
+- main menu;
+- Wave 1;
+- ability-selection screen;
+- fully opened Wave 9 arena;
+- game-over screen.
 
 Confirmed:
 
-- Wave 1 visibly begins in a smaller central combat room;
-- Wave 9 visibly uses the complete arena;
-- locked space is dark and does not look like an interactive puzzle;
-- the expansion border clearly defines the current playable space;
-- combat cover remains simple and readable;
-- no objective panel, sequence marker, puzzle instruction, region banner, or mode UI appears;
-- mobile enemies no longer overlap the movement stick, Recall, Dash, or Pause buttons;
-- HUD and controls remain inside the viewport.
+- Arabic text renders without clipping;
+- the HUD is compact and readable;
+- the menu contains one primary Play action;
+- ability cards remain inside the screen;
+- Wave 1 and Wave 9 geometry are visually distinct;
+- touch controls remain inside the viewport;
+- enemies stay clear of touch controls;
+- game-over actions remain visible;
+- no old UI layer, rotation instruction, objective panel, or mode selector appears.
 
 ## Remaining acceptance checks
 
-These require the deployed build or physical hardware and are not marked complete:
+These require the merged/deployed build or physical hardware and are not marked complete:
 
-1. Complete a normal run from Wave 1 through Wave 10 without QA shortcuts.
-2. Confirm the expansions at Waves 3, 6, and 9 feel correctly timed during real play.
-3. Review whether the central room is comfortable with the first two waves.
-4. Review enemy pressure and readability near the fourteen-enemy cap.
-5. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
-6. Test installed PWA launch and offline restart with cache v2.1.0.
-7. Verify the deployed GitHub Pages build after deployment completes.
+1. Complete a normal run through Wave 10 without QA shortcuts.
+2. Confirm the slower enemy unlock curve feels correct during real play.
+3. Review Wave 9+ pressure near the fourteen-enemy cap.
+4. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
+5. Test installed PWA launch and offline restart with cache v2.2.0.
+6. Verify the deployed GitHub Pages build after deployment completes.
 
 ## Refresh note
 
-The service-worker cache changes from `one-bullet-arena-v2.0.0-simple` to `one-bullet-arena-v2.1.0-simple`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the previous map remains visible.
+The service-worker cache changes from `one-bullet-arena-v2.1.0-simple` to `one-bullet-arena-v2.2.0-clean`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if an older build remains visible.

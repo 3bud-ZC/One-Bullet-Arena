@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
-export const SIMPLE_GAME_VERSION = '2.0.0-simple';
+export const SIMPLE_GAME_VERSION = '2.1.0-simple';
 
 export const ENEMY_TYPES = Object.freeze({
   scout: { id: 'scout', radius: 17, speed: 126, health: 1, score: 100, color: '#ff5f78' },

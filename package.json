@@ -1,14 +1,16 @@
 {
   "name": "one-bullet-arena",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
-  "description": "A clean one-bullet wave survival game with one automatically expanding arena.",
+  "description": "A stable one-bullet wave-survival game with one automatic progression path.",
   "scripts": {
-    "check": "node --check src/main.js && node --check src/game.js && node --check src/game-data.js && node --check src/arena.js && node --check src/audio.js && node --check sw.js && node --check playwright.config.js",
-    "test": "node --test tests/core-loop.test.js",
+    "check": "node --check src/main.js && node --check src/config.js && node --check src/storage.js && node --check src/game.js && node --check src/game-data.js && node --check src/arena.js && node --check src/audio.js && node --check src/input.js && node --check src/render.js && node --check src/ui.js && node --check sw.js && node --check playwright.config.js && node --check scripts/build.mjs && node --check scripts/verify-dist.mjs",
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs",
+    "test:dist": "node scripts/verify-dist.mjs",
     "test:browser": "playwright test",
-    "verify": "npm run check && npm test"
+    "verify": "npm run check && npm test && npm run build && npm run test:dist"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0"

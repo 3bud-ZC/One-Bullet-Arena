@@ -1,4 +1,5 @@
 import { SimpleOneBulletArena } from './simple-game.js';
+import { installExpandingArena } from './expanding-arena.js';
 import { installSimpleUiCleanup } from './simple-ui-cleanup.js';
 
 const canvas = document.querySelector('#game-canvas');
@@ -8,6 +9,7 @@ canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
 const game = new SimpleOneBulletArena(canvas);
+installExpandingArena(game);
 installSimpleUiCleanup(game);
 window.__ONE_BULLET_ARENA__ = game;
 

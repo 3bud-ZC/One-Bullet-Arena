@@ -10,7 +10,8 @@ canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
 const game = new OneBulletGame(canvas, liveRegion);
-window.__ONE_BULLET_ARENA__ = game;
+const qaMode = new URLSearchParams(location.search).get('qa') === '1';
+if (qaMode) window.__ONE_BULLET_ARENA__ = game;
 
 document.addEventListener('keydown', async (event) => {
   if (event.key.toLowerCase() !== 'f') return;
@@ -22,7 +23,7 @@ document.addEventListener('keydown', async (event) => {
   }
 });
 
-if ('serviceWorker' in navigator && !location.search.includes('qa=1')) {
+if ('serviceWorker' in navigator && !qaMode) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
 

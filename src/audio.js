@@ -1,22 +1,16 @@
-const STORAGE_KEY = 'one-bullet-clean-audio';
-const DEFAULTS = Object.freeze({ music: 0.3, sfx: 0.68, muted: false });
+import { STORAGE_KEYS } from './config.js';
+import { readJson, writeJson } from './storage.js';
 
-function loadSettings() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    return {
+const DEFAULTS = Object.freeze({ music: 0.26, sfx: 0.66, muted: false });
+
+export class AudioEngine {
+  constructor() {
+    const saved = readJson(STORAGE_KEYS.audio, DEFAULTS) || DEFAULTS;
+    this.settings = {
       music: clamp(saved.music ?? DEFAULTS.music),
       sfx: clamp(saved.sfx ?? DEFAULTS.sfx),
       muted: Boolean(saved.muted ?? DEFAULTS.muted),
     };
-  } catch {
-    return { ...DEFAULTS };
-  }
-}
-
-export class AudioEngine {
-  constructor() {
-    this.settings = loadSettings();
     this.context = null;
     this.master = null;
     this.musicTimer = null;
@@ -40,8 +34,7 @@ export class AudioEngine {
   }
 
   save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings)); }
-    catch { /* Audio remains usable when storage is unavailable. */ }
+    writeJson(STORAGE_KEYS.audio, this.settings);
     if (this.master) this.master.gain.value = this.settings.muted ? 0 : 1;
   }
 
@@ -53,6 +46,10 @@ export class AudioEngine {
 
   setScene(scene) {
     this.scene = scene === 'combat' ? 'combat' : 'menu';
+  }
+
+  snapshot() {
+    return { ...this.settings };
   }
 
   tone({ frequency = 440, duration = 0.1, type = 'sine', volume = 0.1, slide = 0 }) {

@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
-export const GAME_VERSION = '2.2.0-clean';
+export const GAME_VERSION = '2.4.0-stable';
 export const MAX_ACTIVE_ENEMIES = 14;
 
 export const ENEMY_TYPES = Object.freeze({
@@ -22,7 +22,7 @@ export const UPGRADES = Object.freeze([
   Object.freeze({ id: 'quick-dash', name: 'اندفاع أسرع', tag: 'حركة', description: 'يقلل وقت انتظار الاندفاع.', maxStacks: 7 }),
   Object.freeze({ id: 'swift-steps', name: 'خطوات خاطفة', tag: 'حركة', description: 'يزيد سرعة حركة اللاعب بنسبة 7%.', maxStacks: 7 }),
   Object.freeze({ id: 'vitality', name: 'قلب إضافي', tag: 'صحة', description: 'يزيد الحد الأقصى للصحة ويعالج قلبًا واحدًا.', maxStacks: 4 }),
-  Object.freeze({ id: 'wave-shield', name: 'درع الموجة', tag: 'دفاع', description: 'ابدأ كل موجة بدرع يمتص ضربة واحدة.', maxStacks: 3 }),
+  Object.freeze({ id: 'wave-shield', name: 'درع الموجة', tag: 'دفاع', description: 'ابدأ كل موجة بدرع يمتص ضربة واحدة.', maxStacks: 1 }),
   Object.freeze({ id: 'second-chance', name: 'فرصة أخيرة', tag: 'نجاة', description: 'تنجو مرة واحدة من ضربة قاتلة بقلب واحد.', maxStacks: 1 }),
 ]);
 
@@ -32,25 +32,35 @@ export function sanitizeWave(value) {
 
 export function enemyPoolForWave(wave) {
   const safeWave = sanitizeWave(wave);
-  return Object.values(ENEMY_TYPES)
-    .filter((enemy) => safeWave >= enemy.unlockWave)
-    .map((enemy) => enemy.id);
+  return Object.values(ENEMY_TYPES).filter((enemy) => safeWave >= enemy.unlockWave).map((enemy) => enemy.id);
 }
 
 export function enemyCountForWave(wave) {
   const safeWave = sanitizeWave(wave);
-  return Math.min(MAX_ACTIVE_ENEMIES, 3 + Math.floor((safeWave - 1) * 0.82));
+  return Math.min(MAX_ACTIVE_ENEMIES, 3 + Math.floor((safeWave - 1) * 0.72));
 }
 
 export function buildWaveComposition(wave) {
   const safeWave = sanitizeWave(wave);
   const count = enemyCountForWave(safeWave);
-  const pool = enemyPoolForWave(safeWave);
-  return Array.from({ length: count }, (_, index) => {
-    if (safeWave <= 2) return 'scout';
-    const cursor = (safeWave * 3 + index * 5 + Math.floor(index / 3)) % pool.length;
-    return pool[cursor];
-  });
+  if (safeWave <= 2) return Array(count).fill('scout');
+
+  const limits = {
+    brute: Math.min(3, 1 + Math.floor(safeWave / 6)),
+    sniper: safeWave >= 4 ? Math.min(2, 1 + Math.floor((safeWave - 4) / 8)) : 0,
+    charger: safeWave >= 6 ? Math.min(2, 1 + Math.floor((safeWave - 6) / 9)) : 0,
+    splitter: safeWave >= 8 ? Math.min(2, 1 + Math.floor((safeWave - 8) / 12)) : 0,
+  };
+  const result = [];
+  const add = (type, amount) => {
+    for (let index = 0; index < amount && result.length < count; index += 1) result.push(type);
+  };
+  add('splitter', Math.min(limits.splitter, safeWave % 4 === 0 ? 1 : 0));
+  add('sniper', Math.min(limits.sniper, safeWave % 3 === 1 ? 1 : 0));
+  add('charger', Math.min(limits.charger, safeWave % 3 === 0 ? 1 : 0));
+  add('brute', Math.min(limits.brute, Math.max(1, Math.floor(count / 4))));
+  while (result.length < count) result.push('scout');
+  return result.sort((a, b) => ((safeWave * 7 + a.length * 3) % 11) - ((safeWave * 7 + b.length * 3) % 11));
 }
 
 export function enemyScaleForWave(wave) {
@@ -63,10 +73,7 @@ export function enemyScaleForWave(wave) {
 }
 
 export function normalizedStacks(stacks = {}) {
-  return Object.fromEntries(UPGRADES.map((upgrade) => [
-    upgrade.id,
-    Math.max(0, Math.min(upgrade.maxStacks, Math.trunc(Number(stacks[upgrade.id]) || 0))),
-  ]));
+  return Object.fromEntries(UPGRADES.map((upgrade) => [upgrade.id, Math.max(0, Math.min(upgrade.maxStacks, Math.trunc(Number(stacks[upgrade.id]) || 0)))]));
 }
 
 export function availableUpgrades(stacks = {}) {
@@ -84,8 +91,7 @@ export function pickUpgradeChoices(stacks = {}, count = 3, random = Math.random,
   while (pool.length > 0 && choices.length < count) {
     const sample = Number(random());
     const normalized = Number.isFinite(sample) ? Math.max(0, Math.min(0.999999, sample)) : 0;
-    const index = Math.floor(normalized * pool.length);
-    choices.push(pool.splice(index, 1)[0]);
+    choices.push(pool.splice(Math.floor(normalized * pool.length), 1)[0]);
   }
   return choices;
 }

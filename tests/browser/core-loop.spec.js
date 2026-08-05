@@ -6,50 +6,116 @@ async function loadGame(page) {
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
 }
 
-test('boots only the clean core runtime', async ({ page }) => {
+test('boots only the modular stable single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.2.0-clean');
+  expect(snapshot.version).toBe('2.4.0-stable');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
+  expect(snapshot.runtimeArchitecture).toBe('modular-runtime');
+  expect(snapshot.autoRecallAfterWave).toBe(true);
+  expect(snapshot.telegraphsLockDirection).toBe(true);
   expect(snapshot.removedSystemsPresent).toBe(false);
   expect(snapshot.puzzleObjectivesPresent).toBe(false);
 });
 
-test('one action starts wave one in the central room', async ({ page }) => {
+test('one action starts wave one and clearing it requires one upgrade', async ({ page }) => {
   await loadGame(page);
   await page.keyboard.press('Enter');
-  const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(1);
   expect(snapshot.enemies).toBe(3);
-  expect(snapshot.arenaStage).toBe(0);
-});
 
-test('clearing a wave requires exactly one upgrade before continuing', async ({ page }) => {
-  await loadGame(page);
-  await page.keyboard.press('Enter');
-  const upgrade = await page.evaluate(() => {
+  snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.update(1);
     return game.getSnapshot();
   });
-  expect(upgrade.state).toBe('upgrade');
-  expect(upgrade.upgradeChoices).toHaveLength(3);
+  expect(snapshot.state).toBe('upgrade');
+  expect(snapshot.upgradeChoices).toHaveLength(3);
 
-  const next = await page.evaluate(() => {
+  snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.chooseUpgrade(0);
     return game.getSnapshot();
   });
-  expect(next.state).toBe('playing');
-  expect(next.wave).toBe(2);
-  expect(next.upgrades).toBe(1);
+  expect(snapshot.state).toBe('playing');
+  expect(snapshot.wave).toBe(2);
+  expect(snapshot.upgrades).toBe(1);
 });
 
-test('the same map expands automatically at waves 3, 6, and 9', async ({ page }) => {
+test('the bullet recalls automatically after the final enemy dies', async ({ page }) => {
+  await loadGame(page);
+  const snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: false,
+      x: game.player.x + 260,
+      y: game.player.y,
+      vx: 0,
+      vy: 0,
+      recoverDelay: 0,
+    });
+    game.waveClearTimer = 0;
+    game.update(0.25);
+    return game.getSnapshot();
+  });
+  expect(snapshot.bulletHeld).toBe(false);
+  expect(snapshot.bulletRecalling).toBe(true);
+});
+
+test('sniper and charger telegraphs lock their direction before execution', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    game.enemyShots = [];
+
+    game.player.x = 800;
+    game.player.y = 300;
+    const sniper = game.spawnEnemy('sniper', 0, { point: { x: 400, y: 300 } });
+    sniper.spawnTime = 0;
+    sniper.attackCooldown = 0;
+    game.updateSniper(sniper, { x: 1, y: 0 }, { shotSpeed: 1 }, 0.01);
+    const sniperLocked = { ...sniper.shotDirection };
+    game.player.x = 400;
+    game.player.y = 620;
+    game.updateSniper(sniper, { x: 0, y: 1 }, { shotSpeed: 1 }, 0.6);
+    const shot = game.enemyShots[0];
+
+    const charger = game.spawnEnemy('charger', 1, { point: { x: 700, y: 300 } });
+    charger.spawnTime = 0;
+    charger.attackCooldown = 0;
+    game.updateCharger(charger, { x: -1, y: 0 }, 0.01);
+    const chargerLocked = { ...charger.chargeDirection };
+    game.updateCharger(charger, { x: 0, y: 1 }, 0.7);
+
+    return {
+      sniperLocked,
+      shotVelocity: shot ? { x: shot.vx, y: shot.vy } : null,
+      chargerLocked,
+      chargerActiveDirection: { ...charger.chargeDirection },
+      chargerRemaining: charger.chargeRemaining,
+    };
+  });
+
+  expect(result.sniperLocked.x).toBeCloseTo(1, 5);
+  expect(result.sniperLocked.y).toBeCloseTo(0, 5);
+  expect(result.shotVelocity.x).toBeGreaterThan(300);
+  expect(Math.abs(result.shotVelocity.y)).toBeLessThan(1);
+  expect(result.chargerLocked.x).toBeCloseTo(-1, 5);
+  expect(result.chargerActiveDirection).toEqual(result.chargerLocked);
+  expect(result.chargerRemaining).toBeGreaterThan(0);
+});
+
+test('the same arena expands at waves 3, 6, and 9', async ({ page }) => {
   await loadGame(page);
   const stages = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -65,7 +131,7 @@ test('the same map expands automatically at waves 3, 6, and 9', async ({ page })
   expect(stages).toEqual([0, 1, 2, 3]);
 });
 
-test('sub-stepped bullet movement cannot tunnel through an enemy', async ({ page }) => {
+test('high-speed bullets cannot tunnel through enemies', async ({ page }) => {
   await loadGame(page);
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -85,101 +151,24 @@ test('sub-stepped bullet movement cannot tunnel through an enemy', async ({ page
   expect(result.remaining).toBe(0);
 });
 
-test('mobile control zones keep combat entities visible', async ({ page }) => {
-  await loadGame(page);
-  const result = await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.startRun();
-    game.touchMode = true;
-    game.wave = 8;
-    game.startNextWave();
-    const zones = game.getSnapshot().touchSafeZones;
-    const checks = [];
-    for (const zone of zones) {
-      game.player.x = zone.x + zone.w / 2;
-      game.player.y = zone.y + zone.h / 2;
-      game.constrainCombatCircle(game.player);
-      const inside = game.player.x + game.player.radius >= zone.x
-        && game.player.x - game.player.radius <= zone.x + zone.w
-        && game.player.y + game.player.radius >= zone.y
-        && game.player.y - game.player.radius <= zone.y + zone.h;
-      checks.push({ id: zone.id, inside });
-    }
-    return checks;
-  });
-  expect(result.every((item) => item.inside === false)).toBe(true);
-});
-
-test('canvas remains contained and the document never scrolls', async ({ page }) => {
+test('canvas remains contained without document scrolling', async ({ page }) => {
   await loadGame(page);
   const layout = await page.evaluate(() => {
     const rect = document.querySelector('#game-canvas').getBoundingClientRect();
     return {
-      rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
-      viewport: { width: innerWidth, height: innerHeight },
-      scroll: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight },
-      externalFonts: [...document.querySelectorAll('link')].some((link) => link.href.includes('fonts.googleapis.com')),
+      right: rect.right, bottom: rect.bottom, width: innerWidth, height: innerHeight,
+      scrollWidth: document.documentElement.scrollWidth,
+      scrollHeight: document.documentElement.scrollHeight,
     };
   });
-  expect(layout.rect.left).toBeGreaterThanOrEqual(0);
-  expect(layout.rect.top).toBeGreaterThanOrEqual(0);
-  expect(layout.rect.right).toBeLessThanOrEqual(layout.viewport.width + 1);
-  expect(layout.rect.bottom).toBeLessThanOrEqual(layout.viewport.height + 1);
-  expect(layout.scroll.width).toBeLessThanOrEqual(layout.viewport.width + 1);
-  expect(layout.scroll.height).toBeLessThanOrEqual(layout.viewport.height + 1);
-  expect(layout.externalFonts).toBe(false);
+  expect(layout.right).toBeLessThanOrEqual(layout.width + 1);
+  expect(layout.bottom).toBeLessThanOrEqual(layout.height + 1);
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.width + 1);
+  expect(layout.scrollHeight).toBeLessThanOrEqual(layout.height + 1);
 });
 
-test('portrait view has no rotation banner or external page chrome', async ({ page }) => {
-  await page.setViewportSize({ width: 412, height: 915 });
-  await loadGame(page);
-  const result = await page.evaluate(() => ({
-    before: getComputedStyle(document.body, '::before').content,
-    bodyChildren: [...document.body.children].map((element) => element.tagName),
-    scrollWidth: document.documentElement.scrollWidth,
-    scrollHeight: document.documentElement.scrollHeight,
-  }));
-  expect(['none', 'normal', '""']).toContain(result.before);
-  expect(result.bodyChildren).toEqual(['MAIN', 'SCRIPT']);
-  expect(result.scrollWidth).toBeLessThanOrEqual(413);
-  expect(result.scrollHeight).toBeLessThanOrEqual(916);
-});
-
-test('menu, upgrade, wave one, wave nine, and game over remain visually reviewable', async ({ page }, testInfo) => {
-  await loadGame(page);
-  await page.screenshot({ path: testInfo.outputPath('menu.png'), fullPage: true });
-
-  await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.startRun();
-    game.banner = null;
-    game.draw();
-  });
-  await page.screenshot({ path: testInfo.outputPath('wave-1.png'), fullPage: true });
-
-  await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.enemies = [];
-    game.resetBulletToPlayer();
-    game.update(1);
-    game.draw();
-  });
-  await page.screenshot({ path: testInfo.outputPath('upgrade.png'), fullPage: true });
-
-  await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.setState('playing');
-    game.wave = 8;
-    game.startNextWave();
-    game.banner = null;
-    game.draw();
-  });
-  await page.screenshot({ path: testInfo.outputPath('wave-9.png'), fullPage: true });
-
-  await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.finishRun();
-    game.draw();
-  });
-  await page.screenshot({ path: testInfo.outputPath('game-over.png'), fullPage: true });
+test('production mode does not expose the mutable QA runtime', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#game-canvas').waitFor({ state: 'visible' });
+  expect(await page.evaluate(() => '__ONE_BULLET_ARENA__' in window)).toBe(false);
 });

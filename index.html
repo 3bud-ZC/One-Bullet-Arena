@@ -18,8 +18,19 @@
   <body>
     <main class="game-shell">
       <section class="game-frame" aria-label="لعبة حلبة الطلقة الواحدة">
-        <canvas id="game-canvas" aria-label="لوحة لعبة حلبة الطلقة الواحدة"></canvas>
+        <canvas
+          id="game-canvas"
+          aria-label="لوحة لعبة حلبة الطلقة الواحدة"
+          aria-describedby="game-instructions"
+        ></canvas>
       </section>
+      <aside class="orientation-hint" role="status" aria-live="polite">
+        <strong>لف الهاتف للوضع الأفقي</strong>
+        <span>اللعبة مصممة للتحكم باليدين في الوضع الأفقي.</span>
+      </aside>
+      <p id="game-instructions" class="visually-hidden">
+        لعبة بطلقة واحدة. تحرك، أطلق الطلقة، استدعها، ثم اختر تطويرًا بعد كل موجة.
+      </p>
       <p id="game-status" class="visually-hidden" aria-live="polite"></p>
     </main>
     <script type="module" src="./src/main.js"></script>

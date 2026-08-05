@@ -1,162 +1,153 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-05
+Last updated: 2026-08-06
 
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current release: **v2.2.0 — Clean Core Stabilization**
-- Pull Request #29: **squash-merged into `main`**
-- v2.2.0 merge commit: `93767ce997b4d4569bd52e7c5fa79bb300c68380`
-- Previous release: **v2.1.0**
-- Previous full release preserved at: `archive/v1.4.1-full`
-- GitHub Pages deployment: **triggered by the Pull Request #29 merge and this status update**
-- Current state: **implementation, repository cleanup, deterministic verification, Chromium verification, PWA update, documentation, desktop/mobile visual review, and merge complete; deployed-build and physical-device acceptance remain**
+- Release candidate: **v2.4.0 — Modular Runtime and UX Stabilization**
+- Pull Request: **#31**
+- Working branch: `refactor/v2.3-complete-stabilization`
+- Current state: **implementation, deterministic verification, cross-browser verification, PWA packaging, gameplay reliability fixes, and UI/UX restructuring complete; physical-device and deployed-build acceptance remain**
 
 ## Product definition
 
-The active game keeps one explicit loop:
+The active game has one explicit path only:
 
 1. Start one run.
 2. Defeat every enemy in the current wave.
-3. Recover the single bullet.
-4. Choose one of three abilities.
-5. Enter the next, harder wave.
-6. Continue until defeat.
+3. Recover the single bullet automatically after the final kill.
+4. Choose one of three in-run upgrades.
+5. Enter the next, harder wave in the same expanding arena.
+6. Continue until defeat, then retry or return to the menu.
 
-There is one map and one game. No alternate mode, puzzle, objective route, or meta progression can block the wave loop.
+There is no alternate mode, hub, puzzle route, objective branch, currency, inventory, or meta-progression path in the active runtime.
 
-## Clean runtime architecture
+## Active architecture
 
-The active game now boots directly into one `OneBulletGame` runtime.
+The browser boots `OneBulletRuntime` from `src/game-runtime.js`.
 
-Active files:
+Active modules:
 
-- `src/main.js`
-- `src/game.js`
-- `src/game-data.js`
-- `src/arena.js`
-- `src/audio.js`
-- `game.css`
+- `src/main.js` — application entry point and PWA registration.
+- `src/game-runtime.js` — active orchestration layer and focused gameplay/UX overrides.
+- `src/game.js` — stable reusable combat engine.
+- `src/input-controller.js` — keyboard, pointer, multi-touch, and lifecycle input.
+- `src/spawn-system.js` — deterministic scored spawn selection.
+- `src/ui-renderer.js` — UI primitives, upgrade comparisons, cooldown bars, and touch layout.
+- `src/game-data.js` — enemy, upgrade, scaling, and wave data.
+- `src/arena.js` — arena stages, safe zones, geometry, and iterative collision solving.
+- `src/audio.js` — generated music, sound effects, mute state, and persistence.
 
-Removed from the active branch:
+The active runtime does not use constructor-time installers, prototype monkey patches, or competing game modes.
 
-- `src/simple-game.js`
-- `src/simple-data.js`
-- `src/expanding-arena.js`
-- `src/simple-ui-cleanup.js`
-- `simple-game.css`
-- their superseded Node and browser tests
+## Gameplay reliability completed
 
-There are no constructor-time gameplay installers or prototype monkey patches. Arena progression and UI behavior are part of the direct runtime.
+- The final enemy kill starts an automatic bullet recall instead of leaving the wave apparently blocked.
+- Upgrade selection opens only after the returning bullet reaches the player.
+- Sniper aim direction is locked when the firing telegraph begins.
+- Charger direction is locked when the charge telegraph begins.
+- Telegraph visuals display the locked attack line, allowing a real dodge window.
+- Wave Shield has one effective level instead of repeated ineffective stacks.
+- Dangerous enemy pressure remains bounded while every generated wave retains a Scout baseline.
+- Spawn selection scores multiple candidates and avoids:
+  - the player;
+  - existing enemies;
+  - arena obstacles;
+  - HUD panels;
+  - mobile Move, Recall, Dash, and Pause controls.
+- Collision recovery now runs iterative passes across bounds, obstacles, HUD zones, and mobile-control zones.
+- High-speed bullet movement remains sub-stepped to prevent tunneling.
+- Enemy population and particle count remain capped.
 
-## Gameplay and stability changes
+## UI/UX completed
 
-- First two waves use Scouts only.
-- Brute unlocks at Wave 3, Sniper at Wave 4, Charger at Wave 6, and Splitter at Wave 8.
-- Active enemy population grows gradually and remains capped at fourteen.
-- Enemy health, movement speed, and projectile speed use bounded scaling.
-- The arena still opens automatically at Waves 3, 6, and 9.
-- High-speed bullet motion is sub-stepped to prevent tunneling through enemies and cover.
-- Circle/rectangle resolution now recovers correctly when an entity center is inside geometry.
-- Enemy projectiles collide with cover.
-- Snipers display a firing telegraph before releasing a projectile.
-- Chargers retain a visible charge telegraph.
-- Overlapping enemies separate from each other.
-- Splitter children respect the global active-enemy cap.
-- Particle count is bounded.
-- Ability selection avoids repeating the previous three cards when alternatives exist.
-- Twelve active in-run abilities remain; no mode-specific or persistent build abilities exist.
+- The main menu now explains the single loop as **Fire → Recover → Upgrade**.
+- Wave 1 contains a contextual tutorial instead of a separate instruction screen.
+- The HUD now exposes:
+  - bullet state;
+  - recall progress;
+  - Dash cooldown;
+  - health and shield;
+  - wave and enemy count;
+  - score;
+  - upgrade count;
+  - arena stage;
+  - mute state.
+- Upgrade cards show the current value and the value after selection.
+- Game Over shows score, time, kills, best combo, shots, hits, upgrades, and damage taken.
+- The visible mobile joystick and its activation area now use the same fixed circular layout.
+- Touch movement no longer overwrites the aiming pointer used by another touch.
+- Portrait mobile orientation guidance was restored as page-level guidance without adding an alternate game screen.
+- Keyboard focus is visible.
+- Reduced-motion preferences reduce particles, shake persistence, and shell effects.
+- HUD and mobile controls are protected combat-safe areas.
 
-## Browser, mobile, accessibility, and PWA
+## Release, PWA, and CI completed
 
-- External Google Fonts were removed.
-- The portrait rotation banner was removed completely.
-- The document contains only the game shell, Canvas, script, and an invisible accessibility live region.
-- The responsive shell uses `100dvh`, safe areas, and no document scrolling.
-- Four mobile combat-safe zones keep entities out from underneath Move, Recall, Dash, and Pause controls.
-- State changes and wave starts are announced through `aria-live` without adding visible page chrome.
-- Existing v2.1 highest score, highest wave, and audio preferences are migrated automatically.
-- The offline application shell caches only active v2.2 files.
-- Service-worker cache: `one-bullet-arena-v2.2.0-clean`.
+- GitHub Pages packages every runtime, style, manifest, icon, and Service Worker asset.
+- Deployment verifies all modular runtime files before publishing.
+- Service Worker navigation fallback is limited to navigation requests and no longer returns HTML for missing JavaScript or CSS assets.
+- Cache version: `one-bullet-arena-v2.4.0-stable`.
+- The mutable QA runtime is exposed only through `?qa=1`.
+- The repository currently has no lockfile, so CI consistently uses `npm install --ignore-scripts --no-audit --no-fund`.
+- Playwright installs every browser that the configuration executes.
 
 ## Automated verification
 
-### Deterministic tests
+### Deterministic verification
 
 - JavaScript syntax checks: **passed**.
-- Deterministic tests: **15/15 passed**.
+- Deterministic tests: **13/13 passed**.
+- Verify workflow run **606**: **passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
-- Final Verify workflow on the Pull Request #29 documentation commit: **passed**.
-- Coverage includes:
-  - release version;
-  - readable Scout-only opening waves;
-  - gradual enemy unlocks;
-  - monotonic capped population;
-  - bounded enemy scaling;
-  - active ability catalog and stack normalization;
-  - upgrade-card repeat avoidance;
-  - automatic arena expansion;
-  - increasing playable area;
-  - absence of objective data;
-  - isolated arena data;
-  - recovery from center-inside-obstacle collisions;
-  - non-overlapping touch safe zones;
-  - combat-entity removal from every touch zone.
 
-### Browser tests
+Coverage includes:
 
-- Playwright Browser Smoke: **18/18 passed**.
+- release version;
+- gradual enemy progression and bounded pressure;
+- upgrade stack boundaries and current/next effect descriptions;
+- automatic arena expansion;
+- obstacle collision recovery;
+- HUD and mobile safe zones;
+- iterative combat collision resolution;
+- spawn avoidance for players, enemies, obstacles, and UI.
+
+### Browser verification
+
+- Browser Smoke workflow run **113**: **passed**.
+- Playwright tests: **36/36 passed** across four projects.
 - Projects:
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
+  - Desktop Firefox at `1440×900`.
+  - Desktop WebKit at `1440×900`.
 - Failures, flaky tests, and skipped tests: **0**.
-- Final Browser Smoke workflow on the Pull Request #29 documentation commit: **passed**.
-- Coverage confirms:
-  - only the clean runtime boots;
-  - no mode, hub, puzzle, or objective state exists;
-  - Wave 1 starts with three enemies;
-  - one ability is required between waves;
-  - the arena expands at Waves 3, 6, and 9;
-  - high-speed bullets cannot tunnel through an enemy;
-  - mobile safe zones keep combat entities visible;
-  - the Canvas remains contained without document scrolling;
-  - no external font is loaded;
-  - Portrait contains no rotation banner or external page chrome.
 
-## Visual QA completed
+Browser coverage confirms:
 
-Reviewed on both desktop and mobile landscape:
-
-- main menu;
-- Wave 1;
-- ability-selection screen;
-- fully opened Wave 9 arena;
-- game-over screen.
-
-Confirmed:
-
-- Arabic text renders without clipping;
-- the HUD is compact and readable;
-- the menu contains one primary Play action;
-- ability cards remain inside the screen;
-- Wave 1 and Wave 9 geometry are visually distinct;
-- touch controls remain inside the viewport;
-- enemies stay clear of touch controls;
-- game-over actions remain visible;
-- no old UI layer, rotation instruction, objective panel, or mode selector appears.
+- only the modular single-path runtime boots;
+- one action starts Wave 1;
+- one upgrade is required between waves;
+- the bullet recalls automatically after the last enemy;
+- Sniper and Charger telegraphs retain their locked directions;
+- the arena expands at Waves 3, 6, and 9;
+- high-speed bullets cannot tunnel through enemies;
+- mobile control zones keep combat entities clear;
+- the Canvas remains contained without document scrolling;
+- production does not expose the mutable QA object.
 
 ## Remaining acceptance checks
 
-These require the deployed build or physical hardware and are not marked complete:
+These checks require the merged/deployed build or physical hardware and are not marked complete:
 
-1. Complete a normal run through Wave 10 without QA shortcuts.
-2. Confirm the slower enemy unlock curve feels correct during real play.
-3. Review Wave 9+ pressure near the fourteen-enemy cap.
-4. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
-5. Test installed PWA launch and offline restart with cache v2.2.0.
-6. Verify the deployed GitHub Pages build after deployment completes.
+1. Play a normal run through at least Wave 15 without QA shortcuts.
+2. Confirm subjective pacing at Waves 8–15 and near the fourteen-enemy cap.
+3. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
+4. Test simultaneous movement, aiming, firing, recall, and Dash on a real multi-touch device.
+5. Install the PWA, launch it offline, and confirm cache replacement from v2.2/v2.3 to v2.4.
+6. Verify the final GitHub Pages deployment after Pull Request #31 is merged.
 
 ## Refresh note
 
-The service-worker cache changes from `one-bullet-arena-v2.1.0-simple` to `one-bullet-arena-v2.2.0-clean`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if an older build remains visible.
+After deployment, use a hard refresh on desktop or clear stored site data on mobile if an older Service Worker build remains visible.

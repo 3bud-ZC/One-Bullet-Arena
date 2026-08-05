@@ -61,7 +61,9 @@ export class CanvasUi {
       ctx.arc(healthX + index * 24, 91, 7, 0, Math.PI * 2);
       ctx.fill();
     }
-    if (game.player.shield > 0) label(ctx, 'درع', WIDTH - 42, 95, 12, COLORS.electric, 900, 'right');
+    if (game.player.shield > 0) {
+      label(ctx, 'درع', WIDTH - 42, 95, 12, COLORS.electric, 900, 'right');
+    }
   }
 
   drawMenu(game) {
@@ -148,10 +150,9 @@ export class CanvasUi {
     label(this.ctx, 'انتهت الجولة', WIDTH / 2, 120, 54, COLORS.danger, 900);
     label(this.ctx, `وصلت إلى الموجة ${game.wave}`, WIDTH / 2, 178, 25, COLORS.text, 850);
 
-    const accuracy = game.stats.shots > 0 ? Math.round(game.stats.hits / game.stats.shots * 100) : 0;
     panel(this.ctx, WIDTH / 2 - 360, 218, 720, 118, COLORS.border, 'rgba(9,15,33,0.88)', 5);
     label(this.ctx, `${game.score.toLocaleString('en-US')} نقطة  •  ${game.stats.kills} عدو  •  ${game.stats.upgrades} قدرات`, WIDTH / 2, 260, 18, COLORS.text, 800);
-    label(this.ctx, `دقة ${accuracy}%  •  مدة ${formatTime(game.runTime)}  •  ضرر مستلم ${game.stats.damageTaken}`, WIDTH / 2, 302, 15, COLORS.muted, 650);
+    label(this.ctx, `إصابات ${game.stats.hits}/${game.stats.shots}  •  مدة ${formatTime(game.runTime)}  •  ضرر مستلم ${game.stats.damageTaken}`, WIDTH / 2, 302, 15, COLORS.muted, 650);
 
     this.drawButton('العب من جديد', WIDTH / 2 - 190, 378, 380, 64, () => game.startRun(), true);
     this.drawButton('القائمة الرئيسية', WIDTH / 2 - 190, 460, 380, 58, () => game.goToMenu());
@@ -197,7 +198,8 @@ export class CanvasUi {
   }
 
   drawButton(textValue, x, y, width, height, action, primary = false) {
-    panel(this.ctx, x, y, width, height, primary ? COLORS.bullet : COLORS.border, primary ? 'rgba(56,48,17,0.94)' : COLORS.panelSoft, primary ? 14 : 5);
+    const hovered = false;
+    panel(this.ctx, x, y, width, height, primary || hovered ? COLORS.bullet : COLORS.border, primary ? 'rgba(56,48,17,0.94)' : COLORS.panelSoft, primary ? 14 : 5);
     label(this.ctx, textValue, x + width / 2, y + height / 2 + 7, 19, primary ? COLORS.bullet : COLORS.text, 850);
     this.addRectRegion(x, y, width, height, action);
   }

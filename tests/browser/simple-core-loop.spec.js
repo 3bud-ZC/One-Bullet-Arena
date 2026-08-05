@@ -73,6 +73,24 @@ test('the canvas remains fully contained without page scrolling', async ({ page 
   expect(layout.stylesheets.some((href) => href.includes('ui-ux-stabilization'))).toBe(false);
 });
 
+test('menu and upgrade selection remain focused', async ({ page }, testInfo) => {
+  await loadGame(page);
+  await page.screenshot({ path: testInfo.outputPath('simple-menu.png'), fullPage: true });
+
+  const upgradeState = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    game.resetBulletToPlayer();
+    game.update(1);
+    game.draw();
+    return game.getSnapshot();
+  });
+  expect(upgradeState.state).toBe('upgrade');
+  expect(upgradeState.upgradeChoices).toHaveLength(3);
+  await page.screenshot({ path: testInfo.outputPath('simple-upgrade.png'), fullPage: true });
+});
+
 test('stable gameplay screenshot shows the simplified HUD', async ({ page }, testInfo) => {
   await loadGame(page);
   await page.keyboard.press('Enter');

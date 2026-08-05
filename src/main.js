@@ -1,4 +1,5 @@
 import { SimpleOneBulletArena } from './simple-game.js';
+import { installSimpleUiCleanup } from './simple-ui-cleanup.js';
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
@@ -7,6 +8,7 @@ canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
 const game = new SimpleOneBulletArena(canvas);
+installSimpleUiCleanup(game);
 window.__ONE_BULLET_ARENA__ = game;
 
 document.addEventListener('keydown', async (event) => {

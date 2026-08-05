@@ -5,12 +5,13 @@ Last updated: 2026-08-05
 ## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v2.0.0 — Simple Core Loop Reset**
-- Pull Request: **#27**
-- Working branch: `feature/simple-core-loop-v2`
+- Current release: **v2.0.0 — Simple Core Loop Reset**
+- Pull Request #27: **squash-merged into `main`**
+- v2.0.0 merge commit: `c1f77c6adff44823506e3561e05a81643fe8b737`
 - Previous full release preserved at: `archive/v1.4.1-full`
 - Repository cleanup commit: `6a05e52ac0a9980328ee5da1978498fe0ea9cc83`
-- Current state: **implementation, active-repository cleanup, deterministic verification, Chromium verification, PWA integration, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
+- GitHub Pages deployment: **triggered by the Pull Request #27 merge and this status update**
+- Current state: **implementation, active-repository cleanup, deterministic verification, Chromium verification, PWA integration, documentation, visual review, and merge complete; deployed-build and physical-device acceptance remain**
 
 ## Product reset
 
@@ -88,7 +89,7 @@ The service worker caches only the active game shell and uses:
 one-bullet-arena-v2.0.0-simple
 ```
 
-Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser specs have been deleted from the v2 working branch.
+Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser specs have been deleted from `main`.
 
 ## Verification
 
@@ -97,6 +98,7 @@ Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser
 - JavaScript syntax checks: **passed**.
 - Automated deterministic tests: **10/10 passed**.
 - Failures, skipped tests, and cancelled tests: **0**.
+- Final Verify workflow on the Pull Request #27 documentation commit: **passed**.
 - Coverage verifies:
   - release version;
   - readable three-enemy first wave;
@@ -116,6 +118,7 @@ Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser
   - Desktop Chromium at `1440×900`.
   - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Failures, flaky tests, and skipped tests: **0**.
+- Final Browser Smoke workflow on the Pull Request #27 documentation commit: **passed**.
 - Coverage confirms:
   - only the simple runtime boots;
   - allowed states contain no mode or hub screens;
@@ -143,14 +146,14 @@ Confirmed:
 
 ## Remaining acceptance checks
 
-These require the merged/deployed build or extended physical play and are not marked complete:
+These require the deployed build or extended physical play and are not marked complete:
 
 1. Complete several runs through at least Wave 10 using normal player input.
 2. Review upgrade balance and repeated-choice variety during long runs.
 3. Review enemy pressure and arena readability near the fourteen-enemy cap.
 4. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
 5. Test installed PWA launch and offline restart with cache v2.0.0.
-6. Verify the GitHub Pages deployment after Pull Request #27 is merged.
+6. Verify the GitHub Pages deployment after deployment completes.
 
 ## Refresh note
 

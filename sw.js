@@ -8,6 +8,7 @@ const APP_SHELL = [
   './src/main.js',
   './src/simple-game.js',
   './src/simple-data.js',
+  './src/simple-ui-cleanup.js',
   './src/audio.js',
 ];
 

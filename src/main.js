@@ -1,4 +1,4 @@
-import { OneBulletGame } from './game.js';
+import { OneBulletRuntime } from './game-runtime.js';
 
 migrateLegacyStorage();
 
@@ -9,7 +9,7 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثو
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new OneBulletGame(canvas, liveRegion);
+const game = new OneBulletRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
 if (qaMode) window.__ONE_BULLET_ARENA__ = game;
 

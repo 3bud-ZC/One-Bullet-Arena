@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { arenaStageForWave } from '../src/expanding-arena.js';
+import { arenaStageForWave, touchControlSafeZones } from '../src/expanding-arena.js';
 
 function area(bounds) {
   return bounds.w * bounds.h;
@@ -45,11 +45,23 @@ test('arena progression contains only combat geometry', () => {
   }
 });
 
-test('returned stage data is isolated from later mutation', () => {
+test('touch controls expose four isolated combat-safe zones', () => {
+  const zones = touchControlSafeZones();
+  assert.deepEqual(zones.map((zone) => zone.id), ['move', 'dash', 'recall', 'pause']);
+  assert.ok(zones.every((zone) => zone.radius >= 55));
+  assert.ok(zones.every((zone) => zone.x >= 0 && zone.x <= 1280));
+  assert.ok(zones.every((zone) => zone.y >= 0 && zone.y <= 720));
+});
+
+test('returned stage and touch-zone data is isolated from later mutation', () => {
   const first = arenaStageForWave(3);
   first.bounds.w = 1;
   first.obstacles[0].x = -999;
   const second = arenaStageForWave(3);
   assert.equal(second.bounds.w, 1040);
   assert.notEqual(second.obstacles[0].x, -999);
+
+  const zones = touchControlSafeZones();
+  zones[0].radius = 1;
+  assert.notEqual(touchControlSafeZones()[0].radius, 1);
 });

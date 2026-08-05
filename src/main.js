@@ -1,16 +1,13 @@
-import { SimpleOneBulletArena } from './simple-game.js';
-import { installExpandingArena } from './expanding-arena.js';
-import { installSimpleUiCleanup } from './simple-ui-cleanup.js';
+import { OneBulletGame } from './game.js';
 
 const canvas = document.querySelector('#game-canvas');
+const liveRegion = document.querySelector('#game-status');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
 
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new SimpleOneBulletArena(canvas);
-installExpandingArena(game);
-installSimpleUiCleanup(game);
+const game = new OneBulletGame(canvas, liveRegion);
 window.__ONE_BULLET_ARENA__ = game;
 
 document.addEventListener('keydown', async (event) => {
@@ -19,7 +16,7 @@ document.addEventListener('keydown', async (event) => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch {
-    // Fullscreen support is optional and does not affect gameplay.
+    // Fullscreen is optional and never blocks gameplay.
   }
 });
 

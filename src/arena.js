@@ -53,6 +53,12 @@ const ARENA_STAGES = Object.freeze([
   }),
 ]);
 
+const HUD_SAFE_ZONES = Object.freeze([
+  Object.freeze({ id: 'hud-left', x: 8, y: 8, w: 356, h: 104 }),
+  Object.freeze({ id: 'hud-center', x: WIDTH / 2 - 192, y: 8, w: 384, h: 104 }),
+  Object.freeze({ id: 'hud-right', x: WIDTH - 364, y: 8, w: 356, h: 104 }),
+]);
+
 const MOBILE_SAFE_ZONES = Object.freeze([
   Object.freeze({ id: 'move', x: 28, y: HEIGHT - 238, w: 228, h: 220 }),
   Object.freeze({ id: 'recall', x: WIDTH - 158, y: HEIGHT - 288, w: 140, h: 126 }),
@@ -73,8 +79,19 @@ export function isArenaUnlockWave(wave) {
   return [3, 6, 9].includes(Math.max(1, Math.trunc(Number(wave) || 1)));
 }
 
+export function hudSafeZones() {
+  return HUD_SAFE_ZONES.map((zone) => ({ ...zone }));
+}
+
 export function mobileSafeZones() {
   return MOBILE_SAFE_ZONES.map((zone) => ({ ...zone }));
+}
+
+export function combatSafeZones(touchMode = false) {
+  return [
+    ...hudSafeZones(),
+    ...(touchMode ? mobileSafeZones() : []),
+  ];
 }
 
 export function cloneStage(stage) {
@@ -113,6 +130,32 @@ export function resolveCircleAgainstRects(circle, rects = []) {
   let collided = false;
   for (const rect of rects) collided = resolveCircleAgainstRect(circle, rect) || collided;
   return collided;
+}
+
+export function resolveCombatCircle(circle, bounds, obstacles = [], safeZones = [], passes = 5) {
+  if (!circle) return circle;
+  const maxPasses = Math.max(1, Math.min(10, Math.trunc(Number(passes) || 1)));
+
+  for (let pass = 0; pass < maxPasses; pass += 1) {
+    const beforeX = circle.x;
+    const beforeY = circle.y;
+    clampCircleToBounds(circle, bounds);
+    resolveCircleAgainstRects(circle, obstacles);
+    for (const zone of safeZones) resolveCircleAgainstSafeZone(circle, zone);
+    clampCircleToBounds(circle, bounds);
+    if (Math.abs(circle.x - beforeX) < 0.001 && Math.abs(circle.y - beforeY) < 0.001) break;
+  }
+  return circle;
+}
+
+function resolveCircleAgainstSafeZone(circle, zone) {
+  if (!circleRectOverlap(circle, zone)) return false;
+  const radius = Math.max(0, Number(circle.radius) || 0);
+  if (String(zone.id).startsWith('hud-')) circle.y = zone.y + zone.h + radius + 1;
+  else if (zone.id === 'move') circle.x = zone.x + zone.w + radius + 1;
+  else if (['recall', 'dash', 'pause'].includes(zone.id)) circle.x = zone.x - radius - 1;
+  else resolveCircleAgainstRect(circle, zone);
+  return true;
 }
 
 export function pushCircleOutOfSafeZones(circle, zones = MOBILE_SAFE_ZONES) {

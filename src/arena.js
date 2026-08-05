@@ -1,4 +1,4 @@
-import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
+import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH, TOUCH_CONTROLS } from './config.js';
 
 const ARENA_STAGES = Object.freeze([
   Object.freeze({
@@ -53,11 +53,17 @@ const ARENA_STAGES = Object.freeze([
   }),
 ]);
 
-const MOBILE_SAFE_ZONES = Object.freeze([
-  Object.freeze({ id: 'move', x: 28, y: HEIGHT - 238, w: 228, h: 220 }),
-  Object.freeze({ id: 'recall', x: WIDTH - 158, y: HEIGHT - 288, w: 140, h: 126 }),
-  Object.freeze({ id: 'dash', x: WIDTH - 162, y: HEIGHT - 154, w: 144, h: 136 }),
-  Object.freeze({ id: 'pause', x: WIDTH - 286, y: HEIGHT - 150, w: 112, h: 132 }),
+const HUD_SAFE_ZONES = Object.freeze([
+  Object.freeze({ id: 'hud-left', x: 12, y: 10, w: 320, h: 102 }),
+  Object.freeze({ id: 'hud-center', x: 488, y: 10, w: 304, h: 68 }),
+  Object.freeze({ id: 'hud-right', x: 948, y: 10, w: 320, h: 102 }),
+]);
+
+const TOUCH_SAFE_ZONES = Object.freeze([
+  circleToRect('move', TOUCH_CONTROLS.move.x, TOUCH_CONTROLS.move.y, TOUCH_CONTROLS.move.hitRadius + 8),
+  circleToRect('recall', TOUCH_CONTROLS.recall.x, TOUCH_CONTROLS.recall.y, TOUCH_CONTROLS.recall.radius + 8),
+  circleToRect('dash', TOUCH_CONTROLS.dash.x, TOUCH_CONTROLS.dash.y, TOUCH_CONTROLS.dash.radius + 8),
+  circleToRect('pause', TOUCH_CONTROLS.pause.x, TOUCH_CONTROLS.pause.y, TOUCH_CONTROLS.pause.radius + 8),
 ]);
 
 export function arenaStageForWave(wave) {
@@ -74,7 +80,15 @@ export function isArenaUnlockWave(wave) {
 }
 
 export function mobileSafeZones() {
-  return MOBILE_SAFE_ZONES.map((zone) => ({ ...zone }));
+  return TOUCH_SAFE_ZONES.map((zone) => ({ ...zone }));
+}
+
+export function hudSafeZones() {
+  return HUD_SAFE_ZONES.map((zone) => ({ ...zone }));
+}
+
+export function combatSafeZones(touchMode = false) {
+  return [...hudSafeZones(), ...(touchMode ? mobileSafeZones() : [])];
 }
 
 export function cloneStage(stage) {
@@ -96,15 +110,15 @@ export function clampCircleToBounds(circle, bounds) {
 export function resolveCircleAgainstRect(circle, rect) {
   if (!circleRectOverlap(circle, rect)) return false;
   const radius = Math.max(0, Number(circle.radius) || 0);
-  const leftPenetration = circle.x + radius - rect.x;
-  const rightPenetration = rect.x + rect.w - (circle.x - radius);
-  const topPenetration = circle.y + radius - rect.y;
-  const bottomPenetration = rect.y + rect.h - (circle.y - radius);
-  const minimum = Math.min(leftPenetration, rightPenetration, topPenetration, bottomPenetration);
+  const left = Math.abs(circle.x - (rect.x - radius));
+  const right = Math.abs(circle.x - (rect.x + rect.w + radius));
+  const top = Math.abs(circle.y - (rect.y - radius));
+  const bottom = Math.abs(circle.y - (rect.y + rect.h + radius));
+  const minimum = Math.min(left, right, top, bottom);
 
-  if (minimum === leftPenetration) circle.x = rect.x - radius - 0.5;
-  else if (minimum === rightPenetration) circle.x = rect.x + rect.w + radius + 0.5;
-  else if (minimum === topPenetration) circle.y = rect.y - radius - 0.5;
+  if (minimum === left) circle.x = rect.x - radius - 0.5;
+  else if (minimum === right) circle.x = rect.x + rect.w + radius + 0.5;
+  else if (minimum === top) circle.y = rect.y - radius - 0.5;
   else circle.y = rect.y + rect.h + radius + 0.5;
   return true;
 }
@@ -115,16 +129,29 @@ export function resolveCircleAgainstRects(circle, rects = []) {
   return collided;
 }
 
-export function pushCircleOutOfSafeZones(circle, zones = MOBILE_SAFE_ZONES) {
+export function pushCircleOutOfSafeZones(circle, zones = TOUCH_SAFE_ZONES) {
   let changed = false;
   const radius = Math.max(0, Number(circle?.radius) || 0);
   for (const zone of zones) {
     if (!circleRectOverlap(circle, zone)) continue;
-    if (zone.id === 'move') circle.x = zone.x + zone.w + radius + 1;
-    else circle.x = zone.x - radius - 1;
+    if (String(zone.id).startsWith('hud-')) circle.y = zone.y + zone.h + radius + 0.5;
+    else if (zone.id === 'move') circle.x = zone.x + zone.w + radius + 0.5;
+    else circle.x = zone.x - radius - 0.5;
     changed = true;
   }
   return changed;
+}
+
+export function constrainCombatCircle(circle, stage, touchMode = false, passes = 4) {
+  const zones = combatSafeZones(touchMode);
+  for (let pass = 0; pass < passes; pass += 1) {
+    clampCircleToBounds(circle, stage.bounds);
+    resolveCircleAgainstRects(circle, stage.obstacles);
+    pushCircleOutOfSafeZones(circle, zones);
+  }
+  clampCircleToBounds(circle, stage.bounds);
+  resolveCircleAgainstRects(circle, stage.obstacles);
+  return circle;
 }
 
 export function circleRectOverlap(circle, rect) {
@@ -150,6 +177,10 @@ export function pointInsideRect(point, rect) {
     && point.y >= rect.y && point.y <= rect.y + rect.h;
 }
 
+export function pointInsideCircle(point, circle, padding = 0) {
+  return Math.hypot(point.x - circle.x, point.y - circle.y) <= circle.radius + padding;
+}
+
 export function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -162,6 +193,10 @@ export function normalize(x, y) {
 
 export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function circleToRect(id, x, y, radius) {
+  return Object.freeze({ id, x: x - radius, y: y - radius, w: radius * 2, h: radius * 2 });
 }
 
 export const ARENA_STAGE_COUNT = ARENA_STAGES.length;

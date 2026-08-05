@@ -53,6 +53,13 @@ const STAGES = Object.freeze([
   },
 ]);
 
+const TOUCH_SAFE_ZONES = Object.freeze([
+  { id: 'move', x: 92, y: 628, radius: 88 },
+  { id: 'dash', x: WIDTH - 92, y: HEIGHT - 92, radius: 72 },
+  { id: 'recall', x: WIDTH - 92, y: HEIGHT - 222, radius: 64 },
+  { id: 'pause', x: WIDTH - 220, y: HEIGHT - 92, radius: 57 },
+]);
+
 export function arenaStageForWave(wave) {
   const safeWave = Math.max(1, Math.trunc(Number(wave) || 1));
   let stage = STAGES[0];
@@ -60,6 +67,10 @@ export function arenaStageForWave(wave) {
     if (safeWave >= candidate.startsAtWave) stage = candidate;
   }
   return cloneStage(stage);
+}
+
+export function touchControlSafeZones() {
+  return TOUCH_SAFE_ZONES.map((zone) => ({ ...zone }));
 }
 
 export function installExpandingArena(game) {
@@ -119,15 +130,20 @@ export function installExpandingArena(game) {
       const point = positions[(seed + attempt + this.wave) % positions.length];
       if (distance(point, this.player) <= 220) continue;
       if (this.arena.obstacles.some((obstacle) => circleRectOverlap({ ...point, radius: 34 }, obstacle))) continue;
+      if (this.touchMode && overlapsTouchZone({ ...point, radius: 34 })) continue;
       return { ...point };
     }
-    return { x: left, y: top };
+    const fallback = { x: centerX, y: top };
+    if (this.touchMode) resolveTouchSafeZones(fallback);
+    return fallback;
   };
 
   game.updatePlayer = function updatePlayerInsideUnlockedArena(dt) {
     originalUpdatePlayer(dt);
     clampEntityToBounds(this.player, this.arenaStage.bounds);
     this.resolveObstacle(this.player);
+    if (this.touchMode) resolveTouchSafeZones(this.player);
+    clampEntityToBounds(this.player, this.arenaStage.bounds);
   };
 
   game.updateEnemies = function updateEnemiesInsideUnlockedArena(dt) {
@@ -135,6 +151,8 @@ export function installExpandingArena(game) {
     for (const enemy of this.enemies) {
       clampEntityToBounds(enemy, this.arenaStage.bounds);
       this.resolveObstacle(enemy);
+      if (this.touchMode) resolveTouchSafeZones(enemy);
+      clampEntityToBounds(enemy, this.arenaStage.bounds);
     }
   };
 
@@ -180,6 +198,7 @@ export function installExpandingArena(game) {
       arenaFullyUnlocked: this.arenaStage.id === STAGES.length - 1,
       arenaProgressionAutomatic: true,
       puzzleObjectivesPresent: false,
+      touchSafeZones: this.touchMode ? touchControlSafeZones() : [],
     };
   };
 
@@ -192,6 +211,7 @@ function applyStage(game, stage) {
     obstacles: stage.obstacles.map((obstacle) => ({ ...obstacle })),
   };
   clampEntityToBounds(game.player, game.arenaStage.bounds);
+  if (game.touchMode) resolveTouchSafeZones(game.player);
   if (game.bullet?.held) {
     game.bullet.x = game.player.x;
     game.bullet.y = game.player.y;
@@ -211,6 +231,29 @@ function clampEntityToBounds(entity, bounds) {
   const radius = Math.max(0, Number(entity.radius) || 0);
   entity.x = clamp(entity.x, bounds.x + radius, bounds.x + bounds.w - radius);
   entity.y = clamp(entity.y, bounds.y + radius, bounds.y + bounds.h - radius);
+}
+
+function resolveTouchSafeZones(entity) {
+  if (!entity) return;
+  for (const zone of TOUCH_SAFE_ZONES) {
+    const radius = Math.max(0, Number(entity.radius) || 0);
+    const minimumDistance = zone.radius + radius;
+    let dx = entity.x - zone.x;
+    let dy = entity.y - zone.y;
+    let currentDistance = Math.hypot(dx, dy);
+    if (currentDistance >= minimumDistance) continue;
+    if (currentDistance < 0.001) {
+      dx = WIDTH / 2 - zone.x;
+      dy = HEIGHT / 2 - zone.y;
+      currentDistance = Math.hypot(dx, dy) || 1;
+    }
+    entity.x = zone.x + dx / currentDistance * minimumDistance;
+    entity.y = zone.y + dy / currentDistance * minimumDistance;
+  }
+}
+
+function overlapsTouchZone(entity) {
+  return TOUCH_SAFE_ZONES.some((zone) => distance(entity, zone) < zone.radius + (entity.radius || 0));
 }
 
 function pointInsideBounds(point, bounds, margin = 0) {

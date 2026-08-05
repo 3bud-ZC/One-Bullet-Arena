@@ -1,7 +1,9 @@
-const CACHE_NAME = 'one-bullet-arena-v2.3.0-stable';
+const CACHE_NAME = 'one-bullet-arena-v2.4.0-stable';
 const APP_SHELL = [
   './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
-  './src/main.js', './src/game.js', './src/game-data.js', './src/arena.js', './src/audio.js',
+  './src/main.js', './src/game.js', './src/game-runtime.js', './src/game-data.js',
+  './src/arena.js', './src/audio.js', './src/input-controller.js',
+  './src/spawn-system.js', './src/ui-renderer.js',
 ];
 
 self.addEventListener('install', (event) => {

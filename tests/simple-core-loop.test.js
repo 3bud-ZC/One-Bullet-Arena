@@ -11,8 +11,8 @@ import {
   pickUpgradeChoices,
 } from '../src/simple-data.js';
 
-test('simple release exposes the reset version', () => {
-  assert.equal(SIMPLE_GAME_VERSION, '2.0.0-simple');
+test('simple release exposes the expanding-arena version', () => {
+  assert.equal(SIMPLE_GAME_VERSION, '2.1.0-simple');
 });
 
 test('wave one is a readable three-scout encounter', () => {

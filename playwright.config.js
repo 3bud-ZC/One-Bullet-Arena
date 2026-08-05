@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: 'core-loop.spec.js',
+  testMatch: '**/*.spec.js',
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
@@ -22,7 +22,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
-      name: 'mobile-landscape',
+      name: 'mobile-landscape-chromium',
       use: {
         browserName: 'chromium',
         viewport: { width: 915, height: 412 },
@@ -30,6 +30,10 @@ export default defineConfig({
         isMobile: true,
         deviceScaleFactor: 2,
       },
+    },
+    {
+      name: 'desktop-webkit',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
     },
   ],
 });

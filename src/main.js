@@ -1,5 +1,7 @@
 import { OneBulletGame } from './game.js';
 
+migrateLegacyStorage();
+
 const canvas = document.querySelector('#game-canvas');
 const liveRegion = document.querySelector('#game-status');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
@@ -22,4 +24,21 @@ document.addEventListener('keydown', async (event) => {
 
 if ('serviceWorker' in navigator && !location.search.includes('qa=1')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+function migrateLegacyStorage() {
+  const migrations = [
+    ['one-bullet-simple-high-score', 'one-bullet-clean-high-score'],
+    ['one-bullet-simple-high-wave', 'one-bullet-clean-high-wave'],
+    ['one-bullet-arena-audio-settings', 'one-bullet-clean-audio'],
+  ];
+  try {
+    for (const [legacyKey, currentKey] of migrations) {
+      if (localStorage.getItem(currentKey) !== null) continue;
+      const legacyValue = localStorage.getItem(legacyKey);
+      if (legacyValue !== null) localStorage.setItem(currentKey, legacyValue);
+    }
+  } catch {
+    // Restricted storage must never prevent the game from starting.
+  }
 }

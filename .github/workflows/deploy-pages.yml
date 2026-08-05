@@ -25,13 +25,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --ignore-scripts --no-audit --no-fund
-      - run: npm run verify
-      - run: |
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run verify:all
+      - name: Build static site
+        run: |
+          rm -rf _site
           mkdir -p _site
-          cp index.html styles.css _site/
-          cp -R src _site/src
+          cp index.html game.css manifest.webmanifest sw.js _site/
+          cp -R src icons _site/
           touch _site/.nojekyll
+          test -f _site/index.html
+          test -f _site/game.css
+          test -f _site/sw.js
+          test -f _site/manifest.webmanifest
+          test -f _site/icons/app-icon.svg
+          test -f _site/src/game.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

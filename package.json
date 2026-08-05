@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A focused one-bullet wave survival game: clear a wave, choose an upgrade, repeat.",
   "scripts": {
-    "check": "node --check src/main.js && node --check src/simple-game.js && node --check src/simple-data.js && node --check src/audio.js && node --check sw.js && node --check playwright.config.js",
+    "check": "node --check src/main.js && node --check src/simple-game.js && node --check src/simple-data.js && node --check src/simple-ui-cleanup.js && node --check src/audio.js && node --check sw.js && node --check playwright.config.js",
     "test": "node --test tests/simple-core-loop.test.js",
     "test:browser": "playwright test",
     "verify": "npm run check && npm test"

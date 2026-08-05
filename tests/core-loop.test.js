@@ -5,11 +5,14 @@ import {
   enemyCountForWave, enemyPoolForWave, enemyScaleForWave, normalizedStacks, pickUpgradeChoices,
 } from '../src/game-data.js';
 import {
-  ARENA_STAGE_COUNT, arenaStageForWave, circleRectOverlap, mobileSafeZones,
-  pushCircleOutOfSafeZones, resolveCircleAgainstRect,
+  ARENA_STAGE_COUNT, arenaStageForWave, circleRectOverlap, combatSafeZones,
+  hudSafeZones, mobileSafeZones, pushCircleOutOfSafeZones, resolveCircleAgainstRect,
+  resolveCombatCircle,
 } from '../src/arena.js';
+import { selectSpawnPoint } from '../src/spawn-system.js';
+import { upgradeEffectText } from '../src/ui-renderer.js';
 
-test('release exposes the stable version', () => assert.equal(GAME_VERSION, '2.3.0-stable'));
+test('release exposes the modular stable version', () => assert.equal(GAME_VERSION, '2.4.0-stable'));
 
 test('the product has one gradual enemy progression', () => {
   assert.deepEqual(buildWaveComposition(1), ['scout', 'scout', 'scout']);
@@ -54,6 +57,14 @@ test('all upgrade stacks have a real effect boundary', () => {
   assert.equal(stacks['quick-dash'], 2);
 });
 
+test('upgrade cards explain the current and next value', () => {
+  const heavy = UPGRADES.find((upgrade) => upgrade.id === 'heavy-shot');
+  const shield = UPGRADES.find((upgrade) => upgrade.id === 'wave-shield');
+  assert.match(upgradeEffectText(heavy, 0), /الحالي/);
+  assert.match(upgradeEffectText(heavy, 0), /بعد الاختيار/);
+  assert.match(upgradeEffectText(shield, 0), /درع/);
+});
+
 test('upgrade choices are unique and avoid the previous cards', () => {
   const previous = ['heavy-shot', 'bullet-velocity', 'extended-ricochet'];
   const choices = pickUpgradeChoices({}, 3, () => 0, previous);
@@ -78,12 +89,50 @@ test('collision recovery escapes obstacle interiors', () => {
   assert.equal(circleRectOverlap(circle, rect), false);
 });
 
-test('mobile safe zones are isolated and push entities clear', () => {
+test('HUD and mobile controls are protected combat zones', () => {
+  assert.deepEqual(hudSafeZones().map((zone) => zone.id), ['hud-left', 'hud-center', 'hud-right']);
+  assert.deepEqual(mobileSafeZones().map((zone) => zone.id), ['move', 'recall', 'dash', 'pause']);
+  assert.equal(combatSafeZones(false).length, 3);
+  assert.equal(combatSafeZones(true).length, 7);
+
+  const stage = arenaStageForWave(9);
+  const circle = { x: 100, y: 60, radius: 18 };
+  resolveCombatCircle(circle, stage.bounds, stage.obstacles, combatSafeZones(false));
+  assert.ok(hudSafeZones().every((zone) => !circleRectOverlap(circle, zone)));
+});
+
+test('mobile safe zones still push entities clear', () => {
   const zones = mobileSafeZones();
-  assert.deepEqual(zones.map((zone) => zone.id), ['move', 'recall', 'dash', 'pause']);
   for (const zone of zones) {
     const circle = { x: zone.x + zone.w / 2, y: zone.y + zone.h / 2, radius: 18 };
     assert.equal(pushCircleOutOfSafeZones(circle, [zone]), true);
     assert.equal(circleRectOverlap(circle, zone), false);
   }
+});
+
+test('spawn selection avoids the player, enemies, obstacles, and UI', () => {
+  const stage = arenaStageForWave(9);
+  const player = { x: 640, y: 360, radius: 18 };
+  const existing = [{ x: 90, y: 150, radius: 24 }, { x: 1190, y: 620, radius: 24 }];
+  const zones = combatSafeZones(true);
+  const point = selectSpawnPoint({
+    bounds: stage.bounds,
+    obstacles: stage.obstacles,
+    safeZones: zones,
+    player,
+    existingEnemies: existing,
+    radius: 34,
+    wave: 12,
+    seed: 4,
+    sanitize: (candidate, radius) => {
+      const circle = { ...candidate, radius };
+      resolveCombatCircle(circle, stage.bounds, stage.obstacles, zones);
+      return { x: circle.x, y: circle.y };
+    },
+  });
+  const probe = { ...point, radius: 34 };
+  assert.ok(Math.hypot(point.x - player.x, point.y - player.y) >= 230);
+  assert.ok(stage.obstacles.every((rect) => !circleRectOverlap(probe, rect)));
+  assert.ok(zones.every((rect) => !circleRectOverlap(probe, rect)));
+  assert.ok(existing.every((enemy) => Math.hypot(point.x - enemy.x, point.y - enemy.y) >= enemy.radius + 34 + 20));
 });

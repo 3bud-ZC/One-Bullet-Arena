@@ -1,110 +1,83 @@
 # One Bullet Arena
 
-**حلبة الطلقة الواحدة** is a focused Arabic wave-survival action game with one rule:
-
-> Defeat every enemy, choose one ability, and enter a harder wave in the same expanding arena.
+**حلبة الطلقة الواحدة** is an Arabic wave-survival action game built around one rule: the player owns one recoverable ricochet bullet.
 
 ## Play
 
-- GitHub Pages: `https://3bud-zc.github.io/One-Bullet-Arena/`
-- Desktop browser and mobile landscape support.
-- Installable PWA with an offline application shell.
+- Production: `https://3bud-zc.github.io/One-Bullet-Arena/`
+- Desktop browsers and mobile landscape.
+- Installable PWA with a verified offline application shell.
 
-## Core loop
+## Single progression path
 
-There is one game and no mode-selection screen:
+The active game intentionally has one route only:
 
-1. Start the run.
-2. Defeat every enemy in the current wave.
-3. Recover the single bullet.
-4. Choose one of three abilities.
-5. Enter the next, harder wave.
-6. Continue until defeat.
+1. Start a run.
+2. Defeat every enemy in the wave.
+3. The single bullet returns automatically after the last kill.
+4. Choose exactly one of three in-run upgrades.
+5. Enter the next, harder wave in the same expanding arena.
+6. Continue until defeat, then retry or return to the menu.
 
-There are no puzzles, ordered targets, objectives, regions, difficulty presets, bosses, currencies, hubs, or meta progression.
+There are no modes, hubs, puzzle objectives, currencies, regions, equipment screens, story routes, or meta progression in the active runtime.
 
-## One expanding arena
+## Gameplay
 
-| Waves | Playable space |
-| --- | --- |
-| 1–2 | Central combat room |
-| 3–5 | Side wings opened |
-| 6–8 | Outer corridors opened |
-| 9+ | Complete arena opened |
-
-Clearing enemies and choosing an ability are the only requirements for progression. After Wave 9, the full arena remains open while combat pressure continues increasing.
-
-## Combat
-
-- One recoverable ricochet bullet.
-- Manual bullet recall.
+- One recoverable bullet with sub-stepped collision simulation.
+- Manual recall during combat and automatic recall after wave completion.
+- Ricochets from arena walls and cover.
 - Dash with invulnerability frames.
-- Five enemy archetypes introduced gradually: Scout, Brute, Sniper, Charger, and Splitter.
-- Bounded increases to enemy population, health, movement speed, and projectile speed.
-- A maximum of fourteen active enemies.
-- Readable Charger and Sniper attack telegraphs.
-- Cover blocks enemy projectiles.
-- Sub-stepped bullet simulation prevents high-speed tunneling.
-
-## Run abilities
-
-Every cleared wave requires one ability selection before the next wave begins. Twelve stackable abilities cover:
-
-- bullet damage and velocity;
-- extra ricochets and ricochet damage;
-- electrical area damage;
-- recall speed and recall damage;
-- movement speed and dash cooldown;
-- health, wave shields, and one final second chance.
-
-Abilities reset when a new run starts. Highest score, highest wave, and audio preferences persist locally. Data from v2.1 is migrated automatically.
+- Five gradually introduced enemy archetypes: Scout, Brute, Sniper, Charger, and Splitter.
+- Locked attack telegraphs: Snipers and Chargers commit to the direction shown before attacking.
+- Deterministic wave composition with per-archetype safety caps.
+- Maximum of fourteen active enemies.
+- One automatically expanding arena at Waves 3, 6, and 9.
+- Twelve meaningful in-run upgrades; all reset at the start of a new run.
 
 ## Controls
 
 | Action | Desktop | Mobile landscape |
 | --- | --- | --- |
-| Move | `WASD` or arrow keys | Virtual joystick |
-| Aim and fire | Mouse and left click | Touch the aiming side |
-| Dash | `Space` or `Shift` | Dash button |
+| Move | `WASD` or arrows | Fixed left joystick |
+| Aim and fire | Mouse / click | Tap outside the joystick |
 | Recall bullet | `Q` | Recall button |
+| Dash | `Space` or `Shift` | Dash button |
 | Pause | `P` or `Escape` | Pause button |
-| Select ability | Click a card or press `1`, `2`, `3` | Tap a card |
-| Mute | `M` | — |
-| Fullscreen | `F` | Browser or installed-app fullscreen |
+| Select upgrade | Click or `1`, `2`, `3` | Tap a card |
+| Mute | `M` or menu/pause control | Menu/pause control |
+| Fullscreen | `F` | Installed-app/browser fullscreen |
 
-## Local development
+## Architecture
+
+The active runtime is split into focused ES modules:
+
+- `src/game.js` — state orchestration and gameplay simulation.
+- `src/game-data.js` — enemies, progression, upgrade definitions, and previews.
+- `src/arena.js` — arena geometry, collisions, and UI-safe combat zones.
+- `src/input.js` — keyboard, mouse, pointer, and fixed-joystick input.
+- `src/render.js` — world, combat entities, telegraphs, and effects.
+- `src/ui.js` — menu, HUD, upgrade cards, pause, game over, and touch controls.
+- `src/audio.js` — generated music and sound effects.
+- `src/storage.js` — safe local persistence and legacy-key migration.
+- `src/config.js` — release constants and shared visual/physics configuration.
+
+The historical feature-heavy implementation remains preserved under `archive/v1.4.1-full`. It is not imported by the active runtime and is not included in the service-worker shell or the generated production build.
+
+## Local verification
+
+Node.js 20 or newer is required.
 
 ```bash
-python3 -m http.server 4173
 npm install
 npm run verify
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:browser
 ```
 
-## Active architecture
+`npm run verify` performs syntax checks, deterministic tests, a production build, and a deployment-shell audit. Browser tests cover Desktop Chromium, Mobile Landscape Chromium, and Desktop WebKit.
 
-The active release has no runtime installers or monkey-patch layers:
+## Deployment
 
-- `src/main.js` — boot, legacy-storage migration, fullscreen, and service-worker registration.
-- `src/game.js` — game state, combat, rendering, input, waves, and ability selection.
-- `src/game-data.js` — enemies, wave scaling, and ability data.
-- `src/arena.js` — pure arena geometry, collisions, expansion stages, and mobile safe zones.
-- `src/audio.js` — active generated music and sound effects only.
-- `game.css` — responsive browser shell and safe-area handling.
+GitHub Pages deploys only the generated `dist/` directory. The build script copies an explicit allowlist of active runtime files, and the deploy workflow runs verification before upload.
 
-The game uses a fixed `1280×720` Canvas simulation contained inside a responsive `16:9` shell. No external fonts or gameplay assets are required.
-
-## Archived full version
-
-The previous feature-heavy v1.4.1 implementation remains preserved in:
-
-```text
-archive/v1.4.1-full
-```
-
-Its modes, regions, Objective Rooms, Cores, Relics, Guardians, and supporting systems are not part of the active game.
-
-## Status
-
-[`STATUS.md`](./STATUS.md) is the source of truth for verification, visual review, release state, and remaining live acceptance checks.
+See [`STATUS.md`](./STATUS.md) for the current release and acceptance state.

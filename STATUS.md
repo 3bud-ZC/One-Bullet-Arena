@@ -4,160 +4,154 @@ Last updated: 2026-08-05
 
 ## Release status
 
-- Product: **One Bullet Arena: Corebreak Protocol**
-- Approved Corebreak Protocol scope: **100% implemented**
-- Current release: **v1.4.1 — Difficulty & Pacing Rebalance**
-- Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
-- UI/UX Stabilization Pass: **merged through Pull Request #19**
-- Combat & Mobile Expansion: **merged through Pull Requests #20–#22**
-- Regional Map Overhaul: **merged through Pull Request #23**
-- Mobile & Browser UI Stabilization: **merged through Pull Request #24**
-- Runtime Kernel & Objective Rooms: **merged through Pull Request #25**
-- v1.4.1 Difficulty & Pacing Rebalance: **squash-merged through Pull Request #26**
-- v1.4.1 merge commit: `a8ed0dc3d871c4457053268cfe708c6fd574163a`
-- GitHub Pages deployment: **triggered by the Pull Request #26 merge and this status update**
-- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, visual review, documentation, and merge complete; deployed-build and physical-device acceptance remain**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Release candidate: **v2.0.0 — Simple Core Loop Reset**
+- Pull Request: **#27**
+- Working branch: `feature/simple-core-loop-v2`
+- Previous full release preserved at: `archive/v1.4.1-full`
+- Repository cleanup commit: `6a05e52ac0a9980328ee5da1978498fe0ea9cc83`
+- Current state: **implementation, active-repository cleanup, deterministic verification, Chromium verification, PWA integration, documentation, and desktop/mobile visual review complete; final documentation-commit gates and merge remain**
 
-## v1.4.1 delivered
+## Product reset
 
-### Deterministic eight-wave pacing curve
+The active game has returned to one explicit loop:
 
-- Added a dedicated Runtime Kernel system named `difficulty-pacing-rebalance`.
-- Added a deterministic local-wave curve that resets when Story Mode enters a new region.
-- Every local wave now defines:
-  - enemy threat budget;
-  - maximum simultaneous population;
-  - Elite cap;
-  - Evolution cap;
-  - enemy health and movement scaling;
-  - hazard scaling;
-  - reinforcement delay;
-  - target encounter duration.
-- Budget growth is progressive and avoids the previous late-wave spike caused by expanded compositions, Objective Rooms, Evolutions, Elites, and hazards stacking together.
+1. Start one run.
+2. Clear the current wave.
+3. Recover the single bullet.
+4. Choose one of three abilities.
+5. Start the next wave.
+6. Continue until defeat.
 
-### Safer onboarding and controlled escalation
+There is no alternate mode or progression route.
 
-- Local waves 1 and 2 contain no Elites or Evolutions.
-- The v1.2 map-mutator layer is suppressed during the first two local waves.
-- Active hazard pressure begins gradually from wave 3 and reaches full intensity only on wave 8.
-- Enemy health and movement are reduced in earlier waves and converge toward the full values by the regional lockdown.
-- Population and threat-budget trimming preserve a minimum readable encounter while removing excess high-cost enemies.
-- Extra Elites are demoted safely instead of deleted.
-- Extra Evolutions are cleared without leaving rage-speed or shell state behind.
+## Removed from the active release
 
-### Difficulty-specific behavior
+- Region and difficulty selection.
+- Story Route and Corebreak Protocol.
+- Daily Challenge, Endless, Boss Rush, and Contracts.
+- Objective Rooms and Guardians.
+- Bullet Cores, Relics, Synergies, Overdrive, and combat techniques.
+- Command Center, Codices, mastery systems, achievements, cosmetics, and run history.
+- Persistent build progression, currencies, and unified backup UI.
+- Legacy runtime installers, UI layers, data modules, and their obsolete tests.
 
-- **Recruit:** lower threat budgets, smaller population caps, slower reinforcements, and stronger recovery support.
-- **Hunter:** balanced default pacing with controlled checkpoint recovery.
-- **Corebreaker:** higher budgets and Evolution pressure with limited adaptive relief.
-- **One-Hit Protocol:** highest pressure profile and no recovery support.
-- Daily Challenge, Corebreak Protocol, Endless, and Boss Rush retain their dedicated balancing systems and are not modified by this regional/story pacing layer.
+The complete v1.4.1 implementation remains available only in the archive branch.
 
-### Objective Room rebalance
+## Active gameplay
 
-On the default Hunter difficulty:
+- One fixed arena.
+- One recoverable bullet.
+- Wall and obstacle ricochets.
+- Manual recall using `Q` or the mobile Recall button.
+- Dash using `Space`, `Shift`, or the mobile Dash button.
+- Five enemy archetypes introduced gradually.
+- Wave population capped at fourteen enemies.
+- Bounded scaling for enemy health, speed, and projectile speed.
+- Endless wave progression until player defeat.
+- Highest score and highest wave stored locally.
 
-- Circuit Sequence remains at three relays.
-- Ricochet Lock uses reduced bounce and hit requirements.
-- Core Defense uses:
-  - 14-second stabilization;
-  - four Core health;
-  - maximum two active assault enemies;
-  - a reduced failure-time penalty.
-- Marked Hunt requires two ordered targets.
-- Bullet Separation uses:
-  - eight-second target duration;
-  - 190-pixel minimum separation;
-  - slower progress decay when the bullet returns too close.
-- Objective reinforcement delays use the current wave plan.
-- Reinforcements pause when objective progress approaches completion.
+## Upgrade flow
 
-### Recovery and adaptive relief
+- Every cleared wave enters the upgrade screen.
+- The next wave cannot begin until one ability is selected.
+- Three unique available abilities are offered.
+- Maxed abilities are removed from later selections.
+- Thirteen run abilities cover:
+  - damage;
+  - bullet velocity;
+  - ricochets;
+  - shock damage;
+  - recall;
+  - movement;
+  - dash cooldown;
+  - perfect catches;
+  - health;
+  - shields;
+  - one second chance.
+- All selected abilities reset when a new run starts.
 
-- Hunter recovery checkpoints occur after local waves 2, 4, and 6 when health is missing.
-- Critical-health Hunter runs can receive emergency recovery outside those checkpoints.
-- Recovery is processed through the Runtime Kernel wave-advancement gate.
-- No recovery is granted while an active Objective Room blocks progression.
-- One-Hit Protocol never receives pacing recovery.
-- One emergency relief event may occur per wave at critical health:
-  - grants one shield outside One-Hit;
-  - slightly reduces active enemy speed;
-  - demotes one high-threat Elite when available;
-  - delays Objective Room reinforcements.
-- Encounters exceeding the configured target duration receive deterministic soft-cap relief every 18 seconds instead of becoming long attrition stalls.
+## Active runtime and repository
 
-### QA diagnostics and offline integration
+The browser loads only:
 
-- `game.getPacingSnapshot()` exposes the active plan, pressure counts, relief events, and objective tuning on the QA route.
-- Package version advanced to **1.4.1**.
-- Service-worker cache advanced to `one-bullet-arena-v1.4.1`.
-- Pacing data and runtime modules are included in the offline application shell.
+- `src/main.js`
+- `src/simple-game.js`
+- `src/simple-data.js`
+- `src/simple-ui-cleanup.js`
+- `src/audio.js`
+- `simple-game.css`
 
-## Gameplay retained
+The service worker caches only the active game shell and uses:
 
-- Twenty-four regional arena identities remain active.
-- Regional missions remain eight waves and Story Mode remains twenty-four waves.
-- Five Objective Rooms, progressive map hazards, moving geometry, Cores, techniques, Overdrive, Relics, Synergies, regional enemies, three Guardians, Corebreak Protocol, Endless, Boss Rush, Contracts, Gamepad, unified save, PWA, and offline support remain connected.
+```text
+one-bullet-arena-v2.0.0-simple
+```
+
+Legacy gameplay source files, legacy CSS layers, old Node tests, and old browser specs have been deleted from the v2 working branch.
 
 ## Verification
 
 ### Deterministic verification
 
-- JavaScript syntax checks: **passed** for every runtime module, service worker, and Playwright configuration.
-- Automated deterministic tests: **144/144 passed**.
-- Failures: **0**.
-- Final Verify workflow on the Pull Request #26 documentation/status commit: **passed**.
-- New coverage verifies:
-  - regional wave reset every eight waves;
-  - smooth budget growth without a late spike;
-  - safe waves 1–2;
-  - full hazard pressure only on wave 8;
-  - Recruit/Hunter/Corebreaker ordering;
-  - enemy threat costs and modifiers;
-  - Hunter objective tuning;
-  - checkpoint and emergency recovery;
-  - One-Hit recovery exclusion.
+- JavaScript syntax checks: **passed**.
+- Automated deterministic tests: **10/10 passed**.
+- Failures, skipped tests, and cancelled tests: **0**.
+- Coverage verifies:
+  - release version;
+  - readable three-enemy first wave;
+  - gradual enemy-roster introduction;
+  - monotonic capped population growth;
+  - bounded enemy scaling;
+  - unique run-upgrade catalog;
+  - stack normalization;
+  - removal of maxed abilities;
+  - three unique upgrade choices;
+  - empty choices after all abilities are maxed.
 
 ### Browser verification
 
-- Playwright Browser Smoke: **34/34 passed** across Desktop Chromium and Mobile Landscape Chromium.
-- Unexpected, flaky, and skipped tests: **0**.
-- Final Browser Smoke workflow on the Pull Request #26 documentation/status commit: **passed**.
+- Playwright Browser Smoke: **12/12 passed**.
+- Browsers/viewports:
+  - Desktop Chromium at `1440×900`.
+  - Mobile Landscape Chromium at `915×412` with touch enabled.
+- Failures, flaky tests, and skipped tests: **0**.
 - Coverage confirms:
-  - Runtime Kernel registration of the pacing system;
-  - pacing release `1.4.1` and zero runtime diagnostic errors;
-  - wave-one population, Elite, and Evolution caps;
-  - wave-four Core Defense tuning;
-  - recovery blocked before objective completion;
-  - recovery granted after objective completion;
-  - direct route, menu, Command Center, Core Hub, gameplay, results, viewport matrix, Objective Rooms, and PWA assets remain operational.
+  - only the simple runtime boots;
+  - allowed states contain no mode or hub screens;
+  - one action starts Wave 1;
+  - Wave 1 contains three enemies;
+  - clearing a wave forces an upgrade selection;
+  - choosing an upgrade starts Wave 2;
+  - the document does not scroll;
+  - the Canvas remains inside both viewports;
+  - no legacy UI stylesheet is loaded.
 
 ### Visual QA completed
 
-- Reviewed Core Defense on Desktop Chromium.
-- Reviewed Core Defense on Mobile Landscape Chromium.
-- Confirmed:
-  - Core Defense uses the compact centered objective panel;
-  - the mobile HUD, objective panel, movement stick, and action controls remain inside the viewport;
-  - the central Core, moving geometry, enemies, and objective timer remain readable;
-  - normal challenge feedback remains independent from the objective panel;
-  - no page overflow or external browser-shell elements return.
+Reviewed the menu, upgrade selection, and active gameplay on desktop and mobile landscape.
 
-## Remaining live acceptance checks
+Confirmed:
 
-These require deployed play, longer runs, or physical hardware and are not marked complete:
+- the menu contains only Play and How to Play;
+- arena geometry is hidden behind menu screens;
+- the upgrade screen shows three large readable cards;
+- Arabic upgrade levels render as `current level X of Y` rather than reversed slash values;
+- the gameplay HUD contains only wave, score, health, bullet, dash, recall, and upgrade count;
+- mobile movement, Recall, Dash, and Pause controls remain inside the viewport;
+- no old hub, mode selector, objective panel, region banner, or meta-progression UI appears.
 
-1. Complete a full eight-wave Hunter regional mission using normal player input.
-2. Complete the twenty-four-wave Story Route and confirm the pacing curve resets per region.
-3. Compare Recruit, Hunter, and Corebreaker on the same Core and region.
-4. Review Core Defense pressure after several real attempts rather than QA wave setup.
-5. Review Ricochet Lock with all five Bullet Cores.
-6. Review Bullet Separation with Recall Core and magnetic-recall upgrades.
-7. Confirm emergency relief is helpful without making deliberate low-health play optimal.
-8. Test the deployed GitHub Pages build after deployment completes.
-9. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
-10. Test installed PWA launch and offline restart using cache v1.4.1.
+## Remaining acceptance checks
 
-## Live refresh note
+These require the merged/deployed build or extended physical play and are not marked complete:
 
-The service-worker cache advances from v1.4.0 to v1.4.1. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the old pacing build remains visible.
+1. Complete several runs through at least Wave 10 using normal player input.
+2. Review upgrade balance and repeated-choice variety during long runs.
+3. Review enemy pressure and arena readability near the fourteen-enemy cap.
+4. Test Chrome Android, Samsung Internet, and Safari iOS on physical devices.
+5. Test installed PWA launch and offline restart with cache v2.0.0.
+6. Verify the GitHub Pages deployment after Pull Request #27 is merged.
+
+## Refresh note
+
+The service-worker cache changes from `one-bullet-arena-v1.4.1` to `one-bullet-arena-v2.0.0-simple`. After deployment, use a hard refresh on desktop or clear the site's stored data on mobile if the previous Corebreak build remains visible.

@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
-export const GAME_VERSION = '2.3.0-stable';
+export const GAME_VERSION = '2.4.0-stable';
 export const MAX_ACTIVE_ENEMIES = 14;
 
 export const ENEMY_TYPES = Object.freeze({

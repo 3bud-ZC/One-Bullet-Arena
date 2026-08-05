@@ -60,14 +60,19 @@ test('touch movement starts only from the visible joystick hit area', async ({ p
   expect(snapshot.shots).toBe(1);
 
   const inside = toClient(118, 608);
-  await page.dispatchEvent('#game-canvas', 'pointerdown', {
-    pointerId: 7,
-    pointerType: 'touch',
-    clientX: inside.x,
-    clientY: inside.y,
-    isPrimary: true,
-    buttons: 1,
-  });
+  await page.evaluate(({ x, y }) => {
+    const canvasElement = document.querySelector('#game-canvas');
+    canvasElement.dispatchEvent(new PointerEvent('pointerdown', {
+      pointerId: 7,
+      pointerType: 'touch',
+      clientX: x,
+      clientY: y,
+      isPrimary: true,
+      buttons: 1,
+      bubbles: true,
+      cancelable: true,
+    }));
+  }, inside);
   snapshot = await page.evaluate(() => ({
     moveActive: Boolean(window.__ONE_BULLET_ARENA__.input.moveTouch),
     shots: window.__ONE_BULLET_ARENA__.stats.shots,

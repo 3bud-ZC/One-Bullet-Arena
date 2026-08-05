@@ -37,7 +37,11 @@ export class InputController {
       const point = this.toGamePoint(event);
       Object.assign(this.pointer, point, { down: true });
       this.actions.onInteraction?.();
-      this.canvas.setPointerCapture?.(event.pointerId);
+      try {
+        this.canvas.setPointerCapture?.(event.pointerId);
+      } catch {
+        // Some browsers and synthetic events can reject capture; input must continue normally.
+      }
       if (this.actions.onUiPointer?.(point)) return;
 
       if (event.pointerType === 'touch') {

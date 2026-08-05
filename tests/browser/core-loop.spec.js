@@ -6,12 +6,15 @@ async function loadGame(page) {
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
 }
 
-test('boots only the stable single-path runtime', async ({ page }) => {
+test('boots only the modular stable single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.3.0-stable');
+  expect(snapshot.version).toBe('2.4.0-stable');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
+  expect(snapshot.runtimeArchitecture).toBe('modular-runtime');
+  expect(snapshot.autoRecallAfterWave).toBe(true);
+  expect(snapshot.telegraphsLockDirection).toBe(true);
   expect(snapshot.removedSystemsPresent).toBe(false);
   expect(snapshot.puzzleObjectivesPresent).toBe(false);
 });
@@ -42,6 +45,74 @@ test('one action starts wave one and clearing it requires one upgrade', async ({
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(2);
   expect(snapshot.upgrades).toBe(1);
+});
+
+test('the bullet recalls automatically after the final enemy dies', async ({ page }) => {
+  await loadGame(page);
+  const snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: false,
+      x: game.player.x + 260,
+      y: game.player.y,
+      vx: 0,
+      vy: 0,
+      recoverDelay: 0,
+    });
+    game.waveClearTimer = 0;
+    game.update(0.25);
+    return game.getSnapshot();
+  });
+  expect(snapshot.bulletHeld).toBe(false);
+  expect(snapshot.bulletRecalling).toBe(true);
+});
+
+test('sniper and charger telegraphs lock their direction before execution', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    game.enemyShots = [];
+
+    game.player.x = 800;
+    game.player.y = 300;
+    const sniper = game.spawnEnemy('sniper', 0, { point: { x: 400, y: 300 } });
+    sniper.spawnTime = 0;
+    sniper.attackCooldown = 0;
+    game.updateSniper(sniper, { x: 1, y: 0 }, { shotSpeed: 1 }, 0.01);
+    const sniperLocked = { ...sniper.shotDirection };
+    game.player.x = 400;
+    game.player.y = 620;
+    game.updateSniper(sniper, { x: 0, y: 1 }, { shotSpeed: 1 }, 0.6);
+    const shot = game.enemyShots[0];
+
+    const charger = game.spawnEnemy('charger', 1, { point: { x: 700, y: 300 } });
+    charger.spawnTime = 0;
+    charger.attackCooldown = 0;
+    game.updateCharger(charger, { x: -1, y: 0 }, 0.01);
+    const chargerLocked = { ...charger.chargeDirection };
+    game.updateCharger(charger, { x: 0, y: 1 }, 0.7);
+
+    return {
+      sniperLocked,
+      shotVelocity: shot ? { x: shot.vx, y: shot.vy } : null,
+      chargerLocked,
+      chargerActiveDirection: { ...charger.chargeDirection },
+      chargerRemaining: charger.chargeRemaining,
+    };
+  });
+
+  expect(result.sniperLocked.x).toBeCloseTo(1, 5);
+  expect(result.sniperLocked.y).toBeCloseTo(0, 5);
+  expect(result.shotVelocity.x).toBeGreaterThan(300);
+  expect(Math.abs(result.shotVelocity.y)).toBeLessThan(1);
+  expect(result.chargerLocked.x).toBeCloseTo(-1, 5);
+  expect(result.chargerActiveDirection).toEqual(result.chargerLocked);
+  expect(result.chargerRemaining).toBeGreaterThan(0);
 });
 
 test('the same arena expands at waves 3, 6, and 9', async ({ page }) => {

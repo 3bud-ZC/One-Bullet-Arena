@@ -6,9 +6,10 @@ Last updated: 2026-08-06
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
 - Candidate: **v2.3.0 — Stable Single Path**
+- Pull Request: **#30 — refactor: stabilize the complete single-path game**
 - Working branch: `refactor/v2.3-stable-single-path`
 - Base release: **v2.2.0**
-- Current state: implementation and local deterministic verification complete; GitHub Actions browser verification and deployed-build acceptance are pending.
+- Current state: implementation, deterministic verification, production-build verification, Chromium/WebKit browser regression, and final visual review complete; merge, deployed-build acceptance, and physical-device checks remain.
 
 ## Product definition
 
@@ -34,12 +35,13 @@ The active runtime and production build contain no alternate modes, hubs, puzzle
 
 - Wave completion now locks combat, automatically recalls the bullet, and then opens one upgrade choice.
 - Sniper and Charger telegraphs lock their attack direction before execution.
-- Enemy projectiles use sub-stepped collision checks.
+- Player and enemy projectiles use sub-stepped collision checks.
 - Wave composition is deterministic and enforces caps for Brutes, Snipers, Chargers, and Splitters.
 - Spawn selection checks player distance, other enemies, obstacles, HUD zones, and mobile controls.
 - Combat collision resolution iterates across bounds, obstacles, HUD zones, and touch controls.
 - The Wave Shield upgrade has one meaningful level instead of two ineffective extra stacks.
 - Dash and recall readiness reset cleanly at the start of each wave.
+- Pointer input continues safely when a browser rejects pointer capture.
 - Particle and floating-text collections remain bounded.
 
 ### UI / UX
@@ -48,7 +50,7 @@ The active runtime and production build contain no alternate modes, hubs, puzzle
 - Added contextual Wave 1 guidance instead of a separate tutorial route.
 - Upgrade cards show current and post-selection values.
 - Added clearer bullet, dash, recall, wave, score, health, shield, and arena-state feedback.
-- Added useful game-over statistics: score, kills, upgrades, accuracy, run time, and damage taken.
+- Added useful game-over statistics: score, kills, upgrades, hits/shots, run time, and damage taken.
 - Added visible audio state and menu/pause mute controls.
 - Mobile movement is restricted to the visible fixed joystick area.
 - HUD and touch controls reserve collision-safe areas in the fully opened arena.
@@ -62,25 +64,34 @@ The active runtime and production build contain no alternate modes, hubs, puzzle
 - Playwright now discovers all browser spec files instead of silently running one named file.
 - The production builder includes only the active application shell; the historical archive remains inert.
 
-## Local verification
+## Verification results
 
-Executed on the candidate source:
+### Deterministic and build verification
 
+- GitHub Actions **Verify**: passed on commit `12ad44093c1e270165808e8be2bc931cdc6f5edf`.
 - JavaScript syntax checks: **passed**.
 - Deterministic tests: **11/11 passed**.
 - Production build: **passed**.
 - Deployment-shell audit: **15 required files verified**.
-- Failures, skips, and cancellations in local deterministic verification: **0**.
+- Failures, skips, and cancellations: **0**.
 
-## Browser verification configured
+### Browser regression
 
-The GitHub Actions browser suite is configured for:
+GitHub Actions **Browser Smoke** passed on commit `12ad44093c1e270165808e8be2bc931cdc6f5edf` across:
 
 - Desktop Chromium at `1440×900`.
 - Mobile Landscape Chromium at `915×412` with touch enabled.
 - Desktop WebKit at `1440×900`.
 
-Coverage includes:
+Results:
+
+- Total test/project cases: **33**.
+- Passed: **31**.
+- Failed: **0**.
+- Flaky: **0**.
+- Intentionally skipped: **2** — the hardware-style joystick gesture test is mobile-only and is skipped in the two desktop projects.
+
+Coverage confirms:
 
 - the single state path;
 - automatic bullet return after the final kill;
@@ -92,15 +103,34 @@ Coverage includes:
 - canvas containment and no document scrolling;
 - HUD/touch combat-safe zones;
 - fixed joystick hit-area behavior;
-- screenshots for menu, Wave 1, upgrades, Wave 9, and game over.
+- safe fallback when pointer capture is rejected.
+
+### Visual review
+
+Final generated screenshots were reviewed for Desktop Chromium, Mobile Landscape Chromium, and Desktop WebKit:
+
+- main menu;
+- Wave 1;
+- upgrade selection;
+- fully opened Wave 9 arena;
+- game-over screen.
+
+Confirmed:
+
+- Arabic text remains readable and unclipped.
+- Upgrade cards remain fully inside the landscape viewport.
+- HUD and touch controls do not cover combat entities.
+- Wave 9 remains readable with the full enemy roster.
+- Retry and menu actions remain visible on game over.
+- Game-over statistics use hits/shots rather than a misleading accuracy percentage.
 
 ## Remaining acceptance checks
 
-These are not marked complete until the Pull Request workflows and real hardware checks are finished:
+These are not marked complete until the release is merged and checked on production or physical hardware:
 
-1. GitHub Actions Verify workflow passes on the candidate commit.
-2. GitHub Actions Browser Smoke passes across Chromium, mobile Chromium, and WebKit.
-3. The deployed GitHub Pages artifact is opened and checked after merge.
-4. A normal manual run reaches at least Wave 15 without QA shortcuts.
-5. Chrome Android, Samsung Internet, and Safari iOS are checked on physical devices.
-6. Installed PWA launch, offline restart, and cache upgrade from v2.2 are checked on physical devices.
+1. Merge Pull Request #30 after the final documentation-only workflow run passes.
+2. Confirm the generated `dist/` build deploys successfully to GitHub Pages.
+3. Open and inspect the deployed production URL after cache propagation.
+4. Complete a normal manual run through at least Wave 15 without QA shortcuts.
+5. Check Chrome Android, Samsung Internet, and Safari iOS on physical devices.
+6. Check installed PWA launch, offline restart, and cache upgrade from v2.2 on physical devices.

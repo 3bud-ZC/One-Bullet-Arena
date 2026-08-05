@@ -31,6 +31,7 @@ import { installMapOverhaulSafety } from './map-overhaul-safety.js';
 import { attachMobileUiStabilization, installMobileUiStabilization } from './mobile-ui-stabilization.js';
 import { installRuntimeKernel } from './runtime-kernel.js';
 import { installObjectiveRooms } from './objective-rooms.js';
+import { installPacingRebalance } from './pacing-rebalance.js';
 import { installMobileUiVisualFixes } from './mobile-ui-visual-fixes.js';
 
 installPhysicalKeyboardBridge();
@@ -66,6 +67,7 @@ installMobileUiStabilization(OneBulletArena);
 // New systems register through one outer runtime pipeline instead of adding more prototype wrappers.
 installRuntimeKernel(OneBulletArena);
 installObjectiveRooms(OneBulletArena);
+installPacingRebalance(OneBulletArena);
 installMobileUiVisualFixes(OneBulletArena);
 
 const canvas = document.querySelector('#game-canvas');

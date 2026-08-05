@@ -6,15 +6,17 @@ Last updated: 2026-08-05
 
 - Product: **One Bullet Arena: Corebreak Protocol**
 - Approved Corebreak Protocol scope: **100% implemented**
-- Release candidate: **v1.4.1 — Difficulty & Pacing Rebalance**
+- Current release: **v1.4.1 — Difficulty & Pacing Rebalance**
 - Corebreak Phases 1–5: **merged through Pull Requests #14–#18**
 - UI/UX Stabilization Pass: **merged through Pull Request #19**
 - Combat & Mobile Expansion: **merged through Pull Requests #20–#22**
 - Regional Map Overhaul: **merged through Pull Request #23**
 - Mobile & Browser UI Stabilization: **merged through Pull Request #24**
 - Runtime Kernel & Objective Rooms: **merged through Pull Request #25**
-- v1.4.1 Difficulty & Pacing Rebalance: **implemented in Pull Request #26; final documentation gates and merge pending**
-- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, and desktop/mobile screenshot review complete; final documentation-commit gates, deployed-build acceptance, and physical-device acceptance remain**
+- v1.4.1 Difficulty & Pacing Rebalance: **squash-merged through Pull Request #26**
+- v1.4.1 merge commit: `a8ed0dc3d871c4457053268cfe708c6fd574163a`
+- GitHub Pages deployment: **triggered by the Pull Request #26 merge and this status update**
+- Current state: **implementation, deterministic verification, Chromium verification, PWA integration, visual review, documentation, and merge complete; deployed-build and physical-device acceptance remain**
 
 ## v1.4.1 delivered
 
@@ -36,7 +38,7 @@ Last updated: 2026-08-05
 ### Safer onboarding and controlled escalation
 
 - Local waves 1 and 2 contain no Elites or Evolutions.
-- The v1.2 map mutator layer is suppressed during the first two local waves.
+- The v1.2 map-mutator layer is suppressed during the first two local waves.
 - Active hazard pressure begins gradually from wave 3 and reaches full intensity only on wave 8.
 - Enemy health and movement are reduced in earlier waves and converge toward the full values by the regional lockdown.
 - Population and threat-budget trimming preserve a minimum readable encounter while removing excess high-cost enemies.
@@ -95,7 +97,7 @@ On the default Hunter difficulty:
 
 - Twenty-four regional arena identities remain active.
 - Regional missions remain eight waves and Story Mode remains twenty-four waves.
-- Five Objective Rooms, progressive map hazards, moving geometry, Cores, techniques, Overdrive, Relics, Synergies, region enemies, three Guardians, Corebreak Protocol, Endless, Boss Rush, Contracts, Gamepad, unified save, PWA, and offline support remain connected.
+- Five Objective Rooms, progressive map hazards, moving geometry, Cores, techniques, Overdrive, Relics, Synergies, regional enemies, three Guardians, Corebreak Protocol, Endless, Boss Rush, Contracts, Gamepad, unified save, PWA, and offline support remain connected.
 
 ## Verification
 
@@ -104,6 +106,7 @@ On the default Hunter difficulty:
 - JavaScript syntax checks: **passed** for every runtime module, service worker, and Playwright configuration.
 - Automated deterministic tests: **144/144 passed**.
 - Failures: **0**.
+- Final Verify workflow on the Pull Request #26 documentation/status commit: **passed**.
 - New coverage verifies:
   - regional wave reset every eight waves;
   - smooth budget growth without a late spike;
@@ -119,6 +122,7 @@ On the default Hunter difficulty:
 
 - Playwright Browser Smoke: **34/34 passed** across Desktop Chromium and Mobile Landscape Chromium.
 - Unexpected, flaky, and skipped tests: **0**.
+- Final Browser Smoke workflow on the Pull Request #26 documentation/status commit: **passed**.
 - Coverage confirms:
   - Runtime Kernel registration of the pacing system;
   - pacing release `1.4.1` and zero runtime diagnostic errors;
@@ -137,7 +141,7 @@ On the default Hunter difficulty:
   - the mobile HUD, objective panel, movement stick, and action controls remain inside the viewport;
   - the central Core, moving geometry, enemies, and objective timer remain readable;
   - normal challenge feedback remains independent from the objective panel;
-  - no page overflow or external browser shell elements return.
+  - no page overflow or external browser-shell elements return.
 
 ## Remaining live acceptance checks
 

@@ -1,88 +1,26 @@
-import './mobile-ui-style-loader.js';
-import { OneBulletArena } from './game.js';
-import { installPhysicalKeyboardBridge } from './input.js';
-import { attachPresentationControls, installUiPolish } from './ui-polish.js';
-import { installUiPolishFixes } from './ui-polish-fixes.js';
-import { attachStabilizationControls, installStabilization } from './stabilization.js';
-import { installDefeatUiRefine } from './defeat-ui-refine.js';
-import { installVisualIdentity } from './visual-identity.js';
-import { attachProgressionControls, installProgression } from './progression.js';
-import { attachReplayabilityControls, installReplayability } from './replayability.js';
-import { installReplayabilityPersistence } from './replayability-persistence.js';
-import { installUiFeedbackBalance } from './ui-feedback-balance.js';
-import { installAccuracySemanticsFix } from './accuracy-semantics-fix.js';
-import { installLiveQaRegions } from './live-qa-regions.js';
-import { installRegionRuntimeFixes } from './regions-runtime-fixes.js';
-import { attachMobileBrowser, installMobileBrowser } from './mobile-browser.js';
-import { installRegionEnemies } from './region-enemies.js';
-import { installRegionBosses } from './region-bosses.js';
-import { installRogueliteRoute } from './roguelite-route.js';
-import { attachAdvancedBuildControls, installAdvancedBuilds } from './advanced-builds.js';
-import { installGameModes } from './game-modes.js';
-import { attachReleaseProductionControls, installReleaseProduction } from './release-production.js';
-import { installReleaseMenuFix } from './release-menu-fix.js';
-import { installUiUxStabilization } from './ui-ux-stabilization.js';
-import { installUiUxRuntimeFixes } from './ui-ux-runtime-fixes.js';
-import { attachV12ExpansionControls, installV12Expansion } from './v12-expansion.js';
-import { installV12UiFixes } from './v12-ui-fixes.js';
-import { installProgressiveMapHazards } from './progressive-map-hazards.js';
-import { installMapOverhaul } from './map-overhaul.js';
-import { installMapOverhaulSafety } from './map-overhaul-safety.js';
-import { attachMobileUiStabilization, installMobileUiStabilization } from './mobile-ui-stabilization.js';
-import { installRuntimeKernel } from './runtime-kernel.js';
-import { installObjectiveRooms } from './objective-rooms.js';
-import { installPacingRebalance } from './pacing-rebalance.js';
-import { installMobileUiVisualFixes } from './mobile-ui-visual-fixes.js';
-
-installPhysicalKeyboardBridge();
-installUiPolish(OneBulletArena);
-installUiPolishFixes(OneBulletArena);
-installStabilization(OneBulletArena);
-installDefeatUiRefine(OneBulletArena);
-installVisualIdentity(OneBulletArena);
-installProgression(OneBulletArena);
-installReplayability(OneBulletArena);
-installReplayabilityPersistence(OneBulletArena);
-installUiFeedbackBalance(OneBulletArena);
-installAccuracySemanticsFix(OneBulletArena);
-installLiveQaRegions(OneBulletArena);
-installRegionRuntimeFixes(OneBulletArena);
-installMobileBrowser(OneBulletArena);
-installRegionEnemies(OneBulletArena);
-installRegionBosses(OneBulletArena);
-installRogueliteRoute(OneBulletArena);
-installAdvancedBuilds(OneBulletArena);
-installGameModes(OneBulletArena);
-installReleaseProduction(OneBulletArena);
-installReleaseMenuFix(OneBulletArena);
-installUiUxStabilization(OneBulletArena);
-installUiUxRuntimeFixes(OneBulletArena);
-installV12Expansion(OneBulletArena);
-installV12UiFixes(OneBulletArena);
-installProgressiveMapHazards(OneBulletArena);
-installMapOverhaul(OneBulletArena);
-installMapOverhaulSafety(OneBulletArena);
-installMobileUiStabilization(OneBulletArena);
-
-// New systems register through one outer runtime pipeline instead of adding more prototype wrappers.
-installRuntimeKernel(OneBulletArena);
-installObjectiveRooms(OneBulletArena);
-installPacingRebalance(OneBulletArena);
-installMobileUiVisualFixes(OneBulletArena);
+import { SimpleOneBulletArena } from './simple-game.js';
+import { installSimpleUiCleanup } from './simple-ui-cleanup.js';
 
 const canvas = document.querySelector('#game-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
+
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new OneBulletArena(canvas);
-attachPresentationControls(game);
-attachStabilizationControls(game);
-attachProgressionControls(game);
-attachReplayabilityControls(game);
-attachV12ExpansionControls(game);
-attachMobileBrowser(game);
-attachAdvancedBuildControls(game);
-attachReleaseProductionControls(game);
-attachMobileUiStabilization(game);
-game.requestProgressionReset = game.resetProgressionSave;
+const game = new SimpleOneBulletArena(canvas);
+installSimpleUiCleanup(game);
+window.__ONE_BULLET_ARENA__ = game;
+
+document.addEventListener('keydown', async (event) => {
+  if (event.key.toLowerCase() !== 'f') return;
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    // Fullscreen support is optional and does not affect gameplay.
+  }
+});
+
+if ('serviceWorker' in navigator && !location.search.includes('qa=1')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}

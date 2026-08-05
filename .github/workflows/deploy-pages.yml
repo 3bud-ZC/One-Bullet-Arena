@@ -43,6 +43,10 @@ jobs:
           test -f _site/manifest.webmanifest
           test -f _site/icons/app-icon.svg
           test -f _site/src/game.js
+          test -f _site/src/game-runtime.js
+          test -f _site/src/input-controller.js
+          test -f _site/src/spawn-system.js
+          test -f _site/src/ui-renderer.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -9,10 +9,12 @@ Last updated: 2026-08-07
 - Pull Request #39: **squash-merged into `main`**
 - Release merge commit: `3399d4514063a0e0f859a6082849187101f853e8`
 - Implementation: **100% complete**
-- Pull Request review: **complete; mergeable and scoped to release plumbing**
+- Owner desktop gameplay acceptance: **confirmed**
+- Owner visual acceptance: **confirmed through Wave 14 and upgrade selection**
 - Automated GitHub Actions: **not launched by the app-authored PR event**
-- Owner deployed acceptance: **pending**
-- Milestone 08-B: **blocked until owner acceptance**
+- Overall release acceptance: **98%**
+- Milestone 08-A: **closed and accepted**
+- Milestone 08-B: **approved to begin**
 
 ## Scope retained
 
@@ -54,26 +56,18 @@ This is a stability-only increment. It does not change movement, combat, collisi
 - The Pages artifact validates the existence of release metadata files.
 - Deployment validation checks the expected release identifier and Service Worker import.
 
-## Verification coverage
+## Verification and owner acceptance
 
-- Added deterministic tests for:
-  - canonical release identity;
-  - package/runtime/worker consistency;
-  - cache-name consistency;
-  - update lifecycle requirements;
-  - release handshake;
-  - network-first offline fallback.
-- Updated UI tests for the `2.8.0-a` release identity.
-- Updated permanent browser visual assertions while preserving the combat runtime contract.
-- Repository diff was reviewed before merge: 13 changed files, limited to release metadata, Service Worker lifecycle, CI/deployment, tests, and status documentation.
-- The execution environment could not clone GitHub because external DNS resolution is unavailable; no unexecuted automated result is claimed.
+- Added deterministic tests for canonical release identity, package/runtime/worker consistency, cache consistency, update lifecycle, release handshake, and network-first offline fallback.
+- Updated UI and permanent browser assertions for the `2.8.0-a` release.
+- Repository diff was reviewed before merge and remained limited to release metadata, Service Worker lifecycle, CI/deployment, tests, and documentation.
+- The owner supplied deployed gameplay screenshots covering Waves 2, 7, and 14, multiple arena stages, enemy density, bullet ready/fired states, shield/dash states, wave transition, and upgrade selection.
+- The owner explicitly confirmed the game is excellent after the release-stability update.
+- No movement, firing, recall, dash, wave progression, or upgrade-selection regression was reported.
+- Automated cross-browser CI remains unclaimed because the app-authored PR event did not launch GitHub Actions.
 
-## Owner acceptance gate
+## Next milestone
 
-1. Run **Deploy GitHub Pages** manually from the GitHub Actions tab if the site does not update automatically.
-2. Open the deployed game normally and confirm the footer displays `v2.8.0-a`.
-3. Refresh once normally; the new worker should take control without manually clearing storage.
-4. Close and reopen the game while online and verify it starts.
-5. After one successful online load, disconnect the network and verify offline startup.
-6. Play one desktop run and confirm movement, firing, recall, dash, upgrade selection, and wave progression are unchanged.
-7. Report the result before Milestone 08-B begins.
+**Milestone 08-B — Runtime Event Foundation**
+
+This increment will introduce a typed internal event bus and stable game-state contracts for future combat, enemy, wave, audio, feedback, and analytics systems. It must not change visible gameplay behavior. Owner acceptance will again be required before Milestone 08-C begins.

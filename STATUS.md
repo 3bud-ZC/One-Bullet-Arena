@@ -2,51 +2,67 @@
 
 Last updated: 2026-08-06
 
-## Current hotfix
+## Release status
 
-- Hotfix: **v2.5.1 — Movement and Controls**
-- Working branch: `hotfix/v2.5.1-movement-controls`
-- Production on `main`: **v2.5.0-polish**
-- Current hotfix completion: **78%**
-- State: **implementation complete; automated movement verification and merge remain**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v2.5.1-controls — Movement and Controls Hotfix**
+- Pull Request #34: **squash-merged into `main`**
+- Release merge commit: `1051993b5f1a42334f15dd86366f82181ef3c20c`
+- Hotfix implementation: **100% complete**
+- Automated movement verification: **100% complete**
+- Overall hotfix acceptance: **97%**
+- Remaining: **deployed Service Worker refresh and owner physical-device confirmation**
 
-## Reported regression
+## Regression fixed
 
-The released v2.5 movement felt broken in real play even though the previous browser suite passed. The old coverage only proved that a movement key changed the player's position. It did not validate touch neutrality, analog speed, or movement response during combat hit-stop.
+The v2.5 release had three movement-quality defects that basic position-change tests did not detect:
 
-## Root causes confirmed
+1. Touch-down could create immediate movement because the joystick used the fixed visual center as its origin.
+2. Every accepted joystick drag was normalized to full speed instead of preserving analog magnitude.
+3. Combat hit-stop froze player movement together with enemies and bullets.
+4. Interrupted pointer capture could leave a touch movement gesture active.
 
-1. The touch joystick used a fixed visual center as its movement origin. Touching away from the exact center could start movement immediately before the player intentionally dragged.
-2. Touch movement was normalized after the dead zone, converting every accepted drag into full player speed instead of preserving analog magnitude.
-3. The v2.5 hit-stop implementation returned before player movement update, freezing the player's controls during every bullet impact.
-4. Pointer-capture loss was not explicitly releasing the movement pointer, which could leave touch movement active after an interrupted gesture.
+## Released fix
 
-## Implemented fix
+- Added `src/movement-hotfix-runtime.js` as the active movement correction layer above the polished runtime.
+- Preserved normalized keyboard movement and consistent diagonal speed.
+- Added a real analog touch curve with a 10-unit dead zone and progressive speed up to a 72-unit maximum radius.
+- Made the actual touch-down position neutral so movement begins only after intentional drag.
+- Aligned the joystick knob visually with the touch gesture origin.
+- Kept enemies, bullets, and combat simulation frozen during hit-stop while player movement and dash remain responsive.
+- Added pointer-up, pointer-cancel, lost-pointer-capture, and window-blur cleanup.
+- Updated the offline application cache to `one-bullet-arena-v2.5.1-controls`.
 
-- Added `src/movement-hotfix-runtime.js` above the existing polish runtime.
-- Preserved normalized full-speed keyboard movement and diagonal consistency.
-- Added a real analog touch curve with a 10-unit dead zone and progressive speed up to the 72-unit maximum radius.
-- Made the actual touch-down point neutral, preventing movement before intentional drag.
-- Realigned the joystick knob to the touch-down origin while keeping the fixed control area visible.
-- Kept enemies, bullets, and the combat world frozen during hit-stop while allowing player movement and dash input to continue.
-- Added `lostpointercapture` cleanup for interrupted touch gestures.
-- Updated the offline cache to `one-bullet-arena-v2.5.1-controls`.
+## Verification results
 
-## Verification added
+- Verify workflow: **passed**.
+- Browser Smoke workflow: **passed**.
+- Playwright: **60/60 passed**.
+- Unexpected failures: **0**.
+- Flaky tests: **0**.
+- Skipped tests: **0**.
+- Tested browser projects:
+  - Desktop Chromium.
+  - Mobile Landscape Chromium.
+  - Desktop Firefox.
+  - Desktop WebKit.
 
-- Unit tests for keyboard normalization, opposite-key cancellation, touch dead zone, partial analog speed, full speed, and combined input limits.
-- Cross-browser tests that verify:
-  - the hotfix runtime is active;
-  - player movement continues during hit-stop while enemies remain frozen;
-  - touch-down starts neutral;
-  - a partial drag produces partial speed;
-  - a full drag produces full speed;
-  - pointer release clears movement state.
+Movement-specific verification confirms:
 
-## Remaining work
+- physical keyboard movement remains normalized;
+- opposite directions cancel correctly;
+- diagonal movement does not exceed maximum speed;
+- touch-down starts with zero movement;
+- the joystick dead zone prevents accidental drift;
+- partial drag produces partial movement speed;
+- full drag produces full movement speed;
+- pointer release clears movement state;
+- player movement remains responsive during hit-stop while enemies remain frozen.
 
-1. Run Verify and Browser Smoke on the hotfix Pull Request.
-2. Correct any desktop, mobile, Firefox, or WebKit regression.
-3. Merge only after every new movement test passes.
-4. Confirm the refreshed Service Worker on GitHub Pages.
-5. Owner physical-device confirmation on keyboard and mobile landscape controls.
+## Remaining owner acceptance
+
+1. Open the GitHub Pages game and perform a hard refresh.
+2. Confirm the old Service Worker is replaced by `one-bullet-arena-v2.5.1-controls`.
+3. Test `WASD`, arrow keys, diagonal movement, dash, and movement during bullet impacts.
+4. Test the mobile joystick from several touch-down positions in landscape mode.
+5. Report any remaining issue with the device, browser, input method, and exact movement behavior.

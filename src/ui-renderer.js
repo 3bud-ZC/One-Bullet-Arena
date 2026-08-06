@@ -1,19 +1,22 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
 
-export const UI_FONT = 'Tahoma, Arial, sans-serif';
+export const UI_FONT = '"Segoe UI", Tahoma, Arial, sans-serif';
 
 export const UI_COLORS = Object.freeze({
-  background: '#050711',
-  panel: 'rgba(10, 16, 34, 0.95)',
-  panelSoft: 'rgba(18, 26, 50, 0.93)',
-  border: '#35416e',
-  text: '#f8f9ff',
-  muted: '#aeb7da',
+  background: '#030611',
+  panel: 'rgba(6, 11, 27, 0.95)',
+  panelSoft: 'rgba(12, 21, 43, 0.94)',
+  border: '#34436f',
+  borderBright: '#536795',
+  text: '#f7f9ff',
+  muted: '#99a8cc',
   player: '#62f3ff',
   bullet: '#ffe66d',
-  danger: '#ff526a',
+  danger: '#ff526f',
   success: '#53f2a1',
   electric: '#58a6ff',
+  warning: '#ffab4f',
+  violet: '#b887ff',
 });
 
 export const TOUCH_LAYOUT = Object.freeze({
@@ -29,31 +32,81 @@ export function roundedRect(ctx, x, y, width, height, radius = 14) {
   else ctx.rect(x, y, width, height);
 }
 
-export function panel(ctx, x, y, width, height, accent = UI_COLORS.border, fill = UI_COLORS.panel, glow = 8) {
+export function panel(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  accent = UI_COLORS.border,
+  fill = UI_COLORS.panel,
+  glow = 8,
+) {
   ctx.save();
+
   ctx.fillStyle = fill;
   ctx.strokeStyle = accent;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.5;
   ctx.shadowColor = accent;
   ctx.shadowBlur = glow;
-  roundedRect(ctx, x, y, width, height, 15);
+  roundedRect(ctx, x, y, width, height, 14);
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.stroke();
+
+  const sheen = ctx.createLinearGradient(x, y, x + width, y + height);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.055)');
+  sheen.addColorStop(0.48, 'rgba(255,255,255,0)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0.018)');
+  ctx.fillStyle = sheen;
+  roundedRect(ctx, x + 1, y + 1, width - 2, height - 2, 13);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 0.7;
+  roundedRect(ctx, x + 5, y + 5, width - 10, height - 10, 10);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = accent;
+  roundedRect(ctx, x + 12, y, Math.max(26, width * 0.15), 2, 1);
+  ctx.fill();
   ctx.restore();
 }
 
-export function label(ctx, text, x, y, size, color = UI_COLORS.text, weight = 700, align = 'center') {
+export function label(
+  ctx,
+  text,
+  x,
+  y,
+  size,
+  color = UI_COLORS.text,
+  weight = 700,
+  align = 'center',
+) {
   ctx.save();
   ctx.direction = 'rtl';
   ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px ${UI_FONT}`;
   ctx.fillText(String(text), x, y);
   ctx.restore();
 }
 
-export function wrapRtl(ctx, text, x, y, maxWidth, lineHeight, size, color, weight, maxLines = 3) {
+export function wrapRtl(
+  ctx,
+  text,
+  x,
+  y,
+  maxWidth,
+  lineHeight,
+  size,
+  color,
+  weight,
+  maxLines = 3,
+) {
   const words = String(text).split(/\s+/);
   const lines = [];
   let line = '';
@@ -77,7 +130,10 @@ export function wrapRtl(ctx, text, x, y, maxWidth, lineHeight, size, color, weig
 }
 
 export function dim(ctx, alpha = 0.84) {
-  ctx.fillStyle = `rgba(2, 4, 12, ${alpha})`;
+  const overlay = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+  overlay.addColorStop(0, `rgba(2, 4, 13, ${Math.min(1, alpha + 0.04)})`);
+  overlay.addColorStop(1, `rgba(1, 2, 8, ${alpha})`);
+  ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 }
 
@@ -94,17 +150,39 @@ export function polygon(ctx, sides, radius, rotation = 0) {
   ctx.fill();
 }
 
-export function progressBar(ctx, x, y, width, height, value, accent, background = 'rgba(255,255,255,0.12)') {
+export function progressBar(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  value,
+  accent,
+  background = 'rgba(255,255,255,0.10)',
+) {
   const safeValue = Math.max(0, Math.min(1, Number(value) || 0));
   ctx.save();
   ctx.fillStyle = background;
   roundedRect(ctx, x, y, width, height, height / 2);
   ctx.fill();
+
   if (safeValue > 0) {
-    ctx.fillStyle = accent;
-    roundedRect(ctx, x, y, Math.max(height, width * safeValue), height, height / 2);
+    const filledWidth = Math.max(height, width * safeValue);
+    const gradient = ctx.createLinearGradient(x, y, x + filledWidth, y);
+    gradient.addColorStop(0, accent);
+    gradient.addColorStop(1, '#ffffff');
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 7;
+    roundedRect(ctx, x, y, filledWidth, height, height / 2);
     ctx.fill();
   }
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#ffffff';
+  roundedRect(ctx, x + 1, y + 1, Math.max(0, width - 2), Math.max(1, height * 0.28), height / 2);
+  ctx.fill();
   ctx.restore();
 }
 

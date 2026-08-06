@@ -14,8 +14,13 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.5 menu, combat HUD, and upgrade cards', async ({ page }, testInfo) => {
+test('captures the v2.6 menu, combat HUD, enemy silhouettes, and upgrade cards', async ({ page }, testInfo) => {
   await loadGame(page);
+
+  const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  expect(menuSnapshot.version).toBe('2.6.0-visual');
+  expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
+  expect(menuSnapshot.redesignedMenu).toBe(true);
   await attachCanvas(page, testInfo, 'menu');
 
   await page.evaluate(() => {
@@ -27,9 +32,13 @@ test('captures the v2.5 menu, combat HUD, and upgrade cards', async ({ page }, t
     game.pointer.y = 360;
     game.draw();
   });
+
+  const combatSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  expect(combatSnapshot.redesignedHud).toBe(true);
+  expect(combatSnapshot.visualEnemyReadability).toBe(true);
   await attachCanvas(page, testInfo, 'combat-hud');
 
-  const snapshot = await page.evaluate(() => {
+  const upgradeSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.enemies = [];
     game.resetBulletToPlayer();
@@ -38,7 +47,24 @@ test('captures the v2.5 menu, combat HUD, and upgrade cards', async ({ page }, t
     game.draw();
     return game.getSnapshot();
   });
-  expect(snapshot.state).toBe('upgrade');
-  expect(snapshot.upgradeChoices).toHaveLength(3);
+  expect(upgradeSnapshot.state).toBe('upgrade');
+  expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
+  expect(upgradeSnapshot.redesignedUpgradeCards).toBe(true);
   await attachCanvas(page, testInfo, 'upgrade-cards');
+
+  await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.state = 'gameover';
+    game.wave = 9;
+    game.score = 15420;
+    game.runTime = 136;
+    game.stats.kills = 47;
+    game.stats.shots = 31;
+    game.stats.hits = 25;
+    game.stats.upgrades = 8;
+    game.stats.damageTaken = 3;
+    game.maxCombo = 11;
+    game.draw();
+  });
+  await attachCanvas(page, testInfo, 'game-over');
 });

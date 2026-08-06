@@ -9,13 +9,18 @@ async function loadGame(page) {
 test('boots only the polished modular single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.5.0-polish');
+  expect(snapshot.version).toBe('2.6.0-visual');
+  expect(snapshot.visualDesign).toBe('2.6.0-visual');
+  expect(snapshot.visualTheme).toBe('neon-tactical-arena');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
   expect(snapshot.runtimeArchitecture).toBe('modular-runtime');
   expect(snapshot.combatPolish).toBe(true);
   expect(snapshot.hudRevision).toBe('compact-status-hud');
   expect(snapshot.upgradeCardRevision).toBe('icon-value-cards');
+  expect(snapshot.redesignedHud).toBe(true);
+  expect(snapshot.redesignedMenu).toBe(true);
+  expect(snapshot.redesignedUpgradeCards).toBe(true);
   expect(snapshot.bulletStatus).toBe('READY');
   expect(snapshot.autoRecallAfterWave).toBe(true);
   expect(snapshot.telegraphsLockDirection).toBe(true);

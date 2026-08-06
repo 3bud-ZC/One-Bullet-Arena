@@ -9,9 +9,15 @@ async function loadGame(page) {
 test('boots only the polished modular single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.6.0-visual');
+  expect(snapshot.version).toBe('2.7.0-feedback');
+  expect(snapshot.combatFeedback).toBe('2.7.0-feedback');
   expect(snapshot.visualDesign).toBe('2.6.0-visual');
   expect(snapshot.visualTheme).toBe('neon-tactical-arena');
+  expect(snapshot.directionalImpacts).toBe(true);
+  expect(snapshot.recallEnergyPackets).toBe(true);
+  expect(snapshot.dashAfterimages).toBe(true);
+  expect(snapshot.comboMomentumHud).toBe(true);
+  expect(snapshot.screenDamageFeedback).toBe(true);
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
   expect(snapshot.runtimeArchitecture).toBe('modular-runtime');
@@ -80,7 +86,7 @@ test('the bullet recalls automatically after the final enemy dies', async ({ pag
   expect(snapshot.bulletStatus).toBe('RETURNING');
 });
 
-test('bullet hits activate impact feedback and final kills show wave clear', async ({ page }) => {
+test('bullet hits activate layered impact feedback and final kills show wave clear', async ({ page }) => {
   await loadGame(page);
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -96,8 +102,35 @@ test('bullet hits activate impact feedback and final kills show wave clear', asy
   });
 
   expect(result.afterHit.impactFeedbackActive).toBe(true);
+  expect(result.afterHit.feedbackEventCount).toBeGreaterThan(0);
   expect(result.afterKill.clearBannerActive).toBe(true);
+  expect(result.afterKill.feedbackEventCount).toBeGreaterThan(1);
   expect(result.afterKill.enemies).toBe(0);
+});
+
+test('manual recall creates energy feedback without changing bullet mechanics', async ({ page }) => {
+  await loadGame(page);
+  const snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: false,
+      x: game.player.x + 420,
+      y: game.player.y + 40,
+      vx: 120,
+      vy: 0,
+      recoverDelay: 0,
+      recallCooldown: 0,
+    });
+    game.recallBullet();
+    return game.getSnapshot();
+  });
+
+  expect(snapshot.bulletHeld).toBe(false);
+  expect(snapshot.bulletRecalling).toBe(true);
+  expect(snapshot.feedbackEventCount).toBeGreaterThan(0);
+  expect(snapshot.recallEnergyPackets).toBe(true);
 });
 
 test('sniper and charger telegraphs lock their direction before execution', async ({ page }) => {

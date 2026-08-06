@@ -12,7 +12,7 @@ import {
 import { selectSpawnPoint } from '../src/spawn-system.js';
 import { upgradeEffectText } from '../src/ui-renderer.js';
 
-test('release exposes the modular stable version', () => assert.equal(GAME_VERSION, '2.4.0-stable'));
+test('release exposes the controls-fix version', () => assert.equal(GAME_VERSION, '2.4.1-controls'));
 
 test('the product has one gradual enemy progression', () => {
   assert.deepEqual(buildWaveComposition(1), ['scout', 'scout', 'scout']);

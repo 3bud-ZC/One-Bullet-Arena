@@ -23,6 +23,7 @@ test('physical WASD is layout-independent and moves the player in every browser'
   expect(normalized).toEqual(['w', 'a', 's', 'd']);
 
   await page.evaluate(() => window.__ONE_BULLET_ARENA__.startRun());
+  await page.locator('#game-canvas').focus();
 
   for (const direction of directions) {
     const before = await page.evaluate(() => {
@@ -35,8 +36,10 @@ test('physical WASD is layout-independent and moves the player in every browser'
     });
 
     await page.keyboard.down(direction.key);
-    await page.waitForTimeout(180);
+    await expect.poll(() => page.evaluate((key) => window.__ONE_BULLET_ARENA__.keys.has(key), direction.key)).toBe(true);
+    await page.evaluate(() => window.__ONE_BULLET_ARENA__.updatePlayer(0.2));
     await page.keyboard.up(direction.key);
+    await expect.poll(() => page.evaluate((key) => window.__ONE_BULLET_ARENA__.keys.has(key), direction.key)).toBe(false);
 
     const after = await page.evaluate(() => {
       const { x, y } = window.__ONE_BULLET_ARENA__.player;

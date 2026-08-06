@@ -1,10 +1,11 @@
-const CACHE_NAME = 'one-bullet-arena-v2.7.0-feedback';
+const CACHE_NAME = 'one-bullet-arena-v2.7.1-ui';
 const APP_SHELL = [
   './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
   './src/main.js', './src/game.js', './src/game-runtime.js', './src/polish-runtime.js',
   './src/movement-hotfix-runtime.js', './src/visual-design-runtime.js',
-  './src/combat-feedback-runtime.js', './src/game-data.js', './src/arena.js', './src/audio.js',
-  './src/input-controller.js', './src/spawn-system.js', './src/ui-renderer.js',
+  './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js', './src/game-data.js',
+  './src/arena.js', './src/audio.js', './src/input-controller.js', './src/spawn-system.js',
+  './src/ui-renderer.js',
 ];
 
 self.addEventListener('install', (event) => {

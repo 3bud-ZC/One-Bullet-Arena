@@ -44,13 +44,20 @@ jobs:
           test -f _site/icons/app-icon.svg
           test -f _site/src/release-config.js
           test -f _site/src/release.js
+          test -f _site/src/core/game-events.js
+          test -f _site/src/core/event-bus.js
+          test -f _site/src/core/game-states.js
+          test -f _site/src/core/event-runtime.js
           test -f _site/src/game.js
           test -f _site/src/game-runtime.js
           test -f _site/src/input-controller.js
           test -f _site/src/spawn-system.js
           test -f _site/src/ui-renderer.js
-          grep -q "2.8.0-a" _site/src/release-config.js
+          EXPECTED_VERSION=$(node -p "require('./package.json').version")
+          grep -q "const version = '$EXPECTED_VERSION'" _site/src/release-config.js
           grep -q "release-config.js" _site/sw.js
+          grep -q "core/event-runtime.js" _site/sw.js
+          grep -q "OneBulletEventRuntime" _site/src/main.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

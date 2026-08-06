@@ -9,8 +9,9 @@ const APP_SHELL = [
   './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
   './src/release-config.js', './src/release.js', './src/main.js', './src/game.js',
   './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js',
-  './src/visual-design-runtime.js', './src/combat-feedback-runtime.js',
-  './src/ui-layout-runtime.js', './src/game-data.js', './src/arena.js', './src/audio.js',
+  './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
+  './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',
+  './src/core/event-runtime.js', './src/game-data.js', './src/arena.js', './src/audio.js',
   './src/input-controller.js', './src/spawn-system.js', './src/ui-renderer.js',
 ];
 

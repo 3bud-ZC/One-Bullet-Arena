@@ -14,17 +14,21 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.8.0-a release foundation, combat, upgrades, and game over', async ({ page }, testInfo) => {
+test('captures the v2.8.0-b event foundation, combat, upgrades, and game over', async ({ page }, testInfo) => {
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('2.8.0-a');
-  expect(menuSnapshot.releaseChannel).toBe('release-stability-foundation');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.8.0-a');
+  expect(menuSnapshot.releaseVersion).toBe('2.8.0-b');
+  expect(menuSnapshot.releaseChannel).toBe('runtime-event-foundation');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.8.0-b');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
+  expect(menuSnapshot.eventFoundationVersion).toBe('2.8.0-b');
+  expect(menuSnapshot.eventSchemaVersion).toBe(1);
+  expect(menuSnapshot.gameEventBusActive).toBe(true);
+  expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('2.8.0-a');
+  expect(menuSnapshot.uiLayoutVersion).toBe('2.8.0-b');
   expect(menuSnapshot.hudLayoutRevision).toBe('compact-safe-zone-hud');
   expect(menuSnapshot.hudPanelHeight).toBe(62);
   expect(menuSnapshot.hudSafeBottom).toBe(80);
@@ -34,7 +38,7 @@ test('captures the v2.8.0-a release foundation, combat, upgrades, and game over'
   expect(menuSnapshot.interfaceLanguageMode).toBe('arabic-menu-english-technical-hud');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'release-menu');
+  await attachCanvas(page, testInfo, 'event-foundation-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -51,7 +55,9 @@ test('captures the v2.8.0-a release foundation, combat, upgrades, and game over'
   expect(combatSnapshot.visualEnemyReadability).toBe(true);
   expect(combatSnapshot.comboMomentumHud).toBe(true);
   expect(combatSnapshot.tutorialLayoutRevision).toBe('single-step-context-strip');
-  await attachCanvas(page, testInfo, 'release-combat-hud');
+  expect(combatSnapshot.recentGameEvents.some((event) => event.type === 'run.started')).toBe(true);
+  expect(combatSnapshot.recentGameEvents.some((event) => event.type === 'wave.started')).toBe(true);
+  await attachCanvas(page, testInfo, 'event-foundation-combat-hud');
 
   const feedbackSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -68,6 +74,7 @@ test('captures the v2.8.0-a release foundation, combat, upgrades, and game over'
   });
   expect(feedbackSnapshot.feedbackEventCount).toBeGreaterThan(0);
   expect(feedbackSnapshot.feedbackCalloutActive).toBe(true);
+  expect(feedbackSnapshot.recentGameEvents.some((event) => event.type === 'enemy.killed')).toBe(true);
   await attachCanvas(page, testInfo, 'impact-feedback');
 
   const upgradeSnapshot = await page.evaluate(() => {
@@ -84,6 +91,8 @@ test('captures the v2.8.0-a release foundation, combat, upgrades, and game over'
   expect(upgradeSnapshot.state).toBe('upgrade');
   expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
   expect(upgradeSnapshot.redesignedUpgradeCards).toBe(true);
+  expect(upgradeSnapshot.recentGameEvents.some((event) => event.type === 'wave.cleared')).toBe(true);
+  expect(upgradeSnapshot.recentGameEvents.some((event) => event.type === 'upgrade.offered')).toBe(true);
   await attachCanvas(page, testInfo, 'upgrade-cards');
 
   await page.evaluate(() => {

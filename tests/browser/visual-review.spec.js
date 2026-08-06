@@ -14,11 +14,12 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.6 menu, combat HUD, enemy silhouettes, and upgrade cards', async ({ page }, testInfo) => {
+test('captures the v2.7 menu, combat, impact feedback, upgrades, and game over', async ({ page }, testInfo) => {
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menuSnapshot.version).toBe('2.6.0-visual');
+  expect(menuSnapshot.version).toBe('2.7.0-feedback');
+  expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
   await attachCanvas(page, testInfo, 'menu');
@@ -36,10 +37,30 @@ test('captures the v2.6 menu, combat HUD, enemy silhouettes, and upgrade cards',
   const combatSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(combatSnapshot.redesignedHud).toBe(true);
   expect(combatSnapshot.visualEnemyReadability).toBe(true);
+  expect(combatSnapshot.comboMomentumHud).toBe(true);
   await attachCanvas(page, testInfo, 'combat-hud');
+
+  const feedbackSnapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.enemies = [];
+    const enemy = game.spawnEnemy('brute', 0, { point: { x: 790, y: 380 } });
+    enemy.spawnTime = 0;
+    game.bullet.vx = 900;
+    game.bullet.vy = -80;
+    game.combo = 4;
+    game.comboTimer = 2.15;
+    game.damageEnemy(enemy, 99, true);
+    game.draw();
+    return game.getSnapshot();
+  });
+  expect(feedbackSnapshot.feedbackEventCount).toBeGreaterThan(0);
+  expect(feedbackSnapshot.feedbackCalloutActive).toBe(true);
+  await attachCanvas(page, testInfo, 'impact-feedback');
 
   const upgradeSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
+    game.feedbackEvents = [];
+    game.feedbackCallout = null;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;

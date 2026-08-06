@@ -2,19 +2,32 @@
 
 Last updated: 2026-08-06
 
-## Current milestone
+## Release status
 
-- Milestone: **v2.6 — Visual Design Polish**
-- Working branch: `feature/v2.6-visual-design-polish`
-- Production on `main`: **v2.5.1-controls**
-- Current milestone completion: **96%**
-- State: **implementation, automated verification, and cross-browser visual review complete; final head verification and merge remain**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v2.6.0-visual — Visual Design Polish**
+- Pull Request #35: **squash-merged into `main`**
+- Release merge commit: `8083b6104f9916bfb984fd1726b1b36ef757d124`
+- Visual implementation: **100% complete**
+- Automated verification: **100% complete**
+- Cross-browser visual review: **100% complete**
+- Overall release acceptance: **97%**
+- Remaining: **deployed Service Worker refresh and owner physical-device playtest**
 
-## Objective
+## Product definition retained
 
-Upgrade the presentation quality of the existing single-path game without adding modes, currencies, meta-progression, bosses, story systems, or gameplay complexity. The v2.5.1 movement hotfix remains the movement foundation.
+The active game still has one path only:
 
-## Implemented visual direction
+1. Start a run.
+2. Defeat every enemy in the wave.
+3. Recover the single bullet automatically after the final kill.
+4. Choose one in-run upgrade.
+5. Enter the next harder wave in the same expanding arena.
+6. Continue until defeat, then retry or return to the menu.
+
+No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
+
+## Released visual direction
 
 - Added `src/visual-design-runtime.js` above the stable movement and polish runtimes.
 - Activated the `v2.6.0-visual` runtime in `src/main.js`.
@@ -40,19 +53,19 @@ Upgrade the presentation quality of the existing single-path game without adding
 - Redesigned the first-wave tutorial into compact visual keycaps.
 - Redesigned the main menu with animated bullet orbit, stronger title hierarchy, gameplay feature cards, high-score chips, and a clearer primary action.
 - Redesigned upgrade selection with category-specific accents, icons, level dots, current-to-next values, and hover lift.
-- Redesigned pause, banner, game-over statistics, buttons, touch joystick, and mobile action controls.
+- Redesigned pause, wave banners, game-over statistics, buttons, touch joystick, and mobile action controls.
 
 ## Release and cache
 
-- Package version updated to `2.6.0`.
+- Package version: `2.6.0`.
 - Runtime release identifier: `2.6.0-visual`.
-- Service Worker cache updated to `one-bullet-arena-v2.6.0-visual`.
-- Browser theme color updated to match the new background.
+- Service Worker cache: `one-bullet-arena-v2.6.0-visual`.
+- Browser theme color matches the new visual background.
 
-## Verification results
+## Final verification results
 
-- Verify workflow run `31070363935`: **passed**.
-- Browser Smoke workflow run `31070363879`: **passed**.
+- Final Verify workflow run `31070647917`: **passed**.
+- Final Browser Smoke workflow run `31070647914`: **passed**.
 - Playwright: **60/60 passed**.
 - Unexpected failures: **0**.
 - Flaky tests: **0**.
@@ -77,9 +90,11 @@ Upgrade the presentation quality of the existing single-path game without adding
 - Game-over statistics and action buttons remain aligned across Chromium, Firefox, and WebKit.
 - No blocking overlap, clipping, missing text, or cross-browser rendering regression was found.
 
-## Remaining work
+## Remaining owner acceptance
 
-1. Run Verify and Browser Smoke against the final branch head after this status update.
-2. Merge Pull Request #35 only if both checks remain green.
-3. Refresh the deployed Service Worker on GitHub Pages.
-4. Perform owner physical-device acceptance on desktop and mobile landscape.
+1. Open the GitHub Pages game and perform a hard refresh.
+2. Confirm the footer displays `v2.6.0-visual`.
+3. Clear site data if the previous Service Worker remains active.
+4. Test the redesigned menu, combat HUD, enemy readability, upgrade cards, and game-over report.
+5. Test desktop and mobile-landscape controls to confirm visual changes did not affect movement feel.
+6. Report any remaining issue with a screenshot, device, browser, and game state.

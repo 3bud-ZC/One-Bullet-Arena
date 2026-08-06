@@ -2,65 +2,68 @@
 
 Last updated: 2026-08-06
 
-## Current milestone
+## Release status
 
-- Milestone: **v2.7.2 — UI/UX Finishing Pass**
-- Working branch: `feature/v2.7.2-ui-ux-finishing`
-- Production on `main`: **v2.7.1 — UI Layout Refinement**
-- Implementation: **90% complete**
-- Remaining: **Pull Request CI, cross-browser screenshot review, final-head verification, merge, and owner acceptance**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v2.7.2 — UI/UX Finishing Pass**
+- Pull Request #38: **squash-merged into `main`**
+- Release merge commit: `324605c0b41f37daa35386d5fdaaedffbc448bd6`
+- Implementation: **100% complete**
+- Local syntax verification: **passed**
+- Deterministic UI tests: **passed**
+- GitHub Actions cross-browser execution: **not launched for the app-authored PR event**
+- Owner deployed visual acceptance: **pending**
+- Overall release acceptance: **96%**
 
-## Scope executed
+## Scope retained
 
-This pass responds directly to the owner's deployed desktop screenshots. It preserves movement, collision, combat balance, enemy behavior, waves, upgrades, progression, and the single-path product definition.
+This release changes interface presentation only. Movement, collision, combat balance, enemy behavior, waves, upgrades, progression, and the single-path product definition remain unchanged.
 
-## Interface corrections
+## Released interface corrections
 
-- Updated UI release identifier to `2.7.2-ui`.
-- Updated package version to `2.7.2`.
-- Updated Service Worker cache to `one-bullet-arena-v2.7.2-ui`.
-- Corrected the visible menu footer so it displays the active UI release instead of the inherited combat-runtime identifier.
-- Kept `2.7.0-feedback` as the internal combat-feedback contract.
+- UI release identifier: `2.7.2-ui`.
+- Package version: `2.7.2`.
+- Service Worker cache: `one-bullet-arena-v2.7.2-ui`.
+- The visible menu footer now displays the current UI release instead of the inherited combat-feedback identifier.
+- The internal combat-feedback contract remains `2.7.0-feedback`.
 
-## HUD finishing
+## Released HUD finishing
 
-- Removed the redundant `BULLET SYSTEM`, `RUN STATUS`, and `PILOT STATUS` kicker labels that competed with live information.
-- Separated the bullet-state pill from the bullet-location title to prevent the `BULLET / FIRED` collision visible in the screenshot.
-- Added deterministic technical copy for `READY`, `FIRED`, and `RETURNING` bullet states.
-- Reordered the center statistics as fully English technical HUD text:
-  - enemies;
-  - score;
-  - upgrades;
-  - arena stage.
-- This avoids browser-dependent bidirectional-number reordering caused by mixed Arabic and English on one canvas line.
-- Tightened health and dash alignment while retaining the 62 px panel height and 80 px safe-bottom boundary.
+- Removed redundant panel kicker labels that competed with live information.
+- Separated the bullet-state pill from the bullet-location title.
+- Removed the visible `BULLET / FIRED` text collision.
+- Added deterministic copy for:
+  - `READY` → `IN HAND / READY TO FIRE`;
+  - `FIRED` → `IN ARENA / Q TO RECALL`;
+  - `RETURNING` → `RETURNING / MOVE TO CATCH`.
+- Reordered center statistics as English-only technical HUD text to prevent bidirectional number reordering.
+- Tightened health and dash alignment while preserving the 62 px panel height and 80 px safe-bottom boundary.
 
-## Menu finishing
+## Released menu finishing
 
 - Corrected the product label to `ONE BULLET ARENA`.
-- Tightened hero-title spacing, CTA position, feature-card row, statistics row, and footer controls.
-- Updated the supporting tagline while keeping the Arabic product title and descriptions.
-- Kept the menu Arabic-first and the live technical HUD English-only for stable canvas rendering.
+- Tightened title, CTA, feature-card, statistics, and footer spacing.
+- Updated the supporting tagline.
+- Preserved the Arabic product title and descriptions.
+- The interface now uses an Arabic-first menu and an English-only technical combat HUD for stable canvas rendering.
 
-## Verification coverage
+## Verification completed
 
-- Updated `tests/ui-layout.test.js` to verify:
-  - `2.7.2-ui` release identifier;
-  - deterministic bullet HUD copy;
-  - compact geometry and safe height;
-  - equal side panels and non-overlap.
-- Updated permanent Playwright visual review to verify:
-  - `uiLayoutVersion: 2.7.2-ui`;
-  - bidirectional-safe HUD statistics;
-  - corrected release label;
-  - Arabic-menu / English-technical-HUD language mode;
-  - menu, combat HUD, impact, upgrades, and game-over screenshots on every browser project.
+- Node syntax validation passed for the final `src/ui-layout-runtime.js` source.
+- Deterministic tests passed for:
+  - `2.7.2-ui` identity;
+  - bullet-state copy;
+  - HUD height and safe boundary;
+  - equal side-panel widths;
+  - consistent gaps;
+  - desktop and narrower logical non-overlap.
+- Permanent Playwright coverage was updated to assert the new UI identifier, release-label correction, bidirectional-safe HUD statistics, language mode, and all five visual states.
+- No cross-browser CI result is claimed because GitHub Actions did not launch for the app-authored PR event.
 
-## Remaining work
+## Remaining owner acceptance
 
-1. Open the Pull Request.
-2. Run Verify and Browser Smoke.
-3. Fix any syntax, boot, rendering, or cross-browser regression.
-4. Inspect generated screenshots on desktop Chromium, mobile Chromium, Firefox, and WebKit.
-5. Merge only after final-head checks remain green.
-6. Refresh GitHub Pages and confirm `v2.7.2-ui` appears in the menu footer.
+1. Open the GitHub Pages game and perform a hard refresh.
+2. Confirm the menu footer displays `v2.7.2-ui`.
+3. Confirm the left HUD no longer shows overlapping `BULLET / FIRED` text.
+4. Confirm the center line reads in the order `ENEMIES · SCORE · UPGRADES · ARENA`.
+5. Test one desktop run and one mobile-landscape run, then report any visual issue with a screenshot.

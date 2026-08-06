@@ -2,15 +2,17 @@
 
 Last updated: 2026-08-06
 
-## Current milestone
+## Release status
 
-- Milestone: **v2.5 — Combat Feel and UI/UX Polish**
-- Working branch: `feature/v2.5-combat-ui-polish`
-- Pull Request: **#33**
-- Current completion: **94%**
-- State: **implementation, automated verification, and cross-browser visual review complete; merge and owner acceptance remain**
-- Production on `main`: **v2.4.1-controls**
-- Candidate release: **v2.5.0-polish**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v2.5.0-polish — Combat Feel and UI/UX Polish**
+- Pull Request #33: **squash-merged into `main`**
+- Release merge commit: `398ca2e6ee1bfc43278b1b826a8e9000256b043f`
+- Code implementation: **100% complete**
+- Automated verification: **100% complete**
+- Cross-browser visual review: **100% complete**
+- Overall release acceptance: **97%**
+- Remaining: **deployed GitHub Pages confirmation and owner physical-device playtest**
 
 ## Product definition retained
 
@@ -25,9 +27,9 @@ The active game still has one path only:
 
 No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
 
-## Implemented in v2.5
+## Released in v2.5
 
-- Added `src/polish-runtime.js` as a presentation and feedback layer above the stable modular runtime.
+- Added `src/polish-runtime.js` as a presentation and combat-feedback layer above the stable modular runtime.
 - Activated `OneBulletPolishRuntime` as the application runtime.
 - Rebuilt the HUD into three compact protected panels.
 - Added explicit bullet states: `READY`, `FIRED`, and `RETURNING`.
@@ -39,12 +41,13 @@ No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, st
 - Added distinct death feedback profiles for scout, brute, sniper, charger, and splitter enemies.
 - Added `WAVE`, `WAVE CLEARED`, and arena-expansion presentation.
 - Refined touch controls with cooldown progress rings and lower visual obstruction.
-- Updated release metadata, offline cache, deterministic tests, browser tests, and permanent visual-review captures.
+- Updated release metadata and the Service Worker cache to `one-bullet-arena-v2.5.0-polish`.
+- Added permanent visual-review captures to the browser test suite.
 
 ## Verification results
 
-- Verify workflow run **642**: **passed**.
-- Browser Smoke workflow run **126**: **passed**.
+- Final Verify workflow run **644**: **passed**.
+- Final Browser Smoke workflow run **127**: **passed**.
 - Playwright: **48/48 passed**.
 - Unexpected failures: **0**.
 - Flaky tests: **0**.
@@ -54,7 +57,7 @@ No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, st
   - Mobile Landscape Chromium.
   - Desktop Firefox.
   - Desktop WebKit.
-- Permanent review captures generated: **12**.
+- Permanent review captures generated and inspected: **12**.
   - Main menu.
   - Combat HUD and first-wave tutorial.
   - Upgrade-selection cards.
@@ -69,8 +72,10 @@ No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, st
 - Arabic text, icons, card borders, and status bars render consistently on Chromium, Firefox, and WebKit.
 - No blocking visual regression was found.
 
-## Remaining acceptance
+## Remaining owner acceptance
 
-1. Merge Pull Request #33 into `main`.
-2. Verify the deployed GitHub Pages build receives the new Service Worker cache.
-3. Owner playtest for combat feel, readability, and Wave 1–15 balance on a physical desktop and mobile device.
+1. Open the GitHub Pages game and confirm the footer displays `v2.5.0-polish`.
+2. Hard-refresh or clear site data if the old Service Worker remains active.
+3. Test desktop controls and combat feedback through Wave 15.
+4. Test mobile landscape controls, card readability, and combat-space visibility on a physical device.
+5. Report any balance, readability, animation, or input issue with the wave number and device/browser.

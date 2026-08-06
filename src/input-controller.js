@@ -90,6 +90,7 @@ export class InputController {
       const point = coordinates(event);
       if (!point) return;
       if (game.touchMove?.id === event.pointerId) {
+        event.preventDefault();
         game.touchMove.x = point.x;
         game.touchMove.y = point.y;
         return;
@@ -116,8 +117,8 @@ export class InputController {
         })) {
           game.touchMove = {
             id: event.pointerId,
-            originX: TOUCH_LAYOUT.move.x,
-            originY: TOUCH_LAYOUT.move.y,
+            originX: point.x,
+            originY: point.y,
             x: point.x,
             y: point.y,
           };
@@ -135,6 +136,7 @@ export class InputController {
     };
     game.canvas.addEventListener('pointerup', releasePointer);
     game.canvas.addEventListener('pointercancel', releasePointer);
+    game.canvas.addEventListener('lostpointercapture', releasePointer);
 
     window.addEventListener('blur', () => {
       game.keys.clear();

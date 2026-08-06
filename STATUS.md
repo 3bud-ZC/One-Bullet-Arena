@@ -2,76 +2,65 @@
 
 Last updated: 2026-08-06
 
-## Release status
+## Current milestone
 
-- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current production code on `main`: **v2.7.1 — UI Layout Refinement**
-- Pull Request #37: **squash-merged into `main`**
-- Release merge commit: `ce87ef95a76a5fa2d82609594ce61e3282176f25`
-- UI implementation: **100% complete**
-- Desktop deployment and owner visual acceptance: **confirmed**
-- Automated verification state: **pending; GitHub Actions did not launch for the app-authored PR/merge events**
-- Mobile physical-device acceptance: **pending**
-- Overall release acceptance: **98%**
+- Milestone: **v2.7.2 — UI/UX Finishing Pass**
+- Working branch: `feature/v2.7.2-ui-ux-finishing`
+- Production on `main`: **v2.7.1 — UI Layout Refinement**
+- Implementation: **90% complete**
+- Remaining: **Pull Request CI, cross-browser screenshot review, final-head verification, merge, and owner acceptance**
 
-## User-reported problem resolved
+## Scope executed
 
-The combat HUD occupied too much vertical space and visually covered the upper arena. The previous three panels used 88 px height, several text rows, thick progress bars, and strong glow.
+This pass responds directly to the owner's deployed desktop screenshots. It preserves movement, collision, combat balance, enemy behavior, waves, upgrades, progression, and the single-path product definition.
 
-## Released UI architecture
+## Interface corrections
 
-- Added `src/ui-layout-runtime.js` above the stable combat-feedback runtime.
-- Activated `OneBulletUiLayoutRuntime` from `src/main.js`.
-- UI layout identifier: `2.7.1-ui`.
-- Package version: `2.7.1`.
-- Service Worker cache: `one-bullet-arena-v2.7.1-ui`.
-- Combat runtime identifier remains `2.7.0-feedback`; movement, collision, combat balance, waves, upgrades, and progression were not changed.
+- Updated UI release identifier to `2.7.2-ui`.
+- Updated package version to `2.7.2`.
+- Updated Service Worker cache to `one-bullet-arena-v2.7.2-ui`.
+- Corrected the visible menu footer so it displays the active UI release instead of the inherited combat-runtime identifier.
+- Kept `2.7.0-feedback` as the internal combat-feedback contract.
 
-## Released HUD improvements
+## HUD finishing
 
-- Reduced each primary HUD panel from 88 px to 62 px.
-- Reduced the normal HUD safe-bottom boundary to 80 px.
-- Rebuilt the top HUD into three compact tactical panels:
-  - bullet state and recall readiness;
-  - wave, enemies, score, upgrades, and arena stage;
-  - health, shield state, and dash readiness.
-- Replaced large side accent bars with restrained top accents.
-- Reduced panel glow, internal padding, progress-bar thickness, and secondary-text size.
-- Compressed secondary run information into one line while preserving the main wave and health hierarchy.
-- Added responsive deterministic panel geometry with equal side widths and consistent gaps.
+- Removed the redundant `BULLET SYSTEM`, `RUN STATUS`, and `PILOT STATUS` kicker labels that competed with live information.
+- Separated the bullet-state pill from the bullet-location title to prevent the `BULLET / FIRED` collision visible in the screenshot.
+- Added deterministic technical copy for `READY`, `FIRED`, and `RETURNING` bullet states.
+- Reordered the center statistics as fully English technical HUD text:
+  - enemies;
+  - score;
+  - upgrades;
+  - arena stage.
+- This avoids browser-dependent bidirectional-number reordering caused by mixed Arabic and English on one canvas line.
+- Tightened health and dash alignment while retaining the 62 px panel height and 80 px safe-bottom boundary.
 
-## Released contextual UI improvements
+## Menu finishing
 
-- Replaced the wide three-step tutorial with one compact instruction at a time.
-- Reduced the combo meter to a 23 px strip.
-- Suppressed the combo strip while the first-wave tutorial is active.
-- Reduced feedback-callout dimensions and prevented tutorial/callout overlap.
-- Preserved desktop and mobile-landscape controls.
+- Corrected the product label to `ONE BULLET ARENA`.
+- Tightened hero-title spacing, CTA position, feature-card row, statistics row, and footer controls.
+- Updated the supporting tagline while keeping the Arabic product title and descriptions.
+- Kept the menu Arabic-first and the live technical HUD English-only for stable canvas rendering.
 
-## Owner acceptance evidence
+## Verification coverage
 
-- The owner opened and played the deployed game after refreshing the release.
-- Desktop screenshots confirmed the updated main menu and the compact combat HUD during Wave 3.
-- The arena remained visible below the HUD without the previous large upper obstruction.
-- The owner explicitly approved the changes and reported that the game and visual changes were enjoyable.
+- Updated `tests/ui-layout.test.js` to verify:
+  - `2.7.2-ui` release identifier;
+  - deterministic bullet HUD copy;
+  - compact geometry and safe height;
+  - equal side panels and non-overlap.
+- Updated permanent Playwright visual review to verify:
+  - `uiLayoutVersion: 2.7.2-ui`;
+  - bidirectional-safe HUD statistics;
+  - corrected release label;
+  - Arabic-menu / English-technical-HUD language mode;
+  - menu, combat HUD, impact, upgrades, and game-over screenshots on every browser project.
 
-## Verification coverage included
+## Remaining work
 
-- Added `tests/ui-layout.test.js` for:
-  - UI release identifier;
-  - HUD height and safe-bottom target;
-  - equal side-panel widths;
-  - deterministic gaps;
-  - non-overlap at desktop and narrower logical widths.
-- Added `src/ui-layout-runtime.js` to JavaScript syntax verification.
-- Updated the permanent Playwright visual-review test to assert:
-  - `uiLayoutVersion: 2.7.1-ui`;
-  - `hudLayoutRevision: compact-safe-zone-hud`;
-  - `hudPanelHeight: 62`;
-  - `hudSafeBottom: 80`;
-  - reduced glow and compact tutorial flags.
-
-## Remaining acceptance
-
-1. Run GitHub Actions manually if automated CI confirmation is required.
-2. Perform one physical mobile-landscape playtest and confirm the HUD and touch controls remain readable.
+1. Open the Pull Request.
+2. Run Verify and Browser Smoke.
+3. Fix any syntax, boot, rendering, or cross-browser regression.
+4. Inspect generated screenshots on desktop Chromium, mobile Chromium, Firefox, and WebKit.
+5. Merge only after final-head checks remain green.
+6. Refresh GitHub Pages and confirm `v2.7.2-ui` appears in the menu footer.

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'one-bullet-arena-v2.7.1-ui';
+const CACHE_NAME = 'one-bullet-arena-v2.7.2-ui';
 const APP_SHELL = [
   './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
   './src/main.js', './src/game.js', './src/game-runtime.js', './src/polish-runtime.js',

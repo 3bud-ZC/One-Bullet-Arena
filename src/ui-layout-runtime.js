@@ -4,7 +4,7 @@ import { OneBulletCombatFeedbackRuntime, comboFeedbackRank } from './combat-feed
 import { bulletPresentationState } from './polish-runtime.js';
 import { UI_COLORS, label, panel, progressBar, roundedRect } from './ui-renderer.js';
 
-export const UI_LAYOUT_VERSION = '2.7.1-ui';
+export const UI_LAYOUT_VERSION = '2.7.2-ui';
 
 export function compactHudLayout(width = WIDTH) {
   const margin = 16;
@@ -26,9 +26,19 @@ export function compactHudLayout(width = WIDTH) {
   };
 }
 
+export function bulletHudCopy(code = 'READY') {
+  const copies = {
+    READY: { title: 'IN HAND', subtitle: 'READY TO FIRE' },
+    FIRED: { title: 'IN ARENA', subtitle: 'Q TO RECALL' },
+    RETURNING: { title: 'RETURNING', subtitle: 'MOVE TO CATCH' },
+  };
+  return copies[code] || copies.READY;
+}
+
 export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   constructor(canvas, liveRegion = null) {
     super(canvas, liveRegion);
+    this.version = UI_LAYOUT_VERSION;
     this.uiLayoutVersion = UI_LAYOUT_VERSION;
   }
 
@@ -41,13 +51,13 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     const recallRatio = 1 - this.bullet.recallCooldown / recallMax;
     const dashRatio = 1 - this.player.dashCooldown / dashMax;
 
-    this.drawCompactPanel(layout.left, bulletState.color, 'BULLET SYSTEM');
+    this.drawCompactPanel(layout.left, bulletState.color);
     this.drawBulletHud(layout.left, bulletState, recallRatio);
 
-    this.drawCompactPanel(layout.center, UI_COLORS.borderBright, 'RUN STATUS');
+    this.drawCompactPanel(layout.center, UI_COLORS.borderBright);
     this.drawRunHud(layout.center);
 
-    this.drawCompactPanel(layout.right, UI_COLORS.player, 'PILOT STATUS');
+    this.drawCompactPanel(layout.right, UI_COLORS.player);
     this.drawPilotHud(layout.right, healthRatio, dashRatio);
 
     if (this.state === 'playing' && this.wave === 1 && this.tutorialStep < 3) this.drawTutorial();
@@ -57,47 +67,36 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     this.drawFeedbackCallout();
   }
 
-  drawCompactPanel(rect, accent, kicker) {
+  drawCompactPanel(rect, accent) {
     const ctx = this.ctx;
-    panel(ctx, rect.x, rect.y, rect.w, rect.h, accent, 'rgba(4, 9, 22, 0.88)', 3);
+    panel(ctx, rect.x, rect.y, rect.w, rect.h, accent, 'rgba(4, 9, 22, 0.9)', 3);
 
     ctx.save();
-    ctx.globalAlpha = 0.82;
+    ctx.globalAlpha = 0.88;
     ctx.fillStyle = accent;
     roundedRect(ctx, rect.x + 10, rect.y, rect.w - 20, 2, 1);
     ctx.fill();
 
-    ctx.globalAlpha = 0.12;
+    ctx.globalAlpha = 0.1;
     const sheen = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y);
     sheen.addColorStop(0, accent);
-    sheen.addColorStop(0.38, 'rgba(255,255,255,0)');
+    sheen.addColorStop(0.42, 'rgba(255,255,255,0)');
     sheen.addColorStop(1, accent);
     ctx.fillStyle = sheen;
-    roundedRect(ctx, rect.x + 2, rect.y + 2, rect.w - 4, 20, 7);
+    roundedRect(ctx, rect.x + 2, rect.y + 2, rect.w - 4, 18, 7);
     ctx.fill();
     ctx.restore();
-
-    label(ctx, kicker, rect.x + 14, rect.y + 15, 8, accent, 900, 'left');
   }
 
   drawBulletHud(rect, bulletState, recallRatio) {
-    const ctx = this.ctx;
+    const copy = bulletHudCopy(bulletState.code);
     const glyph = bulletState.code === 'READY' ? '●' : bulletState.code === 'RETURNING' ? '↺' : '→';
 
-    this.drawStatusPill(rect.x + 14, rect.y + 23, 104, 23, `${glyph}  ${bulletState.code}`, bulletState.color);
-    label(ctx, bulletState.label, rect.x + rect.w - 16, rect.y + 31, 15, UI_COLORS.text, 900, 'right');
-    label(
-      ctx,
-      this.bullet.held ? 'جاهزة للإطلاق' : this.bullet.recalling ? 'تعود إليك' : 'Q للاستدعاء',
-      rect.x + rect.w - 16,
-      rect.y + 48,
-      9,
-      UI_COLORS.muted,
-      800,
-      'right',
-    );
+    this.drawStatusPill(rect.x + 14, rect.y + 9, 96, 22, `${glyph} ${bulletState.code}`, bulletState.color);
+    label(this.ctx, copy.title, rect.x + rect.w - 16, rect.y + 25, 14, UI_COLORS.text, 900, 'right');
+    label(this.ctx, copy.subtitle, rect.x + rect.w - 16, rect.y + 44, 9, UI_COLORS.muted, 850, 'right');
     progressBar(
-      ctx,
+      this.ctx,
       rect.x + 14,
       rect.y + rect.h - 7,
       rect.w - 28,
@@ -109,19 +108,20 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   }
 
   drawRunHud(rect) {
-    const ctx = this.ctx;
-    const waveText = `WAVE ${String(this.wave).padStart(2, '0')}`;
-    const enemiesText = `${this.enemies.length} ENEMIES`;
-    const scoreText = `${this.score.toLocaleString('en-US')} SCORE`;
-    const arenaText = `ARENA ${this.arenaStage.id + 1}/4`;
-    const upgradesText = `${this.stats.upgrades} UPGRADES`;
-
-    label(ctx, waveText, rect.x + rect.w / 2, rect.y + 29, 21, UI_COLORS.text, 900);
     label(
-      ctx,
-      `${enemiesText}  ·  ${scoreText}  ·  ${upgradesText}  ·  ${arenaText}`,
+      this.ctx,
+      `WAVE ${String(this.wave).padStart(2, '0')}`,
       rect.x + rect.w / 2,
-      rect.y + 51,
+      rect.y + 27,
+      21,
+      UI_COLORS.text,
+      900,
+    );
+    label(
+      this.ctx,
+      `ENEMIES ${this.enemies.length}  ·  SCORE ${this.score.toLocaleString('en-US')}  ·  UPGRADES ${this.stats.upgrades}  ·  ARENA ${this.arenaStage.id + 1}/4`,
+      rect.x + rect.w / 2,
+      rect.y + 50,
       9,
       this.combo > 1 ? UI_COLORS.bullet : UI_COLORS.muted,
       850,
@@ -129,23 +129,22 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   }
 
   drawPilotHud(rect, healthRatio, dashRatio) {
-    const ctx = this.ctx;
     const shieldOnline = this.player.shield > 0;
 
     label(
-      ctx,
+      this.ctx,
       `HP ${this.player.health}/${this.player.maxHealth}`,
       rect.x + rect.w - 16,
-      rect.y + 27,
+      rect.y + 25,
       15,
       UI_COLORS.text,
       900,
       'right',
     );
     progressBar(
-      ctx,
+      this.ctx,
       rect.x + 14,
-      rect.y + 33,
+      rect.y + 31,
       rect.w - 28,
       7,
       clamp(healthRatio, 0, 1),
@@ -154,20 +153,20 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     );
 
     label(
-      ctx,
-      shieldOnline ? 'SHIELD ONLINE' : 'DASH',
+      this.ctx,
+      shieldOnline ? 'SHIELD' : 'DASH',
       rect.x + 14,
-      rect.y + 53,
+      rect.y + 52,
       9,
       shieldOnline ? UI_COLORS.electric : UI_COLORS.muted,
       900,
       'left',
     );
     progressBar(
-      ctx,
-      rect.x + 112,
-      rect.y + 48,
-      rect.w - 128,
+      this.ctx,
+      rect.x + 92,
+      rect.y + 47,
+      rect.w - 108,
       5,
       clamp(dashRatio, 0, 1),
       UI_COLORS.player,
@@ -184,7 +183,7 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     roundedRect(ctx, x, y, width, height, height / 2);
     ctx.fill();
     ctx.stroke();
-    label(ctx, text, x + width / 2, y + 16, 9, color, 900);
+    label(ctx, text, x + width / 2, y + 15, 8, color, 900);
     ctx.restore();
   }
 
@@ -201,23 +200,21 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
         { key: 'Q', title: 'استدعِ الطلقة والتقطها' },
       ];
     const current = steps[this.tutorialStep] || steps[0];
-    const ctx = this.ctx;
     const width = 430;
     const height = 42;
     const x = WIDTH / 2 - width / 2;
     const y = 80;
 
-    panel(ctx, x, y, width, height, UI_COLORS.bullet, 'rgba(4,9,22,0.9)', 3);
+    panel(this.ctx, x, y, width, height, UI_COLORS.bullet, 'rgba(4,9,22,0.9)', 3);
     this.drawStatusPill(x + 10, y + 9, 92, 24, current.key, UI_COLORS.bullet);
-    label(ctx, current.title, x + width - 48, y + 27, 12, UI_COLORS.text, 850, 'right');
-    label(ctx, `${this.tutorialStep + 1}/3`, x + width - 14, y + 27, 9, UI_COLORS.muted, 900, 'right');
+    label(this.ctx, current.title, x + width - 48, y + 27, 12, UI_COLORS.text, 850, 'right');
+    label(this.ctx, `${this.tutorialStep + 1}/3`, x + width - 14, y + 27, 9, UI_COLORS.muted, 900, 'right');
   }
 
   drawComboMomentum() {
     if (this.state !== 'playing' || this.combo < 2) return;
     if (this.wave === 1 && this.tutorialStep < 3) return;
 
-    const ctx = this.ctx;
     const rank = comboFeedbackRank(this.combo);
     const ratio = clamp(this.comboTimer / 2.15, 0, 1);
     const width = 222;
@@ -225,17 +222,17 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     const x = WIDTH / 2 - width / 2;
     const y = 78;
 
-    ctx.save();
-    ctx.globalAlpha = 0.72 + this.comboPulse * 0.24;
-    ctx.fillStyle = 'rgba(4,9,22,0.84)';
-    ctx.strokeStyle = rank.color;
-    ctx.lineWidth = 1.2 + this.comboPulse;
-    roundedRect(ctx, x, y, width, height, 7);
-    ctx.fill();
-    ctx.stroke();
-    progressBar(ctx, x + 8, y + height - 5, width - 16, 3, ratio, rank.color, 'rgba(255,255,255,0.07)');
-    label(ctx, `${rank.code}  ·  ×${this.combo}`, WIDTH / 2, y + 14, 9, rank.color, 900);
-    ctx.restore();
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.72 + this.comboPulse * 0.24;
+    this.ctx.fillStyle = 'rgba(4,9,22,0.84)';
+    this.ctx.strokeStyle = rank.color;
+    this.ctx.lineWidth = 1.2 + this.comboPulse;
+    roundedRect(this.ctx, x, y, width, height, 7);
+    this.ctx.fill();
+    this.ctx.stroke();
+    progressBar(this.ctx, x + 8, y + height - 5, width - 16, 3, ratio, rank.color, 'rgba(255,255,255,0.07)');
+    label(this.ctx, `${rank.code}  ·  ×${this.combo}`, WIDTH / 2, y + 14, 9, rank.color, 900);
+    this.ctx.restore();
   }
 
   drawFeedbackCallout() {
@@ -250,35 +247,69 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     const tutorialVisible = this.state === 'playing' && this.wave === 1 && this.tutorialStep < 3;
     const y = tutorialVisible ? HEIGHT - 142 : HEIGHT - 92;
     const slide = (1 - intro) * 14;
-    const ctx = this.ctx;
 
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(0, slide);
-    ctx.fillStyle = 'rgba(4,9,22,0.88)';
-    ctx.strokeStyle = callout.color;
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = callout.color;
-    ctx.shadowBlur = 8;
-    roundedRect(ctx, x, y, width, height, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    label(ctx, callout.title, WIDTH / 2, y + 21, 13, callout.color, 900);
-    label(ctx, callout.subtitle, WIDTH / 2, y + 40, 10, UI_COLORS.text, 800);
-    ctx.restore();
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    this.ctx.translate(0, slide);
+    this.ctx.fillStyle = 'rgba(4,9,22,0.88)';
+    this.ctx.strokeStyle = callout.color;
+    this.ctx.lineWidth = 1.5;
+    this.ctx.shadowColor = callout.color;
+    this.ctx.shadowBlur = 8;
+    roundedRect(this.ctx, x, y, width, height, 8);
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.shadowBlur = 0;
+    label(this.ctx, callout.title, WIDTH / 2, y + 21, 13, callout.color, 900);
+    label(this.ctx, callout.subtitle, WIDTH / 2, y + 40, 10, UI_COLORS.text, 800);
+    this.ctx.restore();
+  }
+
+  drawMenu() {
+    const pulse = 1 + Math.sin(this.elapsed * 2.1) * 0.016;
+    this.drawMenuOrbit();
+
+    label(this.ctx, 'ONE BULLET ARENA', WIDTH / 2, 82, 13, UI_COLORS.player, 900);
+    this.ctx.save();
+    this.ctx.translate(WIDTH / 2, 166);
+    this.ctx.scale(pulse, pulse);
+    label(this.ctx, 'حلبة الطلقة', 0, 0, 62, UI_COLORS.text, 900);
+    label(this.ctx, 'الواحدة', 0, 62, 62, UI_COLORS.bullet, 900);
+    this.ctx.restore();
+
+    label(this.ctx, 'ONE SHOT  ·  ONE RECALL  ·  KEEP MOVING', WIDTH / 2, 270, 11, UI_COLORS.muted, 900);
+    label(this.ctx, 'استخدم الارتداد، استعد الطلقة، واصمد أمام الموجات المتصاعدة.', WIDTH / 2, 302, 16, UI_COLORS.text, 650);
+
+    this.drawButton('ابدأ الجولة', WIDTH / 2 - 180, 336, 360, 60, () => this.startRun(), true);
+
+    this.drawMenuFeatureCard(122, 430, 316, '01', 'أطلق', 'طلقة واحدة ذات ارتدادات دقيقة.', UI_COLORS.bullet);
+    this.drawMenuFeatureCard(482, 430, 316, '02', 'استعد', 'استدعاء مغناطيسي يعيد سلاحك.', UI_COLORS.electric);
+    this.drawMenuFeatureCard(842, 430, 316, '03', 'تطوّر', 'اختر قدرة واحدة بعد كل موجة.', UI_COLORS.player);
+
+    this.drawStatChip(372, 596, 250, 'BEST WAVE', this.highWave);
+    this.drawStatChip(658, 596, 250, 'HIGH SCORE', this.highScore.toLocaleString('en-US'));
+
+    const controls = this.touchMode
+      ? 'LEFT STICK MOVE  ·  TAP FIRE  ·  RIGHT BUTTONS RECALL / DASH'
+      : 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH  ·  P PAUSE';
+    label(this.ctx, controls, WIDTH / 2, 677, 10, UI_COLORS.muted, 800);
+    label(this.ctx, `v${UI_LAYOUT_VERSION}`, WIDTH - 24, 696, 10, '#7182a8', 800, 'right');
   }
 
   getSnapshot() {
     const layout = compactHudLayout(WIDTH);
     return {
       ...super.getSnapshot(),
+      version: UI_LAYOUT_VERSION,
       uiLayoutVersion: UI_LAYOUT_VERSION,
-      hudLayoutRevision: 'compact-safe-zone-hud',
+      hudLayoutRevision: 'compact-safe-zone-hud-v2',
       hudPanelHeight: layout.height,
       hudSafeBottom: layout.safeBottom,
       tutorialLayoutRevision: 'single-step-context-strip',
       reducedHudGlow: true,
+      bidiSafeHudStats: true,
+      releaseLabelCorrected: true,
+      interfaceLanguageMode: 'arabic-menu-english-technical-hud',
     };
   }
 }

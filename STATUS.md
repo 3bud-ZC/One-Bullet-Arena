@@ -2,17 +2,13 @@
 
 Last updated: 2026-08-06
 
-## Release status
+## Current milestone
 
-- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current production code on `main`: **v2.6.0-visual — Visual Design Polish**
-- Pull Request #35: **squash-merged into `main`**
-- Release merge commit: `8083b6104f9916bfb984fd1726b1b36ef757d124`
-- Visual implementation: **100% complete**
-- Automated verification: **100% complete**
-- Cross-browser visual review: **100% complete**
-- Overall release acceptance: **97%**
-- Remaining: **deployed Service Worker refresh and owner physical-device playtest**
+- Milestone: **v2.7 — Combat Feel & Feedback**
+- Working branch: `feature/v2.7-combat-feel-feedback`
+- Production on `main`: **v2.6.0-visual**
+- Current milestone completion: **82%**
+- State: **implementation and verification coverage complete; CI and cross-browser visual review remain**
 
 ## Product definition retained
 
@@ -27,74 +23,66 @@ The active game still has one path only:
 
 No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
 
-## Released visual direction
+## Implemented combat-feedback architecture
 
-- Added `src/visual-design-runtime.js` above the stable movement and polish runtimes.
-- Activated the `v2.6.0-visual` runtime in `src/main.js`.
-- Introduced a unified neon tactical-arena theme with dark layered surfaces, cyan player identity, yellow bullet identity, and danger-specific enemy colors.
-- Redesigned the page backdrop and responsive game frame while retaining 16:9 desktop and mobile-landscape behavior.
-- Updated shared canvas panels, progress bars, typography, borders, sheen, and accent details.
+- Added `src/combat-feedback-runtime.js` above the stable visual, movement-hotfix, polish, and modular game runtimes.
+- Activated `OneBulletCombatFeedbackRuntime` from `src/main.js`.
+- Runtime identifier: `2.7.0-feedback`.
+- Package version: `2.7.0`.
+- Service Worker cache: `one-bullet-arena-v2.7.0-feedback`.
+- The new layer changes presentation and feedback only; movement, collision, waves, enemy timing, damage, upgrades, and progression remain unchanged.
 
-## Arena and gameplay presentation
+## Combat impact improvements
 
-- Added layered gradients, ambient stars, animated grid movement, radial rings, floor stripes, vignette depth, and a central arena emblem.
-- Redesigned arena borders with inner lines, glowing brackets, and expansion feedback.
-- Redesigned obstacles with layered materials and technical stripe detailing.
-- Redesigned the player as a directional ship-like silhouette with a core, weapon nose, shield ring, and dash trail.
-- Redesigned the single bullet as a rotating hex core with stronger trail, recall tether, orbit ring, and muzzle feedback.
-- Added distinct layered silhouettes and cores for scout, brute, sniper, charger, and splitter enemies.
-- Improved spawn, sniper, and charger telegraphs without changing their gameplay timing.
-- Redesigned hostile projectiles with directional trails and clearer danger glow.
+- Added deterministic enemy-specific impact profiles for scout, brute, sniper, charger, and splitter enemies.
+- Added stronger lethal profiles with more directional sparks, larger shock rings, heavier shake, and slightly longer impact freeze.
+- Added directional impact rays based on bullet velocity.
+- Added dedicated muzzle-cone feedback on every successful shot.
+- Added ricochet spark fans that follow the reflected bullet direction.
+- Preserved reduced-motion behavior by suppressing optional camera shake and dash echoes.
 
-## Interface redesign
+## Recall and movement feedback
 
-- Rebuilt the HUD into tactical bullet, run, and pilot panels with clearer hierarchy.
-- Added stronger bullet-state glyphs, health and cooldown bars, score, hostile count, combo, arena, and upgrade status.
-- Redesigned the first-wave tutorial into compact visual keycaps.
-- Redesigned the main menu with animated bullet orbit, stronger title hierarchy, gameplay feature cards, high-score chips, and a clearer primary action.
-- Redesigned upgrade selection with category-specific accents, icons, level dots, current-to-next values, and hover lift.
-- Redesigned pause, wave banners, game-over statistics, buttons, touch joystick, and mobile action controls.
+- Added recall-start rings around the distant bullet.
+- Added moving energy packets along the magnetic return tether.
+- Added a catch pulse and radial glow when the returning bullet reaches the player.
+- Added a distinct long-recall callout for catches from significant distance.
+- Added short-lived dash afterimages without changing dash speed, duration, cooldown, or invulnerability.
 
-## Release and cache
+## HUD and screen feedback
 
-- Package version: `2.6.0`.
-- Runtime release identifier: `2.6.0-visual`.
-- Service Worker cache: `one-bullet-arena-v2.6.0-visual`.
-- Browser theme color matches the new visual background.
+- Added a compact combo-momentum meter with stable rank thresholds:
+  - `LOCKED IN` at combo 3;
+  - `CHAINED` at combo 5;
+  - `RELENTLESS` at combo 8;
+  - `OVERDRIVE` at combo 12.
+- Added contextual combat callouts for waves, upgrades, long recalls, shields, player damage, and run termination.
+- Added shield-hit arcs and directional hull-hit arcs.
+- Added damage-edge vignette and a restrained low-health border pulse.
+- Added a wave-entry radial sweep.
 
-## Final verification results
+## Verification coverage added
 
-- Final Verify workflow run `31070647917`: **passed**.
-- Final Browser Smoke workflow run `31070647914`: **passed**.
-- Playwright: **60/60 passed**.
-- Unexpected failures: **0**.
-- Flaky tests: **0**.
-- Skipped tests: **0**.
-- Tested projects:
-  - Desktop Chromium.
-  - Mobile Landscape Chromium.
-  - Desktop Firefox.
-  - Desktop WebKit.
-
-## Visual review results
-
-- Permanent screenshots generated and inspected: **16**.
-- Reviewed states on every browser project:
+- Added deterministic unit coverage for:
+  - release identifier;
+  - lethal versus non-lethal impact scaling;
+  - unknown-enemy fallback behavior;
+  - combo rank thresholds.
+- Updated the browser boot contract for the active v2.7 runtime and all feedback capability flags.
+- Added browser coverage for manual recall feedback while preserving bullet mechanics.
+- Expanded impact tests to require active feedback events after normal and lethal hits.
+- Expanded permanent cross-browser visual review from four to five states per browser:
   - main menu;
-  - combat HUD and enemies;
+  - combat HUD;
+  - lethal impact feedback;
   - upgrade cards;
   - game-over report.
-- Menu hierarchy, Arabic text, feature cards, score chips, and version label remain contained.
-- Combat HUD remains separated from the arena and mobile controls remain outside the primary combat space.
-- Upgrade cards remain readable and fully contained at desktop and mobile-landscape sizes.
-- Game-over statistics and action buttons remain aligned across Chromium, Firefox, and WebKit.
-- No blocking overlap, clipping, missing text, or cross-browser rendering regression was found.
 
-## Remaining owner acceptance
+## Remaining work
 
-1. Open the GitHub Pages game and perform a hard refresh.
-2. Confirm the footer displays `v2.6.0-visual`.
-3. Clear site data if the previous Service Worker remains active.
-4. Test the redesigned menu, combat HUD, enemy readability, upgrade cards, and game-over report.
-5. Test desktop and mobile-landscape controls to confirm visual changes did not affect movement feel.
-6. Report any remaining issue with a screenshot, device, browser, and game state.
+1. Open the Pull Request.
+2. Run Verify and Browser Smoke against the branch.
+3. Fix any syntax, state, rendering, or cross-browser regression.
+4. Inspect all generated screenshots across desktop Chromium, mobile Chromium, Firefox, and WebKit.
+5. Merge only after final-head checks remain green.
+6. Refresh GitHub Pages and perform owner physical-device acceptance.

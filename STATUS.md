@@ -7,8 +7,8 @@ Last updated: 2026-08-06
 - Milestone: **v2.6 — Visual Design Polish**
 - Working branch: `feature/v2.6-visual-design-polish`
 - Production on `main`: **v2.5.1-controls**
-- Current milestone completion: **82%**
-- State: **implementation complete; automated verification and visual review remain**
+- Current milestone completion: **96%**
+- State: **implementation, automated verification, and cross-browser visual review complete; final head verification and merge remain**
 
 ## Objective
 
@@ -49,20 +49,37 @@ Upgrade the presentation quality of the existing single-path game without adding
 - Service Worker cache updated to `one-bullet-arena-v2.6.0-visual`.
 - Browser theme color updated to match the new background.
 
-## Verification added
+## Verification results
 
-- Added unit coverage for the visual release identifier, theme completeness, enemy categories, upgrade categories, and critical color separation.
-- Updated browser boot verification to require the active visual runtime and redesigned UI flags.
-- Expanded permanent visual-review captures to four states per browser project:
+- Verify workflow run `31070363935`: **passed**.
+- Browser Smoke workflow run `31070363879`: **passed**.
+- Playwright: **60/60 passed**.
+- Unexpected failures: **0**.
+- Flaky tests: **0**.
+- Skipped tests: **0**.
+- Tested projects:
+  - Desktop Chromium.
+  - Mobile Landscape Chromium.
+  - Desktop Firefox.
+  - Desktop WebKit.
+
+## Visual review results
+
+- Permanent screenshots generated and inspected: **16**.
+- Reviewed states on every browser project:
   - main menu;
   - combat HUD and enemies;
   - upgrade cards;
   - game-over report.
+- Menu hierarchy, Arabic text, feature cards, score chips, and version label remain contained.
+- Combat HUD remains separated from the arena and mobile controls remain outside the primary combat space.
+- Upgrade cards remain readable and fully contained at desktop and mobile-landscape sizes.
+- Game-over statistics and action buttons remain aligned across Chromium, Firefox, and WebKit.
+- No blocking overlap, clipping, missing text, or cross-browser rendering regression was found.
 
 ## Remaining work
 
-1. Open the Pull Request and run Verify and Browser Smoke.
-2. Fix any syntax, rendering, layout, or cross-browser issue.
-3. Inspect the generated screenshots for desktop Chromium, mobile Chromium, Firefox, and WebKit.
-4. Merge only after final automated and visual verification passes.
-5. Refresh GitHub Pages and perform owner physical-device acceptance.
+1. Run Verify and Browser Smoke against the final branch head after this status update.
+2. Merge Pull Request #35 only if both checks remain green.
+3. Refresh the deployed Service Worker on GitHub Pages.
+4. Perform owner physical-device acceptance on desktop and mobile landscape.

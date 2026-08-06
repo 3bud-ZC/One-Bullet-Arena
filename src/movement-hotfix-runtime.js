@@ -1,5 +1,6 @@
 import { clamp, normalize } from './arena.js';
 import { OneBulletPolishRuntime } from './polish-runtime.js';
+import { TOUCH_LAYOUT } from './ui-renderer.js';
 
 export const MOVEMENT_HOTFIX_VERSION = '2.5.1-controls';
 
@@ -65,6 +66,22 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
     if (this.bullet.held) this.updateBullet(0);
     this.updateParticles(dt * 0.18);
     this.updateFloatingTexts(dt * 0.18);
+  }
+
+  drawTouchControls() {
+    if (!this.touchMove) {
+      super.drawTouchControls();
+      return;
+    }
+
+    const originalTouchMove = this.touchMove;
+    this.touchMove = {
+      ...originalTouchMove,
+      x: TOUCH_LAYOUT.move.x + (originalTouchMove.x - originalTouchMove.originX),
+      y: TOUCH_LAYOUT.move.y + (originalTouchMove.y - originalTouchMove.originY),
+    };
+    super.drawTouchControls();
+    this.touchMove = originalTouchMove;
   }
 
   getSnapshot() {

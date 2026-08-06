@@ -2,80 +2,51 @@
 
 Last updated: 2026-08-06
 
-## Release status
+## Current hotfix
 
-- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current production code on `main`: **v2.5.0-polish — Combat Feel and UI/UX Polish**
-- Pull Request #33: **squash-merged into `main`**
-- Release merge commit: `398ca2e6ee1bfc43278b1b826a8e9000256b043f`
-- Code implementation: **100% complete**
-- Automated verification: **100% complete**
-- Cross-browser visual review: **100% complete**
-- Overall release acceptance: **97%**
-- Remaining: **deployed GitHub Pages confirmation and owner physical-device playtest**
+- Hotfix: **v2.5.1 — Movement and Controls**
+- Working branch: `hotfix/v2.5.1-movement-controls`
+- Production on `main`: **v2.5.0-polish**
+- Current hotfix completion: **78%**
+- State: **implementation complete; automated movement verification and merge remain**
 
-## Product definition retained
+## Reported regression
 
-The active game still has one path only:
+The released v2.5 movement felt broken in real play even though the previous browser suite passed. The old coverage only proved that a movement key changed the player's position. It did not validate touch neutrality, analog speed, or movement response during combat hit-stop.
 
-1. Start a run.
-2. Defeat every enemy in the wave.
-3. Recover the single bullet automatically after the final kill.
-4. Choose one in-run upgrade.
-5. Enter the next harder wave in the same expanding arena.
-6. Continue until defeat, then retry or return to the menu.
+## Root causes confirmed
 
-No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
+1. The touch joystick used a fixed visual center as its movement origin. Touching away from the exact center could start movement immediately before the player intentionally dragged.
+2. Touch movement was normalized after the dead zone, converting every accepted drag into full player speed instead of preserving analog magnitude.
+3. The v2.5 hit-stop implementation returned before player movement update, freezing the player's controls during every bullet impact.
+4. Pointer-capture loss was not explicitly releasing the movement pointer, which could leave touch movement active after an interrupted gesture.
 
-## Released in v2.5
+## Implemented fix
 
-- Added `src/polish-runtime.js` as a presentation and combat-feedback layer above the stable modular runtime.
-- Activated `OneBulletPolishRuntime` as the application runtime.
-- Rebuilt the HUD into three compact protected panels.
-- Added explicit bullet states: `READY`, `FIRED`, and `RETURNING`.
-- Added readable health, dash, recall, enemy-count, score, combo, upgrade-count, and arena-stage information.
-- Rebuilt the first-wave tutorial into compact keyboard and touch instruction steps.
-- Rebuilt upgrade cards with category icons, current-to-next values, level indicators, and stronger hover hierarchy.
-- Added stronger bullet trails, recall tether feedback, muzzle flash, ricochet feedback, and catch feedback.
-- Added light hit-stop, impact flash, and controlled screen shake, disabled or reduced under reduced-motion preferences.
-- Added distinct death feedback profiles for scout, brute, sniper, charger, and splitter enemies.
-- Added `WAVE`, `WAVE CLEARED`, and arena-expansion presentation.
-- Refined touch controls with cooldown progress rings and lower visual obstruction.
-- Updated release metadata and the Service Worker cache to `one-bullet-arena-v2.5.0-polish`.
-- Added permanent visual-review captures to the browser test suite.
+- Added `src/movement-hotfix-runtime.js` above the existing polish runtime.
+- Preserved normalized full-speed keyboard movement and diagonal consistency.
+- Added a real analog touch curve with a 10-unit dead zone and progressive speed up to the 72-unit maximum radius.
+- Made the actual touch-down point neutral, preventing movement before intentional drag.
+- Realigned the joystick knob to the touch-down origin while keeping the fixed control area visible.
+- Kept enemies, bullets, and the combat world frozen during hit-stop while allowing player movement and dash input to continue.
+- Added `lostpointercapture` cleanup for interrupted touch gestures.
+- Updated the offline cache to `one-bullet-arena-v2.5.1-controls`.
 
-## Verification results
+## Verification added
 
-- Final Verify workflow run **644**: **passed**.
-- Final Browser Smoke workflow run **127**: **passed**.
-- Playwright: **48/48 passed**.
-- Unexpected failures: **0**.
-- Flaky tests: **0**.
-- Skipped tests: **0**.
-- Browser projects:
-  - Desktop Chromium.
-  - Mobile Landscape Chromium.
-  - Desktop Firefox.
-  - Desktop WebKit.
-- Permanent review captures generated and inspected: **12**.
-  - Main menu.
-  - Combat HUD and first-wave tutorial.
-  - Upgrade-selection cards.
-  - All three states captured on every browser project.
+- Unit tests for keyboard normalization, opposite-key cancellation, touch dead zone, partial analog speed, full speed, and combined input limits.
+- Cross-browser tests that verify:
+  - the hotfix runtime is active;
+  - player movement continues during hit-stop while enemies remain frozen;
+  - touch-down starts neutral;
+  - a partial drag produces partial speed;
+  - a full drag produces full speed;
+  - pointer release clears movement state.
 
-## Visual review findings
+## Remaining work
 
-- HUD panels remain inside the canvas and do not overlap one another.
-- The combat arena remains visible below the protected HUD and tutorial areas.
-- Mobile joystick and action controls remain outside the main combat focus area.
-- Upgrade cards remain readable and fully contained at desktop and mobile-landscape sizes.
-- Arabic text, icons, card borders, and status bars render consistently on Chromium, Firefox, and WebKit.
-- No blocking visual regression was found.
-
-## Remaining owner acceptance
-
-1. Open the GitHub Pages game and confirm the footer displays `v2.5.0-polish`.
-2. Hard-refresh or clear site data if the old Service Worker remains active.
-3. Test desktop controls and combat feedback through Wave 15.
-4. Test mobile landscape controls, card readability, and combat-space visibility on a physical device.
-5. Report any balance, readability, animation, or input issue with the wave number and device/browser.
+1. Run Verify and Browser Smoke on the hotfix Pull Request.
+2. Correct any desktop, mobile, Firefox, or WebKit regression.
+3. Merge only after every new movement test passes.
+4. Confirm the refreshed Service Worker on GitHub Pages.
+5. Owner physical-device confirmation on keyboard and mobile landscape controls.

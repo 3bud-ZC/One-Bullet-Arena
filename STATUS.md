@@ -2,80 +2,58 @@
 
 Last updated: 2026-08-06
 
-## Release status
+## Current milestone
 
-- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current production release: **v2.4.1-controls — Physical WASD Controls Fix**
-- Pull Request #32: **squash-merged into `main`**
-- v2.4.1 merge commit: `6d652c59f5e5aa5e180557bee0ecfbc71fec3ae9`
-- Current state: **implementation, automated verification, cross-browser WASD verification, offline-cache revision, and merge complete; final deployed-build and owner device acceptance remain**
+- Milestone: **v2.5 — Combat Feel and UI/UX Polish**
+- Working branch: `feature/v2.5-combat-ui-polish`
+- Current completion: **72%**
+- State: **implementation complete for the first integrated pass; automated verification and visual review pending**
+- Production on `main`: **v2.4.1-controls**
+- Candidate release: **v2.5.0-polish**
 
-## Product definition
+## Product definition retained
 
-The active game keeps one explicit path only:
+The active game still has one path only:
 
-1. Start one run.
+1. Start a run.
 2. Defeat every enemy in the wave.
 3. Recover the single bullet automatically after the final kill.
-4. Choose one of three in-run upgrades.
-5. Enter the next, harder wave in the same expanding arena.
+4. Choose one in-run upgrade.
+5. Enter the next harder wave in the same expanding arena.
 6. Continue until defeat, then retry or return to the menu.
 
-There are no alternate modes, hubs, puzzles, objectives, currencies, inventories, bosses, or meta-progression systems in the active runtime.
+No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
 
-## v2.4.1-controls fix
+## Implemented in v2.5 candidate
 
-### Reported issue
+- Added `src/polish-runtime.js` as a presentation and feedback layer above the stable modular runtime.
+- Activated `OneBulletPolishRuntime` as the application runtime.
+- Rebuilt the HUD into three compact protected panels.
+- Added explicit bullet states: `READY`, `FIRED`, and `RETURNING`.
+- Added readable health, dash, recall, enemy-count, score, combo, upgrade-count, and arena-stage information.
+- Rebuilt the first-wave tutorial into compact keyboard/touch instruction steps.
+- Rebuilt upgrade cards with category icons, current-to-next values, level indicators, and stronger hover hierarchy.
+- Added stronger bullet trails, recall tether feedback, muzzle flash, ricochet feedback, and catch feedback.
+- Added light hit-stop, impact flash, and controlled screen shake, disabled or reduced under reduced-motion preferences.
+- Added distinct death feedback profiles for scout, brute, sniper, charger, and splitter enemies.
+- Added `WAVE`, `WAVE CLEARED`, and arena-expansion presentation.
+- Refined touch controls with cooldown progress rings and lower visual obstruction.
+- Updated release metadata, offline cache, deterministic tests, and browser tests for v2.5.
 
-On an Arabic keyboard layout, the physical W/A/S/D keys generated Arabic `KeyboardEvent.key` values. The runtime previously stored those character values, so the movement engine did not see `w`, `a`, `s`, or `d`; arrow keys still worked.
+## Verification added
 
-### Implemented
+- Unit coverage for release consistency.
+- Unit coverage for bullet HUD states.
+- Unit coverage for upgrade visual categories.
+- Browser assertions for the polished runtime, compact HUD, and icon/value upgrade cards.
+- Browser assertions for hit feedback and the final-enemy wave-clear state.
+- Existing combat, progression, WASD, mobile-safe-zone, PWA, cross-browser, and security tests remain required.
 
-- Keyboard controls now normalize from `KeyboardEvent.code`, representing the physical key position instead of the typed character.
-- Physical W/A/S/D work whether the active keyboard language is Arabic or English.
-- Q, P, M, R, Space, Shift, Enter, Escape, and upgrade-number keys also use layout-independent physical mappings.
-- Arrow-key movement remains available as a secondary control method.
-- Repeated keydown events no longer retrigger one-shot actions such as Dash, Recall, Pause, Mute, Restart, or upgrade selection.
-- The visible release is `v2.4.1-controls`.
-- The Service Worker cache is `one-bullet-arena-v2.4.1-controls`, ensuring installed and offline builds receive the corrected controller.
+## Remaining work
 
-## Automated verification
-
-- Arabic-layout normalization tests: **passed**.
-- Real four-direction W/A/S/D movement test: **passed**.
-- Verify workflow run **628**: **passed**.
-- Browser Smoke workflow run **122**: **passed**.
-- Playwright tests: **40/40 passed**.
-- Projects:
-  - Desktop Chromium.
-  - Mobile Landscape Chromium.
-  - Desktop Firefox.
-  - Desktop WebKit.
-- Failures, flaky tests, skipped tests, and cancelled tests: **0**.
-
-Coverage verifies:
-
-- Arabic characters from the physical W/A/S/D positions normalize to `w`, `a`, `s`, and `d`;
-- the input controller receives and releases each WASD key;
-- each key moves the player in the correct direction;
-- existing wave progression, combat, touch-safe zones, PWA, layout, and production-security checks remain passing.
-
-## Active architecture
-
-- `src/main.js` — application entry and PWA registration.
-- `src/game-runtime.js` — active orchestration layer.
-- `src/game.js` — reusable combat engine.
-- `src/input-controller.js` — layout-independent keyboard, pointer, multi-touch, and lifecycle input.
-- `src/spawn-system.js` — scored spawn selection.
-- `src/ui-renderer.js` — Canvas UI and touch layout.
-- `src/game-data.js` — game data and release version.
-- `src/arena.js` — arena geometry and collision safety.
-- `src/audio.js` — generated audio and persistence.
-
-## Remaining acceptance checks
-
-1. Hard-refresh the GitHub Pages game or clear its stored site data if the old Service Worker remains active.
-2. Test W/A/S/D while the Windows keyboard language is Arabic.
-3. Test W/A/S/D while the Windows keyboard language is English.
-4. Confirm Q Recall, Space/Shift Dash, P Pause, M Mute, and 1/2/3 upgrade selection.
-5. Continue the existing physical-device, PWA offline, and Wave 8–15 balance checks.
+1. Run Verify and Browser Smoke on the Pull Request.
+2. Fix any deterministic or cross-browser regression.
+3. Review uploaded screenshots at desktop and mobile landscape sizes.
+4. Adjust layout if cards, HUD, tutorial, or touch controls overlap.
+5. Merge only after all automated checks pass.
+6. Perform owner acceptance for feel, readability, and Wave 1–15 balance.

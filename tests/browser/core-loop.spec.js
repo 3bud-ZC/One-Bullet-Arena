@@ -9,7 +9,7 @@ async function loadGame(page) {
 test('boots only the modular stable single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.4.0-stable');
+  expect(snapshot.version).toBe('2.4.1-controls');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
   expect(snapshot.runtimeArchitecture).toBe('modular-runtime');

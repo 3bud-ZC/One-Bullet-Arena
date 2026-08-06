@@ -10,7 +10,7 @@ export function compactHudLayout(width = WIDTH) {
   const margin = 16;
   const gap = 14;
   const centerWidth = Math.min(420, Math.max(340, width * 0.328));
-  const sideWidth = Math.max(300, (width - margin * 2 - gap * 2 - centerWidth) / 2);
+  const sideWidth = Math.max(1, (width - margin * 2 - gap * 2 - centerWidth) / 2);
   const y = 10;
   const height = 62;
 
@@ -33,7 +33,6 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   }
 
   drawHud() {
-    const ctx = this.ctx;
     const layout = compactHudLayout(WIDTH);
     const bulletState = bulletPresentationState(this.bullet);
     const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);

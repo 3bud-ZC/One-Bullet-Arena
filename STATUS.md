@@ -9,8 +9,10 @@ Last updated: 2026-08-06
 - Pull Request #37: **squash-merged into `main`**
 - Release merge commit: `ce87ef95a76a5fa2d82609594ce61e3282176f25`
 - UI implementation: **100% complete**
+- Desktop deployment and owner visual acceptance: **confirmed**
 - Automated verification state: **pending; GitHub Actions did not launch for the app-authored PR/merge events**
-- Owner visual acceptance: **pending**
+- Mobile physical-device acceptance: **pending**
+- Overall release acceptance: **98%**
 
 ## User-reported problem resolved
 
@@ -46,6 +48,13 @@ The combat HUD occupied too much vertical space and visually covered the upper a
 - Reduced feedback-callout dimensions and prevented tutorial/callout overlap.
 - Preserved desktop and mobile-landscape controls.
 
+## Owner acceptance evidence
+
+- The owner opened and played the deployed game after refreshing the release.
+- Desktop screenshots confirmed the updated main menu and the compact combat HUD during Wave 3.
+- The arena remained visible below the HUD without the previous large upper obstruction.
+- The owner explicitly approved the changes and reported that the game and visual changes were enjoyable.
+
 ## Verification coverage included
 
 - Added `tests/ui-layout.test.js` for:
@@ -64,8 +73,5 @@ The combat HUD occupied too much vertical space and visually covered the upper a
 
 ## Remaining acceptance
 
-1. Open the GitHub Pages game and perform a hard refresh.
-2. Clear site data or unregister the previous Service Worker if the old 88 px HUD remains.
-3. Capture the combat screen after the new HUD appears.
-4. Confirm desktop and mobile-landscape readability and that no important combat element is hidden.
-5. Run GitHub Actions manually if automated CI confirmation is required before declaring full release acceptance.
+1. Run GitHub Actions manually if automated CI confirmation is required.
+2. Perform one physical mobile-landscape playtest and confirm the HUD and touch controls remain readable.

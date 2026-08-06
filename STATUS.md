@@ -2,13 +2,17 @@
 
 Last updated: 2026-08-06
 
-## Current milestone
+## Release status
 
-- Milestone: **v2.7 — Combat Feel & Feedback**
-- Working branch: `feature/v2.7-combat-feel-feedback`
-- Production on `main`: **v2.6.0-visual**
-- Current milestone completion: **96%**
-- State: **implementation, automated verification, and cross-browser visual review complete; final-head verification and merge remain**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v2.7.0-feedback — Combat Feel & Feedback**
+- Pull Request #36: **squash-merged into `main`**
+- Release merge commit: `35174665184c6bdf97ec4115e8aef9c3f49b0a8b`
+- Combat-feedback implementation: **100% complete**
+- Automated verification: **100% complete**
+- Cross-browser visual review: **100% complete**
+- Overall release acceptance: **97%**
+- Remaining: **deployed Service Worker refresh and owner physical-device playtest**
 
 ## Product definition retained
 
@@ -23,7 +27,7 @@ The active game still has one path only:
 
 No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, story regions, or meta-progression were added.
 
-## Implemented combat-feedback architecture
+## Released combat-feedback architecture
 
 - Added `src/combat-feedback-runtime.js` above the stable visual, movement-hotfix, polish, and modular game runtimes.
 - Activated `OneBulletCombatFeedbackRuntime` from `src/main.js`.
@@ -61,10 +65,10 @@ No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, st
 - Added damage-edge vignette and a restrained low-health border pulse.
 - Added a wave-entry radial sweep.
 
-## Verification results
+## Final verification results
 
-- Verify workflow run `31081640146`: **passed**.
-- Browser Smoke workflow run `31081639999`: **passed**.
+- Final Verify workflow run `31082220753`: **passed**.
+- Final Browser Smoke workflow run `31082220713`: **passed**.
 - Playwright tests: **64/64 passed**.
 - Unexpected failures: **0**.
 - Flaky tests: **0**.
@@ -88,9 +92,11 @@ No alternate modes, hubs, currencies, equipment, objectives, puzzles, bosses, st
 - Mobile-landscape controls remained outside the primary combat space.
 - No blocking overlap, clipping, missing text, or cross-browser rendering regression was found.
 
-## Remaining work
+## Remaining owner acceptance
 
-1. Run Verify and Browser Smoke against the final branch head after this status update.
-2. Merge Pull Request #36 only if both checks remain green.
-3. Refresh the deployed Service Worker on GitHub Pages.
-4. Perform owner physical-device acceptance on desktop and mobile landscape.
+1. Open the GitHub Pages game and perform a hard refresh.
+2. Confirm the footer displays `v2.7.0-feedback`.
+3. Clear site data and unregister the previous Service Worker if an older version remains active.
+4. Test firing, lethal hits, ricochets, bullet recall, bullet catch, dash afterimages, combo ranks, shield hits, and low-health feedback.
+5. Test desktop controls and mobile-landscape controls to confirm the feedback layer did not affect movement feel.
+6. Report any remaining issue with a screenshot, device, browser, and game state.

@@ -6,13 +6,17 @@ async function loadGame(page) {
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
 }
 
-test('boots only the modular stable single-path runtime', async ({ page }) => {
+test('boots only the polished modular single-path runtime', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.version).toBe('2.4.1-controls');
+  expect(snapshot.version).toBe('2.5.0-polish');
   expect(snapshot.state).toBe('menu');
   expect(snapshot.allowedStates).toEqual(['menu', 'playing', 'upgrade', 'paused', 'gameover']);
   expect(snapshot.runtimeArchitecture).toBe('modular-runtime');
+  expect(snapshot.combatPolish).toBe(true);
+  expect(snapshot.hudRevision).toBe('compact-status-hud');
+  expect(snapshot.upgradeCardRevision).toBe('icon-value-cards');
+  expect(snapshot.bulletStatus).toBe('READY');
   expect(snapshot.autoRecallAfterWave).toBe(true);
   expect(snapshot.telegraphsLockDirection).toBe(true);
   expect(snapshot.removedSystemsPresent).toBe(false);
@@ -68,6 +72,27 @@ test('the bullet recalls automatically after the final enemy dies', async ({ pag
   });
   expect(snapshot.bulletHeld).toBe(false);
   expect(snapshot.bulletRecalling).toBe(true);
+  expect(snapshot.bulletStatus).toBe('RETURNING');
+});
+
+test('bullet hits activate impact feedback and final kills show wave clear', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    const enemy = game.spawnEnemy('brute', 0, { point: { x: 760, y: 360 } });
+    enemy.spawnTime = 0;
+    game.damageEnemy(enemy, 1, true);
+    const afterHit = game.getSnapshot();
+    game.damageEnemy(enemy, 99, true);
+    const afterKill = game.getSnapshot();
+    return { afterHit, afterKill };
+  });
+
+  expect(result.afterHit.impactFeedbackActive).toBe(true);
+  expect(result.afterKill.clearBannerActive).toBe(true);
+  expect(result.afterKill.enemies).toBe(0);
 });
 
 test('sniper and charger telegraphs lock their direction before execution', async ({ page }) => {

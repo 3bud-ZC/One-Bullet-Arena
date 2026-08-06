@@ -11,8 +11,25 @@ import {
 } from '../src/arena.js';
 import { selectSpawnPoint } from '../src/spawn-system.js';
 import { upgradeEffectText } from '../src/ui-renderer.js';
+import { POLISH_VERSION, bulletPresentationState, upgradeVisualKind } from '../src/polish-runtime.js';
 
-test('release exposes the controls-fix version', () => assert.equal(GAME_VERSION, '2.4.1-controls'));
+test('release exposes the v2.5 polish version', () => {
+  assert.equal(GAME_VERSION, '2.5.0-polish');
+  assert.equal(POLISH_VERSION, GAME_VERSION);
+});
+
+test('bullet HUD states remain explicit', () => {
+  assert.equal(bulletPresentationState({ held: true }).code, 'READY');
+  assert.equal(bulletPresentationState({ held: false, recalling: false }).code, 'FIRED');
+  assert.equal(bulletPresentationState({ held: false, recalling: true }).code, 'RETURNING');
+});
+
+test('upgrade icons cover every gameplay category', () => {
+  const kinds = new Set(UPGRADES.map((upgrade) => upgradeVisualKind(upgrade)));
+  for (const expected of ['bullet', 'movement', 'recall', 'defense', 'health', 'ricochet', 'shock']) {
+    assert.ok(kinds.has(expected));
+  }
+});
 
 test('the product has one gradual enemy progression', () => {
   assert.deepEqual(buildWaveComposition(1), ['scout', 'scout', 'scout']);

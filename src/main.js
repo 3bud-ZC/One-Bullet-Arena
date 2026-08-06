@@ -1,4 +1,5 @@
 import { OneBulletUiLayoutRuntime } from './ui-layout-runtime.js';
+import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
 
@@ -11,7 +12,10 @@ canvas.addEventListener('pointerdown', () => canvas.focus());
 
 const game = new OneBulletUiLayoutRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
-if (qaMode) window.__ONE_BULLET_ARENA__ = game;
+if (qaMode) {
+  window.__ONE_BULLET_ARENA__ = game;
+  window.__ONE_BULLET_RELEASE__ = RELEASE_INFO;
+}
 
 document.addEventListener('keydown', async (event) => {
   if (event.key.toLowerCase() !== 'f') return;
@@ -24,7 +28,35 @@ document.addEventListener('keydown', async (event) => {
 });
 
 if ('serviceWorker' in navigator && !qaMode) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  registerServiceWorker().catch(() => {
+    // Offline support must never block the game from starting.
+  });
+}
+
+async function registerServiceWorker() {
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloadHandled = false;
+
+  if (hadController) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloadHandled) return;
+      const reloadKey = `one-bullet-release-reloaded:${RELEASE_INFO.version}`;
+      try {
+        if (sessionStorage.getItem(reloadKey) === '1') return;
+        sessionStorage.setItem(reloadKey, '1');
+      } catch {
+        // Restricted session storage should not prevent a safe reload.
+      }
+      reloadHandled = true;
+      location.reload();
+    });
+  }
+
+  const registration = await navigator.serviceWorker.register('./sw.js', {
+    updateViaCache: 'none',
+  });
+
+  await registration.update();
 }
 
 function migrateLegacyStorage() {

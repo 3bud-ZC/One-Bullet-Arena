@@ -14,13 +14,17 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.7.2 finished UI, combat, impact feedback, upgrades, and game over', async ({ page }, testInfo) => {
+test('captures the v2.8.0-a release foundation, combat, upgrades, and game over', async ({ page }, testInfo) => {
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menuSnapshot.version).toBe('2.7.0-feedback');
+  expect(menuSnapshot.version).toBe('2.8.0-a');
+  expect(menuSnapshot.releaseVersion).toBe('2.8.0-a');
+  expect(menuSnapshot.releaseChannel).toBe('release-stability-foundation');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.8.0-a');
+  expect(menuSnapshot.releaseSchemaVersion).toBe(1);
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('2.7.2-ui');
+  expect(menuSnapshot.uiLayoutVersion).toBe('2.8.0-a');
   expect(menuSnapshot.hudLayoutRevision).toBe('compact-safe-zone-hud');
   expect(menuSnapshot.hudPanelHeight).toBe(62);
   expect(menuSnapshot.hudSafeBottom).toBe(80);
@@ -30,7 +34,7 @@ test('captures the v2.7.2 finished UI, combat, impact feedback, upgrades, and ga
   expect(menuSnapshot.interfaceLanguageMode).toBe('arabic-menu-english-technical-hud');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'finished-menu');
+  await attachCanvas(page, testInfo, 'release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -47,7 +51,7 @@ test('captures the v2.7.2 finished UI, combat, impact feedback, upgrades, and ga
   expect(combatSnapshot.visualEnemyReadability).toBe(true);
   expect(combatSnapshot.comboMomentumHud).toBe(true);
   expect(combatSnapshot.tutorialLayoutRevision).toBe('single-step-context-strip');
-  await attachCanvas(page, testInfo, 'finished-combat-hud');
+  await attachCanvas(page, testInfo, 'release-combat-hud');
 
   const feedbackSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

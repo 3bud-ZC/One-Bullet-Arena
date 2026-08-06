@@ -1,6 +1,39 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
 import { TOUCH_LAYOUT, pointInsideCircle } from './ui-renderer.js';
 
+const PHYSICAL_KEY_MAP = Object.freeze({
+  KeyW: 'w',
+  KeyA: 'a',
+  KeyS: 's',
+  KeyD: 'd',
+  KeyQ: 'q',
+  KeyM: 'm',
+  KeyP: 'p',
+  KeyR: 'r',
+  Digit1: '1',
+  Digit2: '2',
+  Digit3: '3',
+  Numpad1: '1',
+  Numpad2: '2',
+  Numpad3: '3',
+  Space: ' ',
+  ShiftLeft: 'shift',
+  ShiftRight: 'shift',
+  Enter: 'enter',
+  NumpadEnter: 'enter',
+  Escape: 'escape',
+  ArrowUp: 'arrowup',
+  ArrowDown: 'arrowdown',
+  ArrowLeft: 'arrowleft',
+  ArrowRight: 'arrowright',
+});
+
+export function normalizeKeyboardInput(event = {}) {
+  const code = typeof event.code === 'string' ? event.code : '';
+  if (Object.hasOwn(PHYSICAL_KEY_MAP, code)) return PHYSICAL_KEY_MAP[code];
+  return typeof event.key === 'string' ? event.key.toLowerCase() : '';
+}
+
 export class InputController {
   constructor(game) {
     this.game = game;
@@ -13,29 +46,34 @@ export class InputController {
     const game = this.game;
 
     window.addEventListener('keydown', (event) => {
-      const key = event.key.toLowerCase();
+      const key = normalizeKeyboardInput(event);
+      if (!key) return;
       game.keys.add(key);
       game.audio.ensure();
       if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) event.preventDefault();
 
-      if (key === 'escape' || key === 'p') {
+      const firstPress = !event.repeat;
+      if (firstPress && (key === 'escape' || key === 'p')) {
         if (game.state === 'playing') game.pause();
         else if (game.state === 'paused') game.resume();
         else if (game.state === 'gameover') game.goToMenu();
         return;
       }
-      if ((key === ' ' || key === 'shift') && game.state === 'playing') game.dashRequested = true;
-      if (key === 'q' && game.state === 'playing') game.recallBullet();
-      if (key === 'm') {
+      if (firstPress && (key === ' ' || key === 'shift') && game.state === 'playing') game.dashRequested = true;
+      if (firstPress && key === 'q' && game.state === 'playing') game.recallBullet();
+      if (firstPress && key === 'm') {
         const muted = game.audio.toggleMute();
         game.announce(muted ? 'تم كتم الصوت' : 'تم تشغيل الصوت');
       }
-      if (game.state === 'upgrade' && ['1', '2', '3'].includes(key)) game.chooseUpgrade(Number(key) - 1);
-      if ((key === 'enter' || key === ' ') && game.state === 'menu') game.startRun();
-      if ((key === 'enter' || key === 'r') && game.state === 'gameover') game.startRun();
+      if (firstPress && game.state === 'upgrade' && ['1', '2', '3'].includes(key)) game.chooseUpgrade(Number(key) - 1);
+      if (firstPress && (key === 'enter' || key === ' ') && game.state === 'menu') game.startRun();
+      if (firstPress && (key === 'enter' || key === 'r') && game.state === 'gameover') game.startRun();
     });
 
-    window.addEventListener('keyup', (event) => game.keys.delete(event.key.toLowerCase()));
+    window.addEventListener('keyup', (event) => {
+      const key = normalizeKeyboardInput(event);
+      if (key) game.keys.delete(key);
+    });
 
     const coordinates = (event) => {
       const rect = game.canvas.getBoundingClientRect();

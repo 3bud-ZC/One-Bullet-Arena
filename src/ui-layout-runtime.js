@@ -2,9 +2,10 @@ import { clamp } from './arena.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
 import { OneBulletCombatFeedbackRuntime, comboFeedbackRank } from './combat-feedback-runtime.js';
 import { bulletPresentationState } from './polish-runtime.js';
+import { RELEASE_INFO, RELEASE_LABEL, RELEASE_VERSION } from './release.js';
 import { UI_COLORS, label, panel, progressBar, roundedRect } from './ui-renderer.js';
 
-export const UI_LAYOUT_VERSION = '2.7.2-ui';
+export const UI_LAYOUT_VERSION = RELEASE_VERSION;
 
 export function compactHudLayout(width = WIDTH) {
   const margin = 16;
@@ -38,8 +39,8 @@ export function bulletHudCopy(code = 'READY') {
 export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   constructor(canvas, liveRegion = null) {
     super(canvas, liveRegion);
-    this.version = UI_LAYOUT_VERSION;
-    this.uiLayoutVersion = UI_LAYOUT_VERSION;
+    this.uiLayoutVersion = RELEASE_VERSION;
+    this.releaseInfo = RELEASE_INFO;
   }
 
   drawHud() {
@@ -196,14 +197,18 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     this.drawStatChip(658, 596, 250, 'HIGH SCORE', this.highScore.toLocaleString('en-US'));
     const controls = this.touchMode ? 'LEFT STICK MOVE  ·  TAP FIRE  ·  RIGHT BUTTONS RECALL / DASH' : 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH  ·  P PAUSE';
     label(this.ctx, controls, WIDTH / 2, 677, 10, UI_COLORS.muted, 800);
-    label(this.ctx, `v${UI_LAYOUT_VERSION}`, WIDTH - 24, 696, 10, '#7182a8', 800, 'right');
+    label(this.ctx, RELEASE_LABEL, WIDTH - 24, 696, 10, '#7182a8', 800, 'right');
   }
 
   getSnapshot() {
     const layout = compactHudLayout(WIDTH);
     return {
       ...super.getSnapshot(),
-      uiLayoutVersion: UI_LAYOUT_VERSION,
+      releaseVersion: RELEASE_VERSION,
+      releaseChannel: RELEASE_INFO.channel,
+      releaseCacheName: RELEASE_INFO.cacheName,
+      releaseSchemaVersion: RELEASE_INFO.schemaVersion,
+      uiLayoutVersion: RELEASE_VERSION,
       hudLayoutRevision: 'compact-safe-zone-hud',
       hudPanelHeight: layout.height,
       hudSafeBottom: layout.safeBottom,

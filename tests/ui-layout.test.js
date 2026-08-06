@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { UI_LAYOUT_VERSION, bulletHudCopy, compactHudLayout } from '../src/ui-layout-runtime.js';
 
-test('UI finishing pass exposes its release identifier', () => {
-  assert.equal(UI_LAYOUT_VERSION, '2.7.2-ui');
+test('UI release identity follows the canonical release source', () => {
+  assert.equal(UI_LAYOUT_VERSION, '2.8.0-a');
 });
 
 test('bullet HUD copy is technical, compact, and deterministic', () => {

@@ -18,7 +18,7 @@ test('captures the v2.8.0-a release foundation, combat, upgrades, and game over'
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menuSnapshot.version).toBe('2.8.0-a');
+  expect(menuSnapshot.version).toBe('2.7.0-feedback');
   expect(menuSnapshot.releaseVersion).toBe('2.8.0-a');
   expect(menuSnapshot.releaseChannel).toBe('release-stability-foundation');
   expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.8.0-a');

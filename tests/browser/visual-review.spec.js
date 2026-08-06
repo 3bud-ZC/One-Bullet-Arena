@@ -14,12 +14,17 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.7 menu, combat, impact feedback, upgrades, and game over', async ({ page }, testInfo) => {
+test('captures the v2.7.1 compact UI, combat, impact feedback, upgrades, and game over', async ({ page }, testInfo) => {
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
+  expect(menuSnapshot.uiLayoutVersion).toBe('2.7.1-ui');
+  expect(menuSnapshot.hudLayoutRevision).toBe('compact-safe-zone-hud');
+  expect(menuSnapshot.hudPanelHeight).toBe(62);
+  expect(menuSnapshot.hudSafeBottom).toBe(80);
+  expect(menuSnapshot.reducedHudGlow).toBe(true);
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
   await attachCanvas(page, testInfo, 'menu');
@@ -38,7 +43,8 @@ test('captures the v2.7 menu, combat, impact feedback, upgrades, and game over',
   expect(combatSnapshot.redesignedHud).toBe(true);
   expect(combatSnapshot.visualEnemyReadability).toBe(true);
   expect(combatSnapshot.comboMomentumHud).toBe(true);
-  await attachCanvas(page, testInfo, 'combat-hud');
+  expect(combatSnapshot.tutorialLayoutRevision).toBe('single-step-context-strip');
+  await attachCanvas(page, testInfo, 'compact-combat-hud');
 
   const feedbackSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

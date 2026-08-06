@@ -39,7 +39,6 @@ export function bulletHudCopy(code = 'READY') {
 export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   constructor(canvas, liveRegion = null) {
     super(canvas, liveRegion);
-    this.version = RELEASE_VERSION;
     this.uiLayoutVersion = RELEASE_VERSION;
     this.releaseInfo = RELEASE_INFO;
   }
@@ -205,7 +204,6 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
     const layout = compactHudLayout(WIDTH);
     return {
       ...super.getSnapshot(),
-      version: RELEASE_VERSION,
       releaseVersion: RELEASE_VERSION,
       releaseChannel: RELEASE_INFO.channel,
       releaseCacheName: RELEASE_INFO.cacheName,

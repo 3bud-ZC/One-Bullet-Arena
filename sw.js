@@ -14,6 +14,7 @@ const APP_SHELL = [
   './src/core/event-runtime.js', './src/core/combat-depth-runtime.js',
   './src/core/checkpoint-store.js', './src/core/checkpoint-runtime.js', './src/core/warden-runtime.js',
   './src/core/world-2d-runtime.js', './src/core/visual-overhaul-runtime.js', './src/core/art-direction-runtime.js',
+  './src/core/interface-redesign-runtime.js',
   './src/game-data.js', './src/arena.js', './src/audio.js', './src/input-controller.js',
   './src/spawn-system.js', './src/ui-renderer.js',
 ];

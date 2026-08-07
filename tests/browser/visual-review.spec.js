@@ -14,17 +14,17 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v3.2 true 2D release and existing combat states', async ({ page }, testInfo) => {
+test('captures the v3.3 visual overhaul release and existing combat states', async ({ page }, testInfo) => {
   test.setTimeout(60000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('3.2.0-true-2d');
-  expect(menuSnapshot.releaseChannel).toBe('visual-world-2d');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.2.0-true-2d');
+  expect(menuSnapshot.releaseVersion).toBe('3.3.0-visual-overhaul');
+  expect(menuSnapshot.releaseChannel).toBe('cinematic-visual-overhaul');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.3.0-visual-overhaul');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('3.2.0-true-2d');
+  expect(menuSnapshot.eventFoundationVersion).toBe('3.3.0-visual-overhaul');
   expect(menuSnapshot.eventSchemaVersion).toBe(4);
   expect(menuSnapshot.gameEventBusActive).toBe(true);
   expect(menuSnapshot.combatDepthActive).toBe(true);
@@ -36,14 +36,18 @@ test('captures the v3.2 true 2D release and existing combat states', async ({ pa
   expect(menuSnapshot.true2DArenaActive).toBe(true);
   expect(menuSnapshot.world2DRuntimeVersion).toBe('3.2.0-true-2d');
   expect(menuSnapshot.world2DStyle).toBe('layered-top-down-2d');
+  expect(menuSnapshot.visualOverhaulActive).toBe(true);
+  expect(menuSnapshot.visualOverhaulRuntimeVersion).toBe('3.3.0-visual-overhaul');
+  expect(menuSnapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
   expect(menuSnapshot.stableHudDuringShake).toBe(true);
   expect(menuSnapshot.gameplayGeometryChanged).toBe(false);
+  expect(menuSnapshot.collisionGeometryChanged).toBe(false);
   expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('3.2.0-true-2d');
+  expect(menuSnapshot.uiLayoutVersion).toBe('3.3.0-visual-overhaul');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'true-2d-release-menu');
+  await attachCanvas(page, testInfo, 'visual-overhaul-release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -57,7 +61,7 @@ test('captures the v3.2 true 2D release and existing combat states', async ({ pa
     game.comboTimer = 2.4;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'true-2d-combat-hud');
+  await attachCanvas(page, testInfo, 'visual-overhaul-combat-hud');
 
   const catchSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

@@ -2,102 +2,122 @@
 
 Last updated: 2026-08-07
 
-## Release status
+## Current milestone
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Milestone: **v3.2.0 — True 2D Arena and Gameplay Feel**
+- Working branch: `feature/v3.2.0-true-2d-arena`
+- Pull Request: **#44 open**
 - Current production code on `main`: **v3.1.0-A — Warden Enemy**
-- Pull Request #43: **squash-merged into `main`**
-- Release merge commit: `479bbdad25ca3533a25a23a0e01d667577f44773`
-- Final tested feature head: `d4162185a18165baa56ccb8903558bbf5233760a`
-- Implementation: **100% complete**
-- Verify #796: **success**
-- Browser Smoke #161: **success**
-- Playwright: **140/140 passed**
+- Implementation on feature branch: **100% complete**
+- Latest verified feature head before this status update: `0cf1cef430e0b912fbd8cb9a2f9809dd1a61a1ea`
+- Verify #815: **success**
+- Browser Smoke #165: **success**
+- Playwright: **144/144 passed**
 - Unexpected failures: **0**
 - Flaky tests: **0**
 - Skipped tests: **0**
-- Permanent visual captures: **52**
-- Warden-specific captures inspected: **12/12**
-- Owner deployed acceptance: **pending**
+- Permanent visual captures: **64**
+- New True 2D captures inspected: **12/12**
+- Merge: **pending final CI on the status-update head**
+- Owner deployed acceptance: **pending after merge**
 - GitHub Pages public deployment: **not independently confirmed from the assistant environment**
-- Next enemy-expansion part: **blocked until owner accepts the Warden release**
+- Next milestone: **blocked until owner accepts the True 2D release**
 
 ## Release identity
 
-- Public release version: `3.1.0-a-warden`.
-- Public release label: `v3.1.0-a-warden`.
-- Release channel: `enemy-expansion-warden`.
-- Service Worker cache: `one-bullet-arena-v3.1.0-a-warden`.
-- Gameplay event schema: `4`.
+- Public release version: `3.2.0-true-2d`.
+- Public release label: `v3.2.0-true-2d`.
+- Release channel: `visual-world-2d`.
+- Service Worker cache: `one-bullet-arena-v3.2.0-true-2d`.
+- Gameplay event schema remains `4`.
 - Checkpoint schema remains `1`.
-- Combat Depth contract remains `2.9.0-combat`.
+- Warden contract remains `3.1.0-a-warden`.
 - Checkpoint Progression contract remains `3.0.0-checkpoint`.
+- Combat Depth contract remains `2.9.0-combat`.
 
-## Warden enemy delivered
+## True 2D world delivered
 
-- The Warden unlocks at Wave 7.
-- Wave composition introduces one Warden at controlled intervals and never floods the arena with shield units.
-- The Warden has a distinct hexagonal body, cyan core, frontal shield arc, health bar, and two-segment guard bar.
-- Its frontal guard rotates gradually toward the player instead of snapping instantly.
-- Direct frontal bullet impacts are blocked and reflected as real ricochets.
-- A normal frontal impact removes one of two guard points.
-- Precision Shot, Bank level 2 or higher, or active Overdrive removes both guard points in one impact.
-- A broken guard stays disabled for `3.2` seconds before restoring.
-- Side and rear attacks bypass the guard and deal `1.2x` damage.
-- Guard reflections integrate with Bank Shot and Momentum rather than cancelling the existing skill systems.
-- Block, break, restore, and flank interactions have dedicated visual feedback and combat callouts.
+- Replaced the flat abstract arena presentation with a layered top-down industrial combat deck.
+- Added deterministic floor tiles with stage-aware accents and readable panel seams.
+- Added horizontal and vertical combat lanes with animated route markings.
+- Added a central mechanical platform, rotating rings, and stage-dependent floor details.
+- Added corner machinery, embedded perimeter lights, stronger locked-space separation, and an arena drop shadow.
+- Arena borders now read as physical walls with thickness, an inner rim, warning lights, and controlled glow.
+- Obstacles now have top faces, side faces, floor shadows, inset panels, and hazard markings.
+- Enemies, the Warden, hostile projectiles, the player, and the bullet now have grounded shadows.
+- Player and bullet lighting creates local depth without hiding combat-critical information.
+- The active arena, enemies, bullet, hazards, and controls retain their original gameplay geometry.
 
-## Architecture and events
+## Gameplay feel improvements
 
-- Added `src/core/warden-runtime.js` above the accepted Checkpoint Runtime.
-- Activated `OneBulletWardenRuntime` from `src/main.js`.
-- Added pure helpers for guard hit-zone classification and shield reflection mathematics.
-- Added gameplay events:
-  - `warden.guard-blocked`;
-  - `warden.guard-broken`;
-  - `warden.guard-restored`.
-- QA snapshots expose Warden runtime activation, unlock wave, active count, guard strength, break timer, and block count.
-- Service Worker and GitHub Pages validation include the Warden runtime.
-- Existing checkpoint saves remain compatible because enemy entities are not serialized in checkpoints.
+- Replaced random frame jitter with deterministic impact shake.
+- World shake no longer moves the HUD, upgrade cards, pause screen, Game Over screen, or touch controls.
+- Added visual-only motion smoothing that does not alter movement speed or collision behavior.
+- Added controlled player lean, movement echoes, motion trails, and dash readability.
+- Added a projected bullet trail, bullet shadow, and clearer flight direction.
+- Added a compact desktop aiming reticle that reflects whether the bullet is ready or currently in the arena.
+- Reduced-motion mode continues to disable or reduce non-essential movement effects.
+
+## Architecture
+
+- Added `src/core/world-2d-runtime.js` above the accepted Warden Runtime.
+- Activated `OneBulletWorld2DRuntime` from `src/main.js`.
+- Runtime chain is now:
+
+  `World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+
+- Added pure helpers for deterministic tile variation and frame-rate-independent visual smoothing.
+- Service Worker and release validation include the new runtime.
+- Checkpoint saves remain compatible because no persistent schema or gameplay entity data changed.
+- No base collision bounds, obstacle rectangles, movement speeds, enemy speeds, wave composition, damage values, or upgrade values were changed.
 
 ## Verification completed
 
-### Deterministic tests
+### Deterministic coverage
 
-- Warden unlock and deterministic Wave 7 composition.
-- Front, side, and rear hit-zone classification.
-- Shield reflection direction and speed preservation.
-- Guard strength and break-duration bounds.
-- Release, event schema, Service Worker, Pages, checkpoint, UI, and keyboard contracts.
+- True 2D release and runtime contract.
+- Frame-rate-independent smoothing approaches targets without overshoot.
+- Floor tile variants are deterministic and bounded.
+- Runtime remains render-only and does not mutate gameplay geometry.
+- Release, Service Worker, runtime chain, event schema, checkpoint, UI, keyboard, movement, Warden, and wave contracts.
 
-### Browser tests
+### Browser coverage
 
-- Warden runtime activation.
-- Wave 7 integration.
-- Frontal block without health loss.
-- Reflected bullet direction and Bank increment.
-- Precision guard break.
-- Damage during the broken-guard window.
-- Flank bypass with `1.2x` damage.
-- Guard restoration and restore event.
-- Continued compatibility with checkpoint save/reload/continue, Combat Depth, movement, touch controls, upgrades, and the PWA shell.
+- New runtime activation and release diagnostics.
+- Core wave loop, upgrades, defeat, and retry/menu behavior.
+- Movement and physical keyboard controls under Arabic and English layouts.
+- Touch movement and safe combat zones.
+- Checkpoint creation, reload, restoration, clearing, and Game Over continue.
+- Perfect Catch, Precision, Bank Shot, Momentum, and Overdrive.
+- Warden block, guard break, flank damage, and guard restoration.
+- Existing PWA shell and release handshake.
 
-### Visual review
-
-The final visual set was reviewed on:
+The final suite passed on:
 
 - Desktop Chromium;
 - Mobile Landscape Chromium;
 - Desktop Firefox;
 - Desktop WebKit.
 
-Warden-specific captures cover:
+### Visual review
 
-1. active two-point frontal guard;
-2. one-point guard after a normal block;
-3. broken guard with countdown and danger presentation.
+The full permanent visual set contains **64 captures**. The new True 2D review contains **12 captures** covering:
 
-The visual tests freeze simulation updates while capturing states, preventing a block screenshot from advancing into a different guard state. No blocking clipping, overlap, mobile-control obstruction, or cross-browser inconsistency was found.
+1. layered main-menu arena preview;
+2. active combat map with multiple enemy silhouettes and physical obstacles;
+3. Wave 7 Warden combat map with bullet flight and guard readability;
+4. all three states across all four Playwright projects.
+
+Manual inspection confirmed:
+
+- no HUD or overlay movement during world shake;
+- no clipping or overlap in the desktop layouts;
+- touch controls remain outside the primary combat focus on mobile landscape;
+- arena tiles, walls, obstacles, player, bullet, and enemies remain readable;
+- Arabic text remains correctly directed and contained;
+- Chromium, Firefox, and WebKit render the map consistently;
+- no blocking visual regression was found.
 
 ## Scope retained
 
@@ -105,16 +125,16 @@ The product path remains:
 
 `Main Menu → New Run or Continue → Wave Combat → Upgrade → Harder Wave → Defeat → Continue/New Run/Menu`
 
-No new mode, boss, currency, shop, hub, equipment, story, objective, puzzle, account, cloud save, or online leaderboard was added.
+No new enemy, mode, boss, currency, shop, hub, equipment, story, objective, puzzle, account, cloud save, or online leaderboard was added.
 
-## Owner acceptance gate
+## Owner acceptance after merge
 
-1. Confirm the menu footer displays `v3.1.0-a-warden`.
-2. Continue from an existing checkpoint or play normally until Wave 7.
-3. Identify the cyan hexagonal Warden and its two-point guard bar.
-4. Fire directly into the front shield and confirm the bullet reflects without damaging health.
-5. Hit the front twice, or use Precision / Bank 2+ / Overdrive, and confirm the guard breaks.
-6. Damage the Warden during the `3.2`-second broken window.
-7. Attack from the side or rear and confirm the flank feedback appears.
-8. Confirm movement, recall, dash, upgrades, checkpoint saving, death, and Continue still work normally.
-9. Report any balance, readability, collision, or control issue before the Orbiter milestone begins.
+1. Confirm the menu footer displays `v3.2.0-true-2d`.
+2. Start a new run and inspect the floor tiles, lanes, center platform, wall depth, and obstacle faces.
+3. Move continuously in all directions and confirm movement still feels responsive while the visual lean and echoes remain smooth.
+4. Fire, ricochet, recall, and catch the bullet while checking the new trail, shadow, and aiming reticle.
+5. Take damage and land heavy hits to confirm the world shakes while the HUD stays fixed.
+6. Reach or continue to Wave 7 and verify the Warden remains readable against the new map.
+7. Test mobile landscape and confirm the movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
+8. Test checkpoint Continue, upgrades, defeat, and returning to the menu.
+9. Report any performance drop, visual clutter, dark area, unreadable enemy, control regression, or collision mismatch before the next milestone begins.

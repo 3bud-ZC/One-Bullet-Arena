@@ -94,7 +94,11 @@ test('captures the v2.9.0 combat depth states and existing core screens', async 
     game.onRicochet();
     game.enemies = [];
     const enemy = game.spawnEnemy('brute', 0, { point: { x: 790, y: 380 } });
+    const survivor = game.spawnEnemy('scout', 1, { point: { x: 1020, y: 540 } });
     enemy.spawnTime = 0;
+    survivor.spawnTime = 0;
+    survivor.health = 999;
+    survivor.maxHealth = 999;
     game.damageEnemy(enemy, 99, true);
     game.draw();
     return game.getSnapshot();
@@ -103,6 +107,7 @@ test('captures the v2.9.0 combat depth states and existing core screens', async 
   expect(feedbackSnapshot.feedbackCalloutActive).toBe(true);
   expect(feedbackSnapshot.precisionKills).toBe(1);
   expect(feedbackSnapshot.bankKills).toBe(1);
+  expect(feedbackSnapshot.enemies).toBe(1);
   await attachCanvas(page, testInfo, 'precision-bank-impact');
 
   const upgradeSnapshot = await page.evaluate(() => {

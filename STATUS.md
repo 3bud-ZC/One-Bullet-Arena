@@ -2,137 +2,103 @@
 
 Last updated: 2026-08-07
 
-## Release status
+## Current milestone
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Current production code on `main`: **v3.2.0 — True 2D Arena and Gameplay Feel**
-- Pull Request #44: **squash-merged into `main`**
-- Release merge commit: `37cc2334aedcc7167bf75c3670866f21fdf4469d`
-- Final tested feature head: `17a4d8fbe8a3a4a2bde49180aa16d11288260bb7`
+- Milestone: **v3.3.0 — Cinematic Visual Overhaul**
+- Working branch: `feature/v3.3.0-visual-overhaul`
+- Pull Request: **#45 — draft during final verification and owner acceptance**
+- Canonical release version: `3.3.0-visual-overhaul`
+- Canonical release label: `v3.3.0-visual-overhaul`
+- Release channel: `cinematic-visual-overhaul`
+- Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
 - Implementation: **100% complete**
-- Verify #817: **success**
-- Browser Smoke #166: **success**
-- Playwright: **144/144 passed**
-- Unexpected failures: **0**
-- Flaky tests: **0**
-- Skipped tests: **0**
-- Permanent visual captures: **64**
-- New True 2D captures inspected: **12/12**
-- Owner deployed acceptance: **pending**
-- GitHub Pages public deployment: **not independently confirmed from the assistant environment**
-- Next milestone: **blocked until owner accepts the True 2D release**
+- Gameplay geometry changed: **no**
+- Collision geometry changed: **no**
+- Combat balance or progression changed: **no**
+- Owner acceptance: **pending**
 
-## Release identity
+## Visual overhaul delivered
 
-- Public release version: `3.2.0-true-2d`.
-- Public release label: `v3.2.0-true-2d`.
-- Release channel: `visual-world-2d`.
-- Service Worker cache: `one-bullet-arena-v3.2.0-true-2d`.
-- Gameplay event schema remains `4`.
-- Checkpoint schema remains `1`.
-- Warden contract remains `3.1.0-a-warden`.
-- Checkpoint Progression contract remains `3.0.0-checkpoint`.
-- Combat Depth contract remains `2.9.0-combat`.
-
-## True 2D world delivered
-
-- Replaced the flat abstract arena presentation with a layered top-down industrial combat deck.
-- Added deterministic floor tiles with stage-aware accents and readable panel seams.
-- Added horizontal and vertical combat lanes with animated route markings.
-- Added a central mechanical platform, rotating rings, and stage-dependent floor details.
-- Added corner machinery, embedded perimeter lights, stronger locked-space separation, and an arena drop shadow.
-- Arena borders now read as physical walls with thickness, an inner rim, warning lights, and controlled glow.
-- Obstacles now have top faces, side faces, floor shadows, inset panels, and hazard markings.
-- Enemies, the Warden, hostile projectiles, the player, and the bullet now have grounded shadows.
-- Player and bullet lighting creates local depth without hiding combat-critical information.
-- The active arena, enemies, bullet, hazards, and controls retain their original gameplay geometry.
-
-## Gameplay feel improvements
-
-- Replaced random frame jitter with deterministic impact shake.
-- World shake no longer moves the HUD, upgrade cards, pause screen, Game Over screen, or touch controls.
-- Added visual-only motion smoothing that does not alter movement speed or collision behavior.
-- Added controlled player lean, movement echoes, motion trails, and dash readability.
-- Added a projected bullet trail, bullet shadow, and clearer flight direction.
-- Added a compact desktop aiming reticle that reflects whether the bullet is ready or currently in the arena.
-- Reduced-motion mode continues to disable or reduce non-essential movement effects.
+- Added `src/core/visual-overhaul-runtime.js` above the accepted True 2D runtime.
+- Strengthened the industrial arena with ambient deck nodes, stage-aware energy accents, floor scan/detail passes, stronger physical borders, corner framing, and obstacle material detail.
+- Added enemy health/threat arcs and clearer impact readability without changing enemy hitboxes.
+- Added hostile projectile glow without changing projectile collision geometry.
+- Added player dash-ready and shield visual layers without changing movement or defensive values.
+- Added a readable bullet recall tether, additional bullet glow, and a secondary aiming-reticle treatment.
+- Added stronger cinematic framing for the main menu, combat HUD, upgrade selection, pause, Game Over, banners, and touch controls.
+- Strengthened the browser shell with a richer sci-fi frame and background treatment while preserving mobile-landscape behavior.
+- `prefers-reduced-motion` support remains active for non-essential motion and shell effects.
 
 ## Architecture
 
-- Added `src/core/world-2d-runtime.js` above the accepted Warden Runtime.
-- Activated `OneBulletWorld2DRuntime` from `src/main.js`.
-- Runtime chain is now:
+The active runtime chain for this milestone is:
 
-  `World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+`VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
-- Added pure helpers for deterministic tile variation and frame-rate-independent visual smoothing.
-- Service Worker and release validation include the new runtime.
-- Checkpoint saves remain compatible because no persistent schema or gameplay entity data changed.
-- No base collision bounds, obstacle rectangles, movement speeds, enemy speeds, wave composition, damage values, or upgrade values were changed.
+- `VisualOverhaul` is render-only.
+- `World2D` remains the accepted lower visual/world contract at `3.2.0-true-2d`.
+- Warden contract remains `3.1.0-a-warden`.
+- Checkpoint Progression contract remains `3.0.0-checkpoint`.
+- Combat Depth contract remains `2.9.0-combat`.
+- Gameplay event schema remains `4`.
+- Checkpoint schema remains `1`.
+- Existing checkpoint saves remain compatible.
+- Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
 
-## Verification completed
+## Verification completed before final release-identity lock
 
-### Deterministic coverage
+Verified feature head: `d1624894f86164fa7fda88c042ce60a8595cce81`.
 
-- True 2D release and runtime contract.
-- Frame-rate-independent smoothing approaches targets without overshoot.
-- Floor tile variants are deterministic and bounded.
-- Runtime remains render-only and does not mutate gameplay geometry.
-- Release, Service Worker, runtime chain, event schema, checkpoint, UI, keyboard, movement, Warden, and wave contracts.
+- Verify #831: **success**.
+- Browser Smoke #170: **success**.
+- Playwright: **148/148 passed**.
+- Unexpected browser-test failures: **0**.
+- New visual-overhaul coverage captures menu, combat, bullet recall, and upgrade states across the configured browser projects.
+- Existing combat, checkpoint, Warden, input, mobile, PWA, and release-handshake coverage continued to pass.
 
-### Browser coverage
+## Manual visual review
 
-- New runtime activation and release diagnostics.
-- Core wave loop, upgrades, defeat, and retry/menu behavior.
-- Movement and physical keyboard controls under Arabic and English layouts.
-- Touch movement and safe combat zones.
-- Checkpoint creation, reload, restoration, clearing, and Game Over continue.
-- Perfect Catch, Precision, Bank Shot, Momentum, and Overdrive.
-- Warden block, guard break, flank damage, and guard restoration.
-- Existing PWA shell and release handshake.
+The generated Playwright captures were inspected after Browser Smoke #170.
 
-The final suite passed on:
+Reviewed states included:
 
-- Desktop Chromium;
-- Mobile Landscape Chromium;
-- Desktop Firefox;
-- Desktop WebKit.
+1. desktop main menu;
+2. desktop active combat;
+3. desktop bullet recall;
+4. desktop upgrade selection;
+5. mobile-landscape combat;
+6. Firefox combat rendering.
 
-### Visual review
+The review found no blocking visual regression:
 
-The full permanent visual set contains **64 captures**. The new True 2D review contains **12 captures** covering:
+- menu hierarchy and framing remain readable;
+- active combat entities remain distinct from the strengthened map;
+- the recall tether is clearly visible without obscuring combat;
+- upgrade cards remain legible;
+- mobile controls stay outside the primary combat focus;
+- Firefox rendering remains consistent with Chromium;
+- no blocking clipping or overlap was observed in the reviewed captures.
 
-1. layered main-menu arena preview;
-2. active combat map with multiple enemy silhouettes and physical obstacles;
-3. Wave 7 Warden combat map with bullet flight and guard readability;
-4. all three states across all four Playwright projects.
+## Final v3.3 verification gate
 
-Manual inspection confirmed:
+The canonical v3.3 identity and its test expectations are now aligned. The final CI cycle must run on the release-identity head that contains this status update.
 
-- no HUD or overlay movement during world shake;
-- no clipping or overlap in the desktop layouts;
-- touch controls remain outside the primary combat focus on mobile landscape;
-- arena tiles, walls, obstacles, player, bullet, and enemies remain readable;
-- Arabic text remains correctly directed and contained;
-- Chromium, Firefox, and WebKit render the map consistently;
-- no blocking visual regression was found.
+Merge remains blocked unless:
 
-## Scope retained
-
-The product path remains:
-
-`Main Menu → New Run or Continue → Wave Combat → Upgrade → Harder Wave → Defeat → Continue/New Run/Menu`
-
-No new enemy, mode, boss, currency, shop, hub, equipment, story, objective, puzzle, account, cloud save, or online leaderboard was added.
+- Verify succeeds;
+- Browser Smoke succeeds;
+- the final release reports `v3.3.0-visual-overhaul`;
+- no new visual, input, checkpoint, combat, Warden, PWA, or cross-browser regression appears.
 
 ## Owner acceptance gate
 
-1. Confirm the menu footer displays `v3.2.0-true-2d`.
-2. Start a new run and inspect the floor tiles, lanes, center platform, wall depth, and obstacle faces.
-3. Move continuously in all directions and confirm movement still feels responsive while the visual lean and echoes remain smooth.
-4. Fire, ricochet, recall, and catch the bullet while checking the new trail, shadow, and aiming reticle.
-5. Take damage and land heavy hits to confirm the world shakes while the HUD stays fixed.
-6. Reach or continue to Wave 7 and verify the Warden remains readable against the new map.
-7. Test mobile landscape and confirm the movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
-8. Test checkpoint Continue, upgrades, defeat, and returning to the menu.
-9. Report any performance drop, visual clutter, dark area, unreadable enemy, control regression, or collision mismatch before the next milestone begins.
+1. Confirm the menu footer displays `v3.3.0-visual-overhaul`.
+2. Start a new run and inspect arena depth, floor detail, border framing, obstacle material treatment, and combat contrast.
+3. Move and dash continuously and confirm the player remains readable and responsive.
+4. Fire, ricochet, recall, and catch the bullet and verify the trail, recall tether, glow, and reticle remain clear.
+5. Fight mixed enemy groups and confirm threat/health arcs help readability rather than adding clutter.
+6. Reach or continue to Wave 7 and verify the Warden remains readable against the upgraded arena.
+7. Check HUD, upgrades, pause, Game Over, and checkpoint Continue/New Run/Menu behavior.
+8. Test mobile landscape and confirm movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
+9. Report any performance drop, excessive glow, visual clutter, dark area, unreadable entity, control regression, or collision mismatch before PR #45 is merged.

@@ -34,11 +34,12 @@ jobs:
         run: |
           rm -rf _site
           mkdir -p _site
-          cp index.html game.css manifest.webmanifest sw.js _site/
+          cp index.html game.css art-direction.css manifest.webmanifest sw.js _site/
           cp -R src icons _site/
           touch _site/.nojekyll
           test -f _site/index.html
           test -f _site/game.css
+          test -f _site/art-direction.css
           test -f _site/sw.js
           test -f _site/manifest.webmanifest
           test -f _site/icons/app-icon.svg
@@ -54,6 +55,7 @@ jobs:
           test -f _site/src/core/warden-runtime.js
           test -f _site/src/core/world-2d-runtime.js
           test -f _site/src/core/visual-overhaul-runtime.js
+          test -f _site/src/core/art-direction-runtime.js
           test -f _site/src/game.js
           test -f _site/src/game-runtime.js
           test -f _site/src/input-controller.js
@@ -61,6 +63,8 @@ jobs:
           test -f _site/src/ui-renderer.js
           EXPECTED_VERSION=$(node -p "require('./package.json').version")
           grep -q "const version = '$EXPECTED_VERSION'" _site/src/release-config.js
+          grep -q "art-direction.css" _site/index.html
+          grep -q "art-direction.css" _site/sw.js
           grep -q "release-config.js" _site/sw.js
           grep -q "core/event-runtime.js" _site/sw.js
           grep -q "core/combat-depth-runtime.js" _site/sw.js
@@ -68,7 +72,8 @@ jobs:
           grep -q "core/warden-runtime.js" _site/sw.js
           grep -q "core/world-2d-runtime.js" _site/sw.js
           grep -q "core/visual-overhaul-runtime.js" _site/sw.js
-          grep -q "OneBulletVisualOverhaulRuntime" _site/src/main.js
+          grep -q "core/art-direction-runtime.js" _site/sw.js
+          grep -q "OneBulletArtDirectionRuntime" _site/src/main.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

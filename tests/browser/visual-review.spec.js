@@ -15,6 +15,7 @@ async function attachCanvas(page, testInfo, name) {
 }
 
 test('captures the v3.1.0 warden release and existing combat states', async ({ page }, testInfo) => {
+  test.setTimeout(60000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());

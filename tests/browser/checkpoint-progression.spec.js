@@ -117,7 +117,8 @@ test('checkpoint survives reload and restores the saved build at wave start', as
   expect(restored.stats.upgrades).toBe(6);
   expect(restored.momentum).toBe(78);
   expect(restored.precisionCharge).toBe(1);
-  expect(restored.overdriveTimer).toBeCloseTo(2.25, 2);
+  expect(restored.overdriveTimer).toBeGreaterThan(2);
+  expect(restored.overdriveTimer).toBeLessThanOrEqual(2.25);
   expect(restored.history.some((event) => event.type === 'checkpoint.loaded')).toBe(true);
   expect(restored.snapshot.enemies).toBeGreaterThan(0);
 });

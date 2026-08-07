@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.2.0-true-2d';
+  const version = '3.3.0-visual-overhaul';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'visual-world-2d',
+    channel: 'cinematic-visual-overhaul',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

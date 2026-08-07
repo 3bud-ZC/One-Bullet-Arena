@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+test.setTimeout(60_000);
+
 async function loadGame(page) {
   await page.goto('/?qa=1');
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));

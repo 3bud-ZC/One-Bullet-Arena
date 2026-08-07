@@ -6,14 +6,14 @@ if (!RELEASE) throw new Error('Release configuration failed to initialize in the
 const CACHE_NAME = RELEASE.cacheName;
 const CACHE_PREFIX = 'one-bullet-arena-v';
 const APP_SHELL = [
-  './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
+  './', './index.html', './game.css', './art-direction.css', './manifest.webmanifest', './icons/app-icon.svg',
   './src/release-config.js', './src/release.js', './src/main.js', './src/game.js',
   './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js',
   './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
   './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',
   './src/core/event-runtime.js', './src/core/combat-depth-runtime.js',
   './src/core/checkpoint-store.js', './src/core/checkpoint-runtime.js', './src/core/warden-runtime.js',
-  './src/core/world-2d-runtime.js', './src/core/visual-overhaul-runtime.js',
+  './src/core/world-2d-runtime.js', './src/core/visual-overhaul-runtime.js', './src/core/art-direction-runtime.js',
   './src/game-data.js', './src/arena.js', './src/audio.js', './src/input-controller.js',
   './src/spawn-system.js', './src/ui-renderer.js',
 ];

@@ -41,12 +41,15 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('visual overhaul remains active under the art-direction top runtime', async () => {
+test('visual overhaul remains active under art-direction and interface top runtimes', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const artSource = await readFile(new URL('../src/core/art-direction-runtime.js', import.meta.url), 'utf8');
+  const interfaceSource = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletArtDirectionRuntime/);
+  assert.match(mainSource, /OneBulletInterfaceRedesignRuntime/);
   assert.match(artSource, /extends OneBulletVisualOverhaulRuntime/);
+  assert.match(interfaceSource, /extends OneBulletArtDirectionRuntime/);
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/art-direction-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/interface-redesign-runtime\.js/);
 });

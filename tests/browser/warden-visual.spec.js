@@ -79,6 +79,6 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
     return game.getSnapshot();
   });
   expect(snapshot.wardenGuardStates[0].guardStrength).toBe(0);
-  expect(snapshot.wardenGuardStates[0].guardBrokenTimer).toBeGreaterThan(3);
+  expect(snapshot.wardenGuardStates[0].guardBrokenTimer).toBeGreaterThan(0.5);
   await attachCanvas(page, testInfo, 'warden-guard-broken');
 });

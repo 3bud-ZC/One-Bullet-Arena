@@ -3,6 +3,7 @@ import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
 import { bulletPresentationState } from '../polish-runtime.js';
 import { RELEASE_VERSION } from '../release.js';
 import { UI_COLORS, label, progressBar, roundedRect } from '../ui-renderer.js';
+import { OneBulletVisualDesignRuntime } from '../visual-design-runtime.js';
 import { OneBulletCheckpointRuntime } from './checkpoint-runtime.js';
 import { OneBulletVisualOverhaulRuntime } from './visual-overhaul-runtime.js';
 
@@ -44,6 +45,83 @@ function drawTacticalPanel(ctx, rect, accent, fill = 'rgba(3, 9, 22, 0.94)') {
   ctx.globalAlpha = 0.18;
   ctx.fillStyle = accent;
   ctx.fillRect(rect.x + 8, rect.y + 8, 3, rect.h - 16);
+  ctx.restore();
+}
+
+function drawLockedSector(ctx, rect, side, accent, warm, nextWave) {
+  if (rect.w <= 2 || rect.h <= 2) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  ctx.clip();
+
+  const fade = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
+  fade.addColorStop(0, 'rgba(2, 7, 18, 0.9)');
+  fade.addColorStop(0.52, 'rgba(3, 10, 24, 0.72)');
+  fade.addColorStop(1, 'rgba(1, 4, 12, 0.92)');
+  ctx.fillStyle = fade;
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+  ctx.globalAlpha = 0.14;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1;
+  const grid = 52;
+  for (let x = Math.floor(rect.x / grid) * grid; x <= rect.x + rect.w; x += grid) {
+    ctx.beginPath();
+    ctx.moveTo(x, rect.y);
+    ctx.lineTo(x, rect.y + rect.h);
+    ctx.stroke();
+  }
+  for (let y = Math.floor(rect.y / grid) * grid; y <= rect.y + rect.h; y += grid) {
+    ctx.beginPath();
+    ctx.moveTo(rect.x, y);
+    ctx.lineTo(rect.x + rect.w, y);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 0.1;
+  ctx.strokeStyle = warm;
+  ctx.lineWidth = 2;
+  const diagonalStep = 74;
+  for (let offset = -rect.h; offset < rect.w + rect.h; offset += diagonalStep) {
+    ctx.beginPath();
+    ctx.moveTo(rect.x + offset, rect.y + rect.h);
+    ctx.lineTo(rect.x + offset + rect.h, rect.y);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 10]);
+  ctx.beginPath();
+  if (side === 'left') {
+    ctx.moveTo(rect.x + rect.w - 2, rect.y + 18);
+    ctx.lineTo(rect.x + rect.w - 2, rect.y + rect.h - 18);
+  } else if (side === 'right') {
+    ctx.moveTo(rect.x + 2, rect.y + 18);
+    ctx.lineTo(rect.x + 2, rect.y + rect.h - 18);
+  } else if (side === 'top') {
+    ctx.moveTo(rect.x + 18, rect.y + rect.h - 2);
+    ctx.lineTo(rect.x + rect.w - 18, rect.y + rect.h - 2);
+  } else {
+    ctx.moveTo(rect.x + 18, rect.y + 2);
+    ctx.lineTo(rect.x + rect.w - 18, rect.y + 2);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const canLabelSide = (side === 'left' || side === 'right') && rect.w >= 180 && rect.h >= 180;
+  const canLabelBottom = side === 'bottom' && rect.h >= 105 && rect.w >= 400;
+  if (canLabelSide || canLabelBottom) {
+    const cx = rect.x + rect.w / 2;
+    const cy = rect.y + rect.h / 2;
+    ctx.globalAlpha = 0.5;
+    label(ctx, 'LOCKED SECTOR', cx, cy - 5, 9, accent, 900);
+    label(ctx, `UNLOCK // WAVE ${String(nextWave).padStart(2, '0')}`, cx, cy + 15, 8, UI_COLORS.muted, 800);
+  }
+
   ctx.restore();
 }
 
@@ -205,6 +283,25 @@ export class OneBulletArtDirectionRuntime extends OneBulletVisualOverhaulRuntime
     ctx.restore();
   }
 
+  drawLockedSpace2D(bounds) {
+    const stage = this.arenaStage?.id ?? 0;
+    if (stage >= 3) return;
+
+    const ctx = this.ctx;
+    const palette = this.palette();
+    const nextWave = [3, 6, 9][stage] || 9;
+    const bottom = bounds.y + bounds.h;
+    const right = bounds.x + bounds.w;
+    const zones = [
+      { side: 'top', x: 0, y: 0, w: WIDTH, h: bounds.y },
+      { side: 'bottom', x: 0, y: bottom, w: WIDTH, h: HEIGHT - bottom },
+      { side: 'left', x: 0, y: bounds.y, w: bounds.x, h: bounds.h },
+      { side: 'right', x: right, y: bounds.y, w: WIDTH - right, h: bounds.h },
+    ];
+
+    for (const zone of zones) drawLockedSector(ctx, zone, zone.side, palette.secondary, palette.warm, nextWave);
+  }
+
   drawObstacle(obstacle) {
     const ctx = this.ctx;
     const palette = this.palette();
@@ -296,6 +393,26 @@ export class OneBulletArtDirectionRuntime extends OneBulletVisualOverhaulRuntime
     ctx.restore();
   }
 
+  drawUpgradeSelection() {
+    OneBulletVisualDesignRuntime.prototype.drawUpgradeSelection.call(this);
+  }
+
+  drawPause() {
+    OneBulletVisualDesignRuntime.prototype.drawPause.call(this);
+  }
+
+  drawGameOver() {
+    OneBulletCheckpointRuntime.prototype.drawGameOver.call(this);
+  }
+
+  drawBanner() {
+    OneBulletVisualDesignRuntime.prototype.drawBanner.call(this);
+  }
+
+  drawTouchControls() {
+    OneBulletVisualDesignRuntime.prototype.drawTouchControls.call(this);
+  }
+
   drawMenu() {
     OneBulletCheckpointRuntime.prototype.drawMenu.call(this);
   }
@@ -308,8 +425,10 @@ export class OneBulletArtDirectionRuntime extends OneBulletVisualOverhaulRuntime
       artDirectionRefinementActive: true,
       desktopViewportMode: 'edge-to-edge-browser-viewport',
       tacticalHudRevision: 'three-module-dashboard-v2',
-      mapVisualRevision: 'sector-grid-reduced-frame-noise',
+      mapVisualRevision: 'sector-grid-locked-deck-v2',
       obstacleVisualRevision: 'chamfered-tactical-blocks',
+      lockedSectorVisuals: true,
+      overlayFrameNoiseReduced: true,
       gameplayGeometryChanged: false,
       collisionGeometryChanged: false,
     };

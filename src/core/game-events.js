@@ -1,4 +1,4 @@
-export const GAME_EVENT_SCHEMA_VERSION = 3;
+export const GAME_EVENT_SCHEMA_VERSION = 4;
 
 export const GAME_EVENTS = Object.freeze({
   RUNTIME_READY: 'runtime.ready',
@@ -29,6 +29,9 @@ export const GAME_EVENTS = Object.freeze({
   CHECKPOINT_SAVED: 'checkpoint.saved',
   CHECKPOINT_LOADED: 'checkpoint.loaded',
   CHECKPOINT_CLEARED: 'checkpoint.cleared',
+  WARDEN_GUARD_BLOCKED: 'warden.guard-blocked',
+  WARDEN_GUARD_BROKEN: 'warden.guard-broken',
+  WARDEN_GUARD_RESTORED: 'warden.guard-restored',
 });
 
 export const GAME_EVENT_TYPES = Object.freeze(Object.values(GAME_EVENTS));

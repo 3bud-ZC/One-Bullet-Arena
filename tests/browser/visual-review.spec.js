@@ -14,28 +14,31 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v3.0.0 checkpoint release and existing combat states', async ({ page }, testInfo) => {
+test('captures the v3.1.0 warden release and existing combat states', async ({ page }, testInfo) => {
+  test.setTimeout(60000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('3.0.0-checkpoint');
-  expect(menuSnapshot.releaseChannel).toBe('checkpoint-progression');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.0.0-checkpoint');
+  expect(menuSnapshot.releaseVersion).toBe('3.1.0-a-warden');
+  expect(menuSnapshot.releaseChannel).toBe('enemy-expansion-warden');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.1.0-a-warden');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('3.0.0-checkpoint');
-  expect(menuSnapshot.eventSchemaVersion).toBe(3);
+  expect(menuSnapshot.eventFoundationVersion).toBe('3.1.0-a-warden');
+  expect(menuSnapshot.eventSchemaVersion).toBe(4);
   expect(menuSnapshot.gameEventBusActive).toBe(true);
   expect(menuSnapshot.combatDepthActive).toBe(true);
   expect(menuSnapshot.combatDepthVersion).toBe('2.9.0-combat');
   expect(menuSnapshot.checkpointProgressionActive).toBe(true);
   expect(menuSnapshot.checkpointRuntimeVersion).toBe('3.0.0-checkpoint');
+  expect(menuSnapshot.wardenEnemyActive).toBe(true);
+  expect(menuSnapshot.wardenRuntimeVersion).toBe('3.1.0-a-warden');
   expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('3.0.0-checkpoint');
+  expect(menuSnapshot.uiLayoutVersion).toBe('3.1.0-a-warden');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'checkpoint-release-menu');
+  await attachCanvas(page, testInfo, 'warden-release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

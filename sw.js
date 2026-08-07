@@ -12,9 +12,9 @@ const APP_SHELL = [
   './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
   './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',
   './src/core/event-runtime.js', './src/core/combat-depth-runtime.js',
-  './src/core/checkpoint-store.js', './src/core/checkpoint-runtime.js', './src/game-data.js',
-  './src/arena.js', './src/audio.js', './src/input-controller.js', './src/spawn-system.js',
-  './src/ui-renderer.js',
+  './src/core/checkpoint-store.js', './src/core/checkpoint-runtime.js', './src/core/warden-runtime.js',
+  './src/game-data.js', './src/arena.js', './src/audio.js', './src/input-controller.js',
+  './src/spawn-system.js', './src/ui-renderer.js',
 ];
 
 self.addEventListener('install', (event) => {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { UI_LAYOUT_VERSION, bulletHudCopy, compactHudLayout } from '../src/ui-layout-runtime.js';
 
 test('UI release identity follows the canonical release source', () => {
-  assert.equal(UI_LAYOUT_VERSION, '3.0.0-checkpoint');
+  assert.equal(UI_LAYOUT_VERSION, '3.1.0-a-warden');
 });
 
 test('bullet HUD copy is technical, compact, and deterministic', () => {

@@ -9,11 +9,11 @@ import {
 } from '../src/release.js';
 
 test('release metadata exposes one canonical identity', () => {
-  assert.equal(RELEASE_VERSION, '3.2.0-true-2d');
-  assert.equal(RELEASE_LABEL, 'v3.2.0-true-2d');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.2.0-true-2d');
+  assert.equal(RELEASE_VERSION, '3.3.0-visual-overhaul');
+  assert.equal(RELEASE_LABEL, 'v3.3.0-visual-overhaul');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.3.0-visual-overhaul');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
-  assert.equal(RELEASE_INFO.channel, 'visual-world-2d');
+  assert.equal(RELEASE_INFO.channel, 'cinematic-visual-overhaul');
   assert.ok(Object.isFrozen(RELEASE_INFO));
 });
 

@@ -10,6 +10,8 @@ const PHYSICAL_KEY_MAP = Object.freeze({
   KeyM: 'm',
   KeyP: 'p',
   KeyR: 'r',
+  KeyC: 'c',
+  KeyN: 'n',
   Digit1: '1',
   Digit2: '2',
   Digit3: '3',
@@ -66,8 +68,20 @@ export class InputController {
         game.announce(muted ? 'تم كتم الصوت' : 'تم تشغيل الصوت');
       }
       if (firstPress && game.state === 'upgrade' && ['1', '2', '3'].includes(key)) game.chooseUpgrade(Number(key) - 1);
-      if (firstPress && (key === 'enter' || key === ' ') && game.state === 'menu') game.startRun();
-      if (firstPress && (key === 'enter' || key === 'r') && game.state === 'gameover') game.startRun();
+
+      if (firstPress && game.state === 'menu') {
+        if (key === 'c' && typeof game.continueFromCheckpoint === 'function') game.continueFromCheckpoint();
+        else if (key === 'n' || key === 'enter' || key === ' ') game.startRun();
+      }
+
+      if (firstPress && game.state === 'gameover') {
+        const hasCheckpoint = typeof game.hasContinueCheckpoint === 'function' && game.hasContinueCheckpoint();
+        if ((key === 'c' || (key === 'enter' && hasCheckpoint)) && typeof game.continueFromCheckpoint === 'function') {
+          game.continueFromCheckpoint();
+        } else if (key === 'r' || key === 'n' || (key === 'enter' && !hasCheckpoint)) {
+          game.startRun();
+        }
+      }
     });
 
     window.addEventListener('keyup', (event) => {

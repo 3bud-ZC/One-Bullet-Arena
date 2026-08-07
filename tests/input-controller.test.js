@@ -10,10 +10,12 @@ test('physical WASD stays stable when the active keyboard layout is Arabic', () 
   assert.equal(normalizeKeyboardInput({ code: 'KeyD', key: 'ي' }), 'd');
 });
 
-test('physical action keys stay stable across keyboard layouts', () => {
+test('physical action and checkpoint keys stay stable across keyboard layouts', () => {
   assert.equal(normalizeKeyboardInput({ code: 'KeyQ', key: 'ض' }), 'q');
   assert.equal(normalizeKeyboardInput({ code: 'KeyP', key: 'ح' }), 'p');
   assert.equal(normalizeKeyboardInput({ code: 'KeyM', key: 'ة' }), 'm');
+  assert.equal(normalizeKeyboardInput({ code: 'KeyC', key: 'ؤ' }), 'c');
+  assert.equal(normalizeKeyboardInput({ code: 'KeyN', key: 'ى' }), 'n');
   assert.equal(normalizeKeyboardInput({ code: 'Digit1', key: '!' }), '1');
 });
 

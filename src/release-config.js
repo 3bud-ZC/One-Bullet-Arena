@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '2.9.0-combat';
+  const version = '3.0.0-checkpoint';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'core-combat-depth',
+    channel: 'checkpoint-progression',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

@@ -59,6 +59,7 @@ test('runtime layers integrate required events without editing base combat', asy
   const combatSource = await readFile(new URL('../src/core/combat-depth-runtime.js', import.meta.url), 'utf8');
   const checkpointSource = await readFile(new URL('../src/core/checkpoint-runtime.js', import.meta.url), 'utf8');
   const wardenSource = await readFile(new URL('../src/core/warden-runtime.js', import.meta.url), 'utf8');
+  const world2DSource = await readFile(new URL('../src/core/world-2d-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   const requiredBaseEvents = [
@@ -79,6 +80,7 @@ test('runtime layers integrate required events without editing base combat', asy
   for (const eventName of requiredSkillEvents) assert.match(combatSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
   for (const eventName of requiredCheckpointEvents) assert.match(checkpointSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
   for (const eventName of requiredWardenEvents) assert.match(wardenSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
-  assert.match(mainSource, /new OneBulletWardenRuntime/);
+  assert.match(world2DSource, /extends OneBulletWardenRuntime/);
+  assert.match(mainSource, /new OneBulletWorld2DRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

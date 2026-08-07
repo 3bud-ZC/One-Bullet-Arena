@@ -62,6 +62,7 @@ test('runtime layers integrate required events without editing base combat', asy
   const world2DSource = await readFile(new URL('../src/core/world-2d-runtime.js', import.meta.url), 'utf8');
   const visualOverhaulSource = await readFile(new URL('../src/core/visual-overhaul-runtime.js', import.meta.url), 'utf8');
   const artDirectionSource = await readFile(new URL('../src/core/art-direction-runtime.js', import.meta.url), 'utf8');
+  const interfaceSource = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   const requiredBaseEvents = [
@@ -85,6 +86,7 @@ test('runtime layers integrate required events without editing base combat', asy
   assert.match(world2DSource, /extends OneBulletWardenRuntime/);
   assert.match(visualOverhaulSource, /extends OneBulletWorld2DRuntime/);
   assert.match(artDirectionSource, /extends OneBulletVisualOverhaulRuntime/);
-  assert.match(mainSource, /new OneBulletArtDirectionRuntime/);
+  assert.match(interfaceSource, /extends OneBulletArtDirectionRuntime/);
+  assert.match(mainSource, /new OneBulletInterfaceRedesignRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

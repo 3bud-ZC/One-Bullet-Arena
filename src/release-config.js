@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.1.0-a-warden';
+  const version = '3.2.0-true-2d';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'enemy-expansion-warden',
+    channel: 'visual-world-2d',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

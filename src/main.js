@@ -1,4 +1,4 @@
-import { OneBulletCombatDepthRuntime } from './core/combat-depth-runtime.js';
+import { OneBulletCheckpointRuntime } from './core/checkpoint-runtime.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
@@ -10,12 +10,13 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثو
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new OneBulletCombatDepthRuntime(canvas, liveRegion);
+const game = new OneBulletCheckpointRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;
   window.__ONE_BULLET_RELEASE__ = RELEASE_INFO;
   window.__ONE_BULLET_EVENTS__ = game.eventBus;
+  window.__ONE_BULLET_CHECKPOINT__ = game.checkpointStore;
 }
 
 document.addEventListener('keydown', async (event) => {

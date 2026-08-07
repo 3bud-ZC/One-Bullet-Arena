@@ -1,114 +1,130 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 
 ## Current milestone
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.3.0 — Cinematic Visual Overhaul**
-- Working branch: `feature/v3.3.0-visual-overhaul`
-- Pull Request: **#45 — draft, awaiting owner visual acceptance**
-- Canonical release version: `3.3.0-visual-overhaul`
-- Canonical release label: `v3.3.0-visual-overhaul`
-- Release channel: `cinematic-visual-overhaul`
-- Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
-- Implementation: **100% complete**
-- Automated verification: **complete and green**
-- Manual capture review: **complete; no blocking visual regression found**
+- Live baseline on `main`: **v3.3.0 — Cinematic Visual Overhaul**
+- Current milestone: **v3.5 — Art Direction & Viewport Refinement**
+- Working branch: `feature/v3.5.0-art-direction-refinement`
+- Pull Request: **#48 — draft, awaiting owner visual acceptance**
+- Current canonical release identity: `3.3.0-visual-overhaul`
+- v3.5 release promotion: **not locked yet; keep v3.3 identity until owner acceptance**
+- Implementation status: **85% complete**
+- Automated verification: **green**
 - Gameplay geometry changed: **no**
 - Collision geometry changed: **no**
-- Combat balance or progression changed: **no**
-- Owner acceptance: **pending**
-- Merge: **blocked only on owner acceptance**
+- Combat balance/progression changed: **no**
+- Merge to `main`: **pending owner visual acceptance**
 
-## Visual overhaul delivered
+## Live deployment baseline
 
-- Added `src/core/visual-overhaul-runtime.js` above the accepted True 2D runtime.
-- Strengthened the industrial arena with ambient deck nodes, stage-aware energy accents, floor scan/detail passes, stronger physical borders, corner framing, and obstacle material detail.
-- Added enemy health/threat arcs and clearer impact readability without changing enemy hitboxes.
-- Added hostile projectile glow without changing projectile collision geometry.
-- Added player dash-ready and shield visual layers without changing movement or defensive values.
-- Added a readable bullet recall tether, additional bullet glow, and a secondary aiming-reticle treatment.
-- Added stronger cinematic framing for the main menu, combat HUD, upgrade selection, pause, Game Over, banners, and touch controls.
-- Strengthened the browser shell with a richer sci-fi frame and background treatment while preserving mobile-landscape behavior.
-- `prefers-reduced-motion` support remains active for non-essential motion and shell effects.
+- PR #45 (`v3.3.0-visual-overhaul`) is merged to `main`.
+- GitHub Pages deployment was repaired through PR #47 after the deploy workflow was found to be hard-coded to the older Warden boot runtime.
+- The Pages build gate now tracks the active visual runtime chain instead of the obsolete v3.1 boot check.
 
-## Architecture
+## v3.5 work completed
 
-The active runtime chain for this milestone is:
+### Desktop viewport
 
-`VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+- Added `art-direction.css` as a dedicated presentation layer.
+- Desktop browser mode now fills **100vw × 100dvh** without requiring the Fullscreen API.
+- Removed the boxed browser shell, outer rounded container, large browser-frame border, and desktop shell padding.
+- The canvas and game frame now occupy the full available browser viewport on desktop.
+- Existing mobile-landscape behavior remains available through the lower responsive layer.
 
-- `VisualOverhaul` is render-only.
-- `World2D` remains the accepted lower visual/world contract at `3.2.0-true-2d`.
-- Warden contract remains `3.1.0-a-warden`.
-- Checkpoint Progression contract remains `3.0.0-checkpoint`.
-- Combat Depth contract remains `2.9.0-combat`.
-- Gameplay event schema remains `4`.
-- Checkpoint schema remains `1`.
-- Existing checkpoint saves remain compatible.
-- Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
+### Dashboard / HUD
 
-## Final v3.3 verification
+- Added `OneBulletArtDirectionRuntime` above `OneBulletVisualOverhaulRuntime`.
+- Rebuilt the gameplay HUD as three restrained tactical modules instead of nested/glowing frame stacks:
+  - left: bullet state + recall readiness;
+  - center: game identity + wave + enemies + score + upgrades + arena stage;
+  - right: HP + segmented Dash/Shield state.
+- Reduced duplicate borders, repeated chrome, and excessive glow.
 
-Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
+### Map / arena
 
-- Verify #833: **success**.
-- Browser Smoke #171: **success**.
-- Playwright: **148/148 passed**.
-- Expected: **148**.
+- Replaced the noisy floor-detail pass with a cleaner sector grid and restrained radar rings.
+- Simplified arena borders to structural lines plus four corner brackets.
+- Added visual **Locked Sectors** around early arena stages so unused screen space reads as future deck/expansion space rather than empty black area.
+- Locked sectors show subtle grid/hatching, structural boundaries, and next-unlock information where space allows.
+- Arena expansion geometry itself is unchanged: the locked sectors remain visual only.
+
+### Shapes / obstacles
+
+- Replaced nested rounded obstacle frames with cleaner chamfered tactical blocks.
+- Reduced decorative bolts, repeated inner borders, and stripe noise.
+- Existing obstacle rectangles and collision data are unchanged.
+
+### Overlay/frame cleanup
+
+- Removed the extra VisualOverhaul wrapper frame from Upgrade Selection.
+- Removed the extra wrapper frame from Pause.
+- Removed the extra wrapper frame from Game Over while retaining Checkpoint behavior.
+- Removed the redundant VisualOverhaul touch-control ring layer.
+- Simplified banner presentation by using the accepted lower visual-design presentation.
+- Checkpoint/main menu bypasses the extra VisualOverhaul menu wrapper.
+
+## Active runtime chain
+
+`ArtDirection → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+
+- `ArtDirection` is presentation/render only.
+- `VisualOverhaul` remains active beneath it.
+- World2D, Warden, Checkpoint, CombatDepth, event schema, save schema, combat values, and progression contracts are unchanged.
+
+## Final automated verification for current v3.5 head
+
+Verified code head: `8c451423d5b68d9e1d905d231ecfb04b4bcc2fba`.
+
+- Verify #883: **success**.
+- Browser Smoke #188: **success**.
+- Playwright tests: **164 total**.
+- Expected/passed: **163**.
 - Unexpected failures: **0**.
-- Flaky tests: **0**.
-- Skipped tests: **0**.
-- The final Browser Smoke artifact was generated successfully for the verified release-content head.
-- The final menu capture visibly reports `v3.3.0-visual-overhaul`.
-- Existing combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage remains green.
+- Flaky: **0**.
+- Skipped: **1** — intentional mobile skip for the desktop-only viewport-dimension assertion.
+- Browser coverage includes desktop Chromium, Firefox, WebKit, and mobile landscape.
+- Desktop viewport assertion confirms the game frame and canvas match the browser viewport while `document.fullscreenElement` is false.
 
-A previous pre-release-identity verification also passed:
+## Manual capture review
 
-- Verify #831: **success**.
-- Browser Smoke #170: **success**.
-- Playwright: **148/148 passed**.
+Reviewed generated captures for:
 
-## Manual visual review
+1. desktop menu;
+2. desktop combat with the new three-module dashboard;
+3. early-stage arena with visual Locked Sectors;
+4. chamfered obstacles and reduced arena-frame noise;
+5. Upgrade Selection without the duplicate outer frame;
+6. Pause without the duplicate outer frame;
+7. mobile-landscape combat;
+8. cross-browser Chromium / Firefox / WebKit rendering.
 
-Generated Playwright captures were reviewed across the final visual-overhaul suite, including representative states for:
+Current result:
 
-1. desktop main menu;
-2. desktop active combat;
-3. desktop bullet recall;
-4. desktop upgrade selection;
-5. checkpoint/menu states;
-6. Warden and combat-depth states;
-7. mobile-landscape combat and controls;
-8. Firefox/WebKit/Chromium rendering coverage.
+- the dashboard is substantially cleaner and closer to the approved tactical reference direction;
+- early arena stages no longer sit inside a mostly empty black screen;
+- locked space is visually meaningful without becoming playable space;
+- obstacle silhouettes are cleaner;
+- overlay screens have less frame-on-frame clutter;
+- no blocking clipping or automated browser regression was found;
+- no gameplay or collision geometry changed.
 
-The review found no blocking visual regression:
+## Remaining work before v3.5 release lock
 
-- menu hierarchy and framing remain readable;
-- the final menu shows the canonical `v3.3.0-visual-overhaul` release label;
-- active combat entities remain distinct from the strengthened map;
-- enemy threat/health arcs add readability without obscuring targets;
-- the recall tether is clearly visible without hiding combat;
-- upgrade cards remain legible;
-- mobile controls stay outside the primary combat focus;
-- cross-browser captures remain visually consistent;
-- no blocking clipping or overlap was observed in the reviewed captures.
-
-## Release decision
-
-The implementation and automated release gate are complete. PR #45 remains intentionally unmerged so the owner can perform a final hands-on visual acceptance pass before production changes.
-
-No additional code change is required unless owner acceptance identifies a visual, performance, readability, input, or collision issue.
+- Owner hands-on review of the new desktop browser presentation.
+- Further checkpoint/menu art-direction refinement if requested after live comparison.
+- Further Upgrade card styling/alignment if the owner wants an even closer match to the supplied visual references.
+- Inspect unusual desktop aspect ratios during owner review; the gameplay simulation remains the fixed 1280×720 logical world while the desktop presentation intentionally fills the browser viewport.
+- Promote release metadata from v3.3 to the final v3.5 identity only after visual acceptance, then run the final release-identity Verify + Browser Smoke gate.
 
 ## Owner acceptance gate
 
-1. Confirm the menu footer displays `v3.3.0-visual-overhaul`.
-2. Start a new run and inspect arena depth, floor detail, border framing, obstacle material treatment, and combat contrast.
-3. Move and dash continuously and confirm the player remains readable and responsive.
-4. Fire, ricochet, recall, and catch the bullet and verify the trail, recall tether, glow, and reticle remain clear.
-5. Fight mixed enemy groups and confirm threat/health arcs help readability rather than adding clutter.
-6. Reach or continue to Wave 7 and verify the Warden remains readable against the upgraded arena.
-7. Check HUD, upgrades, pause, Game Over, and checkpoint Continue/New Run/Menu behavior.
-8. Test mobile landscape and confirm movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
-9. Report any performance drop, excessive glow, visual clutter, dark area, unreadable entity, control regression, or collision mismatch before PR #45 is merged.
+1. Confirm the game fills the browser content area without using Fullscreen mode.
+2. Check that the top dashboard is readable and not visually dominant.
+3. Start Wave 1 and confirm the Locked Sectors make the surrounding map feel intentional rather than empty.
+4. Reach Waves 3, 6, and 9 and inspect arena expansion transitions.
+5. Inspect obstacle shapes and arena borders during active combat.
+6. Inspect Upgrade, Pause, Game Over, Checkpoint, and mobile-landscape screens.
+7. Report any stretching, excessive darkness, glow, clutter, clipping, unreadable labels, or spacing issue before merge.

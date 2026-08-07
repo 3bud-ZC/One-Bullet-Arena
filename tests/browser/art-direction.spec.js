@@ -14,7 +14,7 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('art-direction runtime owns the visual layer without gameplay geometry changes', async ({ page }, testInfo) => {
+test('art-direction and interface-redesign runtimes own the visual layer without gameplay geometry changes', async ({ page }, testInfo) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -24,6 +24,10 @@ test('art-direction runtime owns the visual layer without gameplay geometry chan
 
   expect(snapshot.artDirectionRefinementActive).toBe(true);
   expect(snapshot.artDirectionRuntimeVersion).toBe('3.5.0-art-direction-refinement');
+  expect(snapshot.interfaceRedesignActive).toBe(true);
+  expect(snapshot.interfaceRedesignRuntimeVersion).toBe('3.5.0-interface-redesign');
+  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v3');
+  expect(snapshot.upgradeArtDirectionRevision).toBe('category-upgrade-cards-v3');
   expect(snapshot.desktopViewportMode).toBe('edge-to-edge-browser-viewport');
   expect(snapshot.tacticalHudRevision).toBe('three-module-dashboard-v2');
   expect(snapshot.mapVisualRevision).toBe('sector-grid-locked-deck-v2');
@@ -32,7 +36,25 @@ test('art-direction runtime owns the visual layer without gameplay geometry chan
   expect(snapshot.overlayFrameNoiseReduced).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(false);
   expect(snapshot.collisionGeometryChanged).toBe(false);
-  await attachCanvas(page, testInfo, 'art-direction-menu');
+  await attachCanvas(page, testInfo, 'interface-redesign-fresh-menu');
+});
+
+test('checkpoint menu uses the command-center hierarchy', async ({ page }, testInfo) => {
+  await loadGame(page);
+  await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.savedCheckpoint = {
+      wave: 16,
+      score: 62599,
+      stats: { upgrades: 15 },
+    };
+    game.highWave = Math.max(game.highWave, 16);
+    game.highScore = Math.max(game.highScore, 68899);
+    game.draw();
+  });
+  const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v3');
+  await attachCanvas(page, testInfo, 'interface-redesign-checkpoint-menu');
 });
 
 test('desktop browser shell fills the available viewport without Fullscreen API', async ({ page }, testInfo) => {
@@ -85,7 +107,7 @@ test('combat dashboard, locked sectors, and tactical map remain readable in the 
   await attachCanvas(page, testInfo, 'art-direction-combat');
 });
 
-test('upgrade and pause states use the reduced-frame presentation', async ({ page }, testInfo) => {
+test('upgrade category cards and pause presentation remain readable', async ({ page }, testInfo) => {
   await loadGame(page);
 
   await page.evaluate(() => {
@@ -107,5 +129,7 @@ test('upgrade and pause states use the reduced-frame presentation', async ({ pag
     game.draw();
   });
   await page.waitForFunction(() => window.__ONE_BULLET_ARENA__.state === 'upgrade');
-  await attachCanvas(page, testInfo, 'art-direction-upgrade');
+  const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
+  expect(snapshot.upgradeArtDirectionRevision).toBe('category-upgrade-cards-v3');
+  await attachCanvas(page, testInfo, 'interface-redesign-upgrade');
 });

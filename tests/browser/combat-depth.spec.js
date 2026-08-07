@@ -9,7 +9,7 @@ async function loadGame(page) {
 test('boots the combat depth runtime and exposes skill diagnostics', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.2.0-true-2d');
+  expect(snapshot.releaseVersion).toBe('3.3.0-visual-overhaul');
   expect(snapshot.combatDepthVersion).toBe('2.9.0-combat');
   expect(snapshot.combatDepthActive).toBe(true);
   expect(snapshot.perfectCatchEnabled).toBe(true);
@@ -19,6 +19,7 @@ test('boots the combat depth runtime and exposes skill diagnostics', async ({ pa
   expect(snapshot.checkpointProgressionActive).toBe(true);
   expect(snapshot.wardenEnemyActive).toBe(true);
   expect(snapshot.true2DArenaActive).toBe(true);
+  expect(snapshot.visualOverhaulActive).toBe(true);
 });
 
 test('a skilled returning catch grants a precision shot and momentum', async ({ page }) => {

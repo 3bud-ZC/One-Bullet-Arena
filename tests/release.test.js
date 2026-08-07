@@ -25,6 +25,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   const checkpointRuntimeSource = await readFile(new URL('../src/core/checkpoint-runtime.js', import.meta.url), 'utf8');
   const wardenRuntimeSource = await readFile(new URL('../src/core/warden-runtime.js', import.meta.url), 'utf8');
   const world2DRuntimeSource = await readFile(new URL('../src/core/world-2d-runtime.js', import.meta.url), 'utf8');
+  const visualOverhaulRuntimeSource = await readFile(new URL('../src/core/visual-overhaul-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 
   assert.equal(packageJson.version, RELEASE_VERSION);
@@ -34,6 +35,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(checkpointRuntimeSource, /OneBulletCombatDepthRuntime/);
   assert.match(wardenRuntimeSource, /OneBulletCheckpointRuntime/);
   assert.match(world2DRuntimeSource, /OneBulletWardenRuntime/);
+  assert.match(visualOverhaulRuntimeSource, /OneBulletWorld2DRuntime/);
   assert.match(workerSource, /importScripts\('\.\/src\/release-config\.js'\)/);
   assert.match(workerSource, /const CACHE_NAME = RELEASE\.cacheName/);
   assert.match(workerSource, /\.\/src\/core\/event-runtime\.js/);
@@ -42,6 +44,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(workerSource, /\.\/src\/core\/checkpoint-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/warden-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-2d-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
   assert.doesNotMatch(workerSource, /one-bullet-arena-v3\.1\.0-a-warden/);
 });
 
@@ -54,6 +57,6 @@ test('service worker keeps an explicit release handshake and network-first fallb
   assert.match(mainSource, /updateViaCache: 'none'/);
   assert.match(mainSource, /registration\.update\(\)/);
   assert.match(mainSource, /controllerchange/);
-  assert.match(mainSource, /OneBulletWorld2DRuntime/);
+  assert.match(mainSource, /OneBulletVisualOverhaulRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

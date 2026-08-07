@@ -10,8 +10,12 @@ test('art direction runtime is a render-only refinement layer', async () => {
   assert.match(source, /gameplayGeometryChanged: false/);
   assert.match(source, /collisionGeometryChanged: false/);
   assert.match(source, /three-module-dashboard-v2/);
-  assert.match(source, /sector-grid-reduced-frame-noise/);
+  assert.match(source, /sector-grid-locked-deck-v2/);
   assert.match(source, /chamfered-tactical-blocks/);
+  assert.match(source, /lockedSectorVisuals: true/);
+  assert.match(source, /overlayFrameNoiseReduced: true/);
+  assert.match(source, /OneBulletVisualDesignRuntime\.prototype\.drawUpgradeSelection/);
+  assert.match(source, /OneBulletCheckpointRuntime\.prototype\.drawGameOver/);
   assert.doesNotMatch(source, /arenaStage\.bounds\s*=/);
   assert.doesNotMatch(source, /arenaStage\.obstacles\s*=/);
   assert.doesNotMatch(source, /player\.speed\s*=/);

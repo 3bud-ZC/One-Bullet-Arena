@@ -9,14 +9,15 @@ async function loadGame(page) {
 test('boots the combat depth runtime and exposes skill diagnostics', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.0.0-checkpoint');
+  expect(snapshot.releaseVersion).toBe('3.1.0-a-warden');
   expect(snapshot.combatDepthVersion).toBe('2.9.0-combat');
   expect(snapshot.combatDepthActive).toBe(true);
   expect(snapshot.perfectCatchEnabled).toBe(true);
   expect(snapshot.bankShotDamageEnabled).toBe(true);
   expect(snapshot.momentumOverdriveEnabled).toBe(true);
-  expect(snapshot.eventSchemaVersion).toBe(3);
+  expect(snapshot.eventSchemaVersion).toBe(4);
   expect(snapshot.checkpointProgressionActive).toBe(true);
+  expect(snapshot.wardenEnemyActive).toBe(true);
 });
 
 test('a skilled returning catch grants a precision shot and momentum', async ({ page }) => {

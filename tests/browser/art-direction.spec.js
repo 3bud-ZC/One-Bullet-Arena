@@ -26,8 +26,10 @@ test('art-direction runtime owns the visual layer without gameplay geometry chan
   expect(snapshot.artDirectionRuntimeVersion).toBe('3.5.0-art-direction-refinement');
   expect(snapshot.desktopViewportMode).toBe('edge-to-edge-browser-viewport');
   expect(snapshot.tacticalHudRevision).toBe('three-module-dashboard-v2');
-  expect(snapshot.mapVisualRevision).toBe('sector-grid-reduced-frame-noise');
+  expect(snapshot.mapVisualRevision).toBe('sector-grid-locked-deck-v2');
   expect(snapshot.obstacleVisualRevision).toBe('chamfered-tactical-blocks');
+  expect(snapshot.lockedSectorVisuals).toBe(true);
+  expect(snapshot.overlayFrameNoiseReduced).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(false);
   expect(snapshot.collisionGeometryChanged).toBe(false);
   await attachCanvas(page, testInfo, 'art-direction-menu');
@@ -57,9 +59,9 @@ test('desktop browser shell fills the available viewport without Fullscreen API'
   expect(metrics.canvas.height).toBeCloseTo(metrics.viewport.height, 0);
 });
 
-test('combat dashboard and tactical map remain readable in the expanded browser canvas', async ({ page }, testInfo) => {
+test('combat dashboard, locked sectors, and tactical map remain readable in the expanded browser canvas', async ({ page }, testInfo) => {
   await loadGame(page);
-  await page.evaluate(() => {
+  const snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
     game.banner = null;
@@ -76,6 +78,34 @@ test('combat dashboard and tactical map remain readable in the expanded browser 
     }
     game.update = () => {};
     game.draw();
+    return game.getSnapshot();
   });
+  expect(snapshot.arenaStage).toBe(0);
+  expect(snapshot.lockedSectorVisuals).toBe(true);
   await attachCanvas(page, testInfo, 'art-direction-combat');
+});
+
+test('upgrade and pause states use the reduced-frame presentation', async ({ page }, testInfo) => {
+  await loadGame(page);
+
+  await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.banner = null;
+    game.tutorialStep = 3;
+    game.pause();
+    game.update = () => {};
+    game.draw();
+  });
+  await attachCanvas(page, testInfo, 'art-direction-pause');
+
+  await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.resume();
+    game.enemies = [];
+    game.openUpgradeSelection();
+    game.draw();
+  });
+  await page.waitForFunction(() => window.__ONE_BULLET_ARENA__.state === 'upgrade');
+  await attachCanvas(page, testInfo, 'art-direction-upgrade');
 });

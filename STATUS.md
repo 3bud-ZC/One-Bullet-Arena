@@ -2,25 +2,23 @@
 
 Last updated: 2026-08-07
 
-## Current milestone
+## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.2.0 — True 2D Arena and Gameplay Feel**
-- Working branch: `feature/v3.2.0-true-2d-arena`
-- Pull Request: **#44 open**
-- Current production code on `main`: **v3.1.0-A — Warden Enemy**
-- Implementation on feature branch: **100% complete**
-- Latest verified feature head before this status update: `0cf1cef430e0b912fbd8cb9a2f9809dd1a61a1ea`
-- Verify #815: **success**
-- Browser Smoke #165: **success**
+- Current production code on `main`: **v3.2.0 — True 2D Arena and Gameplay Feel**
+- Pull Request #44: **squash-merged into `main`**
+- Release merge commit: `37cc2334aedcc7167bf75c3670866f21fdf4469d`
+- Final tested feature head: `17a4d8fbe8a3a4a2bde49180aa16d11288260bb7`
+- Implementation: **100% complete**
+- Verify #817: **success**
+- Browser Smoke #166: **success**
 - Playwright: **144/144 passed**
 - Unexpected failures: **0**
 - Flaky tests: **0**
 - Skipped tests: **0**
 - Permanent visual captures: **64**
 - New True 2D captures inspected: **12/12**
-- Merge: **pending final CI on the status-update head**
-- Owner deployed acceptance: **pending after merge**
+- Owner deployed acceptance: **pending**
 - GitHub Pages public deployment: **not independently confirmed from the assistant environment**
 - Next milestone: **blocked until owner accepts the True 2D release**
 
@@ -127,7 +125,7 @@ The product path remains:
 
 No new enemy, mode, boss, currency, shop, hub, equipment, story, objective, puzzle, account, cloud save, or online leaderboard was added.
 
-## Owner acceptance after merge
+## Owner acceptance gate
 
 1. Confirm the menu footer displays `v3.2.0-true-2d`.
 2. Start a new run and inspect the floor tiles, lanes, center platform, wall depth, and obstacle faces.

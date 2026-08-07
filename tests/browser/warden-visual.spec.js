@@ -25,6 +25,9 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
     game.enemyShots = [];
     game.banner = null;
     game.tutorialStep = 3;
+    game.feedbackEvents = [];
+    game.feedbackCallout = null;
+    game.floatingTexts = [];
     game.player.x = 420;
     game.player.y = 360;
     const warden = game.spawnEnemy('warden', 0, { point: { x: 760, y: 360 } });
@@ -32,6 +35,7 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
     warden.spawnTime = 0;
     scout.spawnTime = 0;
     warden.guardAngle = Math.PI;
+    game.update = () => {};
     game.draw();
     return game.getSnapshot();
   });
@@ -42,6 +46,9 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     const warden = game.enemies.find((enemy) => enemy.type === 'warden');
+    game.feedbackEvents = [];
+    game.feedbackCallout = null;
+    game.floatingTexts = [];
     Object.assign(game.bullet, {
       held: false,
       recalling: false,
@@ -64,6 +71,9 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     const warden = game.enemies.find((enemy) => enemy.type === 'warden');
+    game.feedbackEvents = [];
+    game.feedbackCallout = null;
+    game.floatingTexts = [];
     Object.assign(game.bullet, {
       held: false,
       recalling: false,
@@ -79,6 +89,6 @@ test('captures active, blocking, and broken warden guard states', async ({ page 
     return game.getSnapshot();
   });
   expect(snapshot.wardenGuardStates[0].guardStrength).toBe(0);
-  expect(snapshot.wardenGuardStates[0].guardBrokenTimer).toBeGreaterThan(0.5);
+  expect(snapshot.wardenGuardStates[0].guardBrokenTimer).toBeGreaterThan(3);
   await attachCanvas(page, testInfo, 'warden-guard-broken');
 });

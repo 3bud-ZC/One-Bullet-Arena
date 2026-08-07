@@ -2,25 +2,23 @@
 
 Last updated: 2026-08-07
 
-## Current milestone
+## Release status
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.1.0-A — Warden Enemy**
-- Working branch: `feature/v3.1.0-a-warden-enemy`
-- Pull Request: **#43 open**
-- Current production code on `main`: **v3.0.0 — Checkpoint Progression**
-- Implementation on feature branch: **100% complete**
-- Latest verified feature head before this status update: `ff86bdd8ebb151450236d8713652f4fd56ba6ee2`
-- Verify #794: **success**
-- Browser Smoke #160: **success**
+- Current production code on `main`: **v3.1.0-A — Warden Enemy**
+- Pull Request #43: **squash-merged into `main`**
+- Release merge commit: `479bbdad25ca3533a25a23a0e01d667577f44773`
+- Final tested feature head: `d4162185a18165baa56ccb8903558bbf5233760a`
+- Implementation: **100% complete**
+- Verify #796: **success**
+- Browser Smoke #161: **success**
 - Playwright: **140/140 passed**
 - Unexpected failures: **0**
 - Flaky tests: **0**
 - Skipped tests: **0**
 - Permanent visual captures: **52**
 - Warden-specific captures inspected: **12/12**
-- Merge: **pending final CI on the status-update head**
-- Owner deployed acceptance: **pending after merge**
+- Owner deployed acceptance: **pending**
 - GitHub Pages public deployment: **not independently confirmed from the assistant environment**
 - Next enemy-expansion part: **blocked until owner accepts the Warden release**
 
@@ -109,7 +107,7 @@ The product path remains:
 
 No new mode, boss, currency, shop, hub, equipment, story, objective, puzzle, account, cloud save, or online leaderboard was added.
 
-## Owner acceptance after merge
+## Owner acceptance gate
 
 1. Confirm the menu footer displays `v3.1.0-a-warden`.
 2. Continue from an existing checkpoint or play normally until Wave 7.

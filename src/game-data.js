@@ -8,6 +8,7 @@ export const ENEMY_TYPES = Object.freeze({
   brute: Object.freeze({ id: 'brute', radius: 27, speed: 68, health: 3, score: 250, color: '#ff9f43', unlockWave: 3 }),
   sniper: Object.freeze({ id: 'sniper', radius: 20, speed: 55, health: 2, score: 225, color: '#b983ff', unlockWave: 4 }),
   charger: Object.freeze({ id: 'charger', radius: 21, speed: 65, health: 2, score: 240, color: '#53f2a1', unlockWave: 6 }),
+  warden: Object.freeze({ id: 'warden', radius: 25, speed: 54, health: 4, score: 360, color: '#67ddff', unlockWave: 7 }),
   splitter: Object.freeze({ id: 'splitter', radius: 24, speed: 72, health: 3, score: 310, color: '#ff79d1', unlockWave: 8 }),
 });
 
@@ -49,6 +50,7 @@ export function buildWaveComposition(wave) {
     brute: Math.min(3, 1 + Math.floor(safeWave / 6)),
     sniper: safeWave >= 4 ? Math.min(2, 1 + Math.floor((safeWave - 4) / 8)) : 0,
     charger: safeWave >= 6 ? Math.min(2, 1 + Math.floor((safeWave - 6) / 9)) : 0,
+    warden: safeWave >= 7 ? Math.min(2, 1 + Math.floor((safeWave - 7) / 12)) : 0,
     splitter: safeWave >= 8 ? Math.min(2, 1 + Math.floor((safeWave - 8) / 12)) : 0,
   };
   const result = [];
@@ -56,6 +58,7 @@ export function buildWaveComposition(wave) {
     for (let index = 0; index < amount && result.length < count; index += 1) result.push(type);
   };
   add('splitter', Math.min(limits.splitter, safeWave % 4 === 0 ? 1 : 0));
+  add('warden', Math.min(limits.warden, safeWave % 4 === 3 ? 1 : 0));
   add('sniper', Math.min(limits.sniper, safeWave % 3 === 1 ? 1 : 0));
   add('charger', Math.min(limits.charger, safeWave % 3 === 0 ? 1 : 0));
   add('brute', Math.min(limits.brute, Math.max(1, Math.floor(count / 4))));

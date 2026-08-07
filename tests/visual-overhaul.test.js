@@ -41,9 +41,13 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('boot and service worker activate the visual overhaul runtime', async () => {
+test('boot keeps the visual overhaul in the active v3.4 runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  const combatJuiceSource = await readFile(new URL('../src/core/combat-juice-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletVisualOverhaulRuntime/);
+
+  assert.match(mainSource, /OneBulletCombatJuiceRuntime/);
+  assert.match(combatJuiceSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/combat-juice-runtime\.js/);
 });

@@ -1,4 +1,4 @@
-import { OneBulletVisualOverhaulRuntime } from './core/visual-overhaul-runtime.js';
+import { OneBulletArtDirectionRuntime } from './core/art-direction-runtime.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
@@ -10,7 +10,7 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثو
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new OneBulletVisualOverhaulRuntime(canvas, liveRegion);
+const game = new OneBulletArtDirectionRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;

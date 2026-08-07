@@ -56,6 +56,7 @@ jobs:
           test -f _site/src/core/world-2d-runtime.js
           test -f _site/src/core/visual-overhaul-runtime.js
           test -f _site/src/core/art-direction-runtime.js
+          test -f _site/src/core/interface-redesign-runtime.js
           test -f _site/src/game.js
           test -f _site/src/game-runtime.js
           test -f _site/src/input-controller.js
@@ -73,7 +74,8 @@ jobs:
           grep -q "core/world-2d-runtime.js" _site/sw.js
           grep -q "core/visual-overhaul-runtime.js" _site/sw.js
           grep -q "core/art-direction-runtime.js" _site/sw.js
-          grep -q "OneBulletArtDirectionRuntime" _site/src/main.js
+          grep -q "core/interface-redesign-runtime.js" _site/sw.js
+          grep -q "OneBulletInterfaceRedesignRuntime" _site/src/main.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

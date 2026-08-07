@@ -48,7 +48,7 @@ export function sanitizeCheckpoint(value) {
 
   const maxHealth = integer(value.player?.maxHealth, 3, 1, 20);
   const health = integer(value.player?.health, maxHealth, 1, maxHealth);
-  const checkpoint = {
+  return {
     schemaVersion: CHECKPOINT_SCHEMA_VERSION,
     savedAt: integer(value.savedAt, Date.now(), 0, Number.MAX_SAFE_INTEGER),
     releaseVersion: String(value.releaseVersion || ''),
@@ -73,8 +73,6 @@ export function sanitizeCheckpoint(value) {
     stats: sanitizeStats(value.stats),
     combat: sanitizeCombat(value.combat),
   };
-
-  return checkpoint;
 }
 
 export function captureCheckpoint(game, releaseVersion = '') {
@@ -112,8 +110,12 @@ export function captureCheckpoint(game, releaseVersion = '') {
 }
 
 export class CheckpointStore {
-  constructor(storage = globalThis.localStorage, key = CHECKPOINT_STORAGE_KEY) {
-    this.storage = storage;
+  constructor(storage, key = CHECKPOINT_STORAGE_KEY) {
+    if (storage !== undefined) this.storage = storage;
+    else {
+      try { this.storage = globalThis.localStorage; }
+      catch { this.storage = null; }
+    }
     this.key = key;
   }
 

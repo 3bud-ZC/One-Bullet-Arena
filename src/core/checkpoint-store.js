@@ -43,8 +43,9 @@ export function sanitizeCheckpoint(value) {
   if (!value || typeof value !== 'object') return null;
   if (integer(value.schemaVersion, 0) !== CHECKPOINT_SCHEMA_VERSION) return null;
 
-  const wave = integer(value.wave, 0, 1, MAX_WAVE);
-  if (wave < 1) return null;
+  const rawWave = Number(value.wave);
+  if (!Number.isFinite(rawWave) || rawWave < 1) return null;
+  const wave = Math.min(MAX_WAVE, Math.trunc(rawWave));
 
   const maxHealth = integer(value.player?.maxHealth, 3, 1, 20);
   const health = integer(value.player?.health, maxHealth, 1, maxHealth);

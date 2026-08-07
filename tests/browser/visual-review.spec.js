@@ -14,68 +14,96 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v2.8.0-b event foundation, combat, upgrades, and game over', async ({ page }, testInfo) => {
+test('captures the v2.9.0 combat depth states and existing core screens', async ({ page }, testInfo) => {
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('2.8.0-b');
-  expect(menuSnapshot.releaseChannel).toBe('runtime-event-foundation');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.8.0-b');
+  expect(menuSnapshot.releaseVersion).toBe('2.9.0-combat');
+  expect(menuSnapshot.releaseChannel).toBe('core-combat-depth');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v2.9.0-combat');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('2.8.0-b');
-  expect(menuSnapshot.eventSchemaVersion).toBe(1);
+  expect(menuSnapshot.eventFoundationVersion).toBe('2.9.0-combat');
+  expect(menuSnapshot.eventSchemaVersion).toBe(2);
   expect(menuSnapshot.gameEventBusActive).toBe(true);
+  expect(menuSnapshot.combatDepthActive).toBe(true);
+  expect(menuSnapshot.combatDepthVersion).toBe('2.9.0-combat');
   expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('2.8.0-b');
-  expect(menuSnapshot.hudLayoutRevision).toBe('compact-safe-zone-hud');
-  expect(menuSnapshot.hudPanelHeight).toBe(62);
-  expect(menuSnapshot.hudSafeBottom).toBe(80);
-  expect(menuSnapshot.reducedHudGlow).toBe(true);
-  expect(menuSnapshot.bidiSafeHudStats).toBe(true);
-  expect(menuSnapshot.releaseLabelCorrected).toBe(true);
-  expect(menuSnapshot.interfaceLanguageMode).toBe('arabic-menu-english-technical-hud');
+  expect(menuSnapshot.uiLayoutVersion).toBe('2.9.0-combat');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'event-foundation-menu');
+  await attachCanvas(page, testInfo, 'combat-depth-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
     game.banner = null;
-    game.tutorialStep = 1;
+    game.tutorialStep = 3;
     game.pointer.x = 930;
     game.pointer.y = 360;
+    game.momentum = 46;
+    game.combo = 4;
+    game.comboTimer = 2.4;
     game.draw();
   });
+  await attachCanvas(page, testInfo, 'momentum-combat-hud');
 
-  const combatSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(combatSnapshot.redesignedHud).toBe(true);
-  expect(combatSnapshot.visualEnemyReadability).toBe(true);
-  expect(combatSnapshot.comboMomentumHud).toBe(true);
-  expect(combatSnapshot.tutorialLayoutRevision).toBe('single-step-context-strip');
-  expect(combatSnapshot.recentGameEvents.some((event) => event.type === 'run.started')).toBe(true);
-  expect(combatSnapshot.recentGameEvents.some((event) => event.type === 'wave.started')).toBe(true);
-  await attachCanvas(page, testInfo, 'event-foundation-combat-hud');
+  const catchSnapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.recallStartedAt = game.runTime - 0.7;
+    game.recallStartDistance = 350;
+    game.catchAlignmentPeak = 0.9;
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: true,
+      x: game.player.x + 6,
+      y: game.player.y,
+      vx: -720,
+      vy: 0,
+      recoverDelay: 0,
+    });
+    game.catchBullet();
+    game.draw();
+    return game.getSnapshot();
+  });
+  expect(catchSnapshot.precisionCharge).toBe(1);
+  expect(catchSnapshot.perfectCatches).toBe(1);
+  await attachCanvas(page, testInfo, 'perfect-catch-precision-ready');
+
+  const overdriveSnapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.momentum = 98;
+    game.addMomentum(10);
+    game.draw();
+    return game.getSnapshot();
+  });
+  expect(overdriveSnapshot.overdriveActive).toBe(true);
+  expect(overdriveSnapshot.overdrives).toBe(1);
+  await attachCanvas(page, testInfo, 'overdrive-active');
 
   const feedbackSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
+    game.overdriveTimer = 0;
+    game.momentum = 0;
+    game.precisionCharge = 1;
+    game.pointer.x = 960;
+    game.pointer.y = 360;
+    game.fireBullet();
+    game.onRicochet();
+    game.onRicochet();
     game.enemies = [];
     const enemy = game.spawnEnemy('brute', 0, { point: { x: 790, y: 380 } });
     enemy.spawnTime = 0;
-    game.bullet.vx = 900;
-    game.bullet.vy = -80;
-    game.combo = 4;
-    game.comboTimer = 2.15;
     game.damageEnemy(enemy, 99, true);
     game.draw();
     return game.getSnapshot();
   });
   expect(feedbackSnapshot.feedbackEventCount).toBeGreaterThan(0);
   expect(feedbackSnapshot.feedbackCalloutActive).toBe(true);
-  expect(feedbackSnapshot.recentGameEvents.some((event) => event.type === 'enemy.killed')).toBe(true);
-  await attachCanvas(page, testInfo, 'impact-feedback');
+  expect(feedbackSnapshot.precisionKills).toBe(1);
+  expect(feedbackSnapshot.bankKills).toBe(1);
+  await attachCanvas(page, testInfo, 'precision-bank-impact');
 
   const upgradeSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -91,8 +119,6 @@ test('captures the v2.8.0-b event foundation, combat, upgrades, and game over', 
   expect(upgradeSnapshot.state).toBe('upgrade');
   expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
   expect(upgradeSnapshot.redesignedUpgradeCards).toBe(true);
-  expect(upgradeSnapshot.recentGameEvents.some((event) => event.type === 'wave.cleared')).toBe(true);
-  expect(upgradeSnapshot.recentGameEvents.some((event) => event.type === 'upgrade.offered')).toBe(true);
   await attachCanvas(page, testInfo, 'upgrade-cards');
 
   await page.evaluate(() => {

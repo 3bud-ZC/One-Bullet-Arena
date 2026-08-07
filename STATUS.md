@@ -5,110 +5,91 @@ Last updated: 2026-08-07
 ## Current milestone
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.3.0 — Cinematic Visual Overhaul**
-- Working branch: `feature/v3.3.0-visual-overhaul`
-- Pull Request: **#45 — draft, awaiting owner visual acceptance**
-- Canonical release version: `3.3.0-visual-overhaul`
-- Canonical release label: `v3.3.0-visual-overhaul`
-- Release channel: `cinematic-visual-overhaul`
-- Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
-- Implementation: **100% complete**
-- Automated verification: **complete and green**
-- Manual capture review: **complete; no blocking visual regression found**
+- Milestone: **v3.4.0 — Combat Feel & Game Juice**
+- Working branch: `feature/v3.4.0-combat-juice`
+- Base branch: `feature/v3.3.0-visual-overhaul`
+- Parent PR: **#45 — v3.3.0 Cinematic Visual Overhaul, still awaiting owner merge acceptance**
+- v3.4 release identity: **not locked yet; feature verification first**
+- Implementation: **feature-complete pending automated/browser verification**
 - Gameplay geometry changed: **no**
 - Collision geometry changed: **no**
-- Combat balance or progression changed: **no**
-- Owner acceptance: **pending**
-- Merge: **blocked only on owner acceptance**
+- Enemy/player speed changed: **no**
+- Damage/progression values changed by v3.4: **no**
+- Checkpoint schema changed: **no**
 
-## Visual overhaul delivered
+## v3.4 combat-juice implementation
 
-- Added `src/core/visual-overhaul-runtime.js` above the accepted True 2D runtime.
-- Strengthened the industrial arena with ambient deck nodes, stage-aware energy accents, floor scan/detail passes, stronger physical borders, corner framing, and obstacle material detail.
-- Added enemy health/threat arcs and clearer impact readability without changing enemy hitboxes.
-- Added hostile projectile glow without changing projectile collision geometry.
-- Added player dash-ready and shield visual layers without changing movement or defensive values.
-- Added a readable bullet recall tether, additional bullet glow, and a secondary aiming-reticle treatment.
-- Added stronger cinematic framing for the main menu, combat HUD, upgrade selection, pause, Game Over, banners, and touch controls.
-- Strengthened the browser shell with a richer sci-fi frame and background treatment while preserving mobile-landscape behavior.
-- `prefers-reduced-motion` support remains active for non-essential motion and shell effects.
+Added `src/core/combat-juice-runtime.js` above the accepted v3.3 visual runtime.
+
+Delivered feedback layers:
+
+1. directional fire-wave impulse around the player and bullet launch vector;
+2. deterministic ricochet shard clouds and expanding bank rings;
+3. stronger lethal-hit treatment with impact cores, kill halos, and deterministic debris;
+4. dedicated Warden guard-impact treatment without changing guard mechanics;
+5. recall-start surge and catch-collapse treatment, including stronger perfect-catch feedback;
+6. dash-start wake/pop treatment;
+7. player-damage and shield-hit world feedback plus a restrained screen-edge damage vignette;
+8. wave-entry ring/sweep treatment, with stronger feedback when the arena expands;
+9. lightweight bullet ghost sampling for high-speed readability;
+10. bounded event queues and reduced-motion handling for non-essential movement effects.
 
 ## Architecture
 
-The active runtime chain for this milestone is:
+Active feature chain:
 
-`VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+`CombatJuice → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
-- `VisualOverhaul` is render-only.
-- `World2D` remains the accepted lower visual/world contract at `3.2.0-true-2d`.
-- Warden contract remains `3.1.0-a-warden`.
-- Checkpoint Progression contract remains `3.0.0-checkpoint`.
-- Combat Depth contract remains `2.9.0-combat`.
-- Gameplay event schema remains `4`.
-- Checkpoint schema remains `1`.
-- Existing checkpoint saves remain compatible.
-- Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
+`CombatJuice` is presentation/game-feel focused. It may raise existing camera shake or hit-stop timers for important impacts, but it does not alter damage, collision geometry, movement speeds, enemy behavior, wave composition, upgrade values, checkpoint data, or progression rules.
 
-## Final v3.3 verification
+## Test coverage added
 
-Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
+- `tests/combat-juice.test.js`
+  - runtime version contract;
+  - bounded impact intensity;
+  - deterministic shard generation;
+  - presentation-only source contract.
+- `tests/browser/combat-juice.spec.js`
+  - runtime activation;
+  - fire feedback;
+  - ricochet feedback;
+  - lethal-hit feedback;
+  - recall/catch feedback;
+  - dash/damage presentation;
+  - canvas captures for visual review.
+- `package.json` syntax gate now includes the new runtime.
+- `sw.js` app shell now includes the new runtime.
+- `src/main.js` boots `OneBulletCombatJuiceRuntime`.
+
+## Verification state
+
+- Local syntax check of the new runtime: **passed**.
+- Repository CI: **pending**.
+- Browser Smoke / Playwright: **pending**.
+- Cross-browser capture review: **pending**.
+- Canonical v3.4 release version/cache lock: **blocked until feature CI is green**.
+
+## Preserved v3.3 baseline
+
+The parent v3.3 feature previously passed:
 
 - Verify #833: **success**.
 - Browser Smoke #171: **success**.
 - Playwright: **148/148 passed**.
-- Expected: **148**.
 - Unexpected failures: **0**.
 - Flaky tests: **0**.
 - Skipped tests: **0**.
-- The final Browser Smoke artifact was generated successfully for the verified release-content head.
-- The final menu capture visibly reports `v3.3.0-visual-overhaul`.
-- Existing combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage remains green.
 
-A previous pre-release-identity verification also passed:
+v3.4 must preserve that baseline before its release identity can be promoted.
 
-- Verify #831: **success**.
-- Browser Smoke #170: **success**.
-- Playwright: **148/148 passed**.
+## Current acceptance gate
 
-## Manual visual review
+Do not merge v3.4 yet.
 
-Generated Playwright captures were reviewed across the final visual-overhaul suite, including representative states for:
+Required before release lock:
 
-1. desktop main menu;
-2. desktop active combat;
-3. desktop bullet recall;
-4. desktop upgrade selection;
-5. checkpoint/menu states;
-6. Warden and combat-depth states;
-7. mobile-landscape combat and controls;
-8. Firefox/WebKit/Chromium rendering coverage.
-
-The review found no blocking visual regression:
-
-- menu hierarchy and framing remain readable;
-- the final menu shows the canonical `v3.3.0-visual-overhaul` release label;
-- active combat entities remain distinct from the strengthened map;
-- enemy threat/health arcs add readability without obscuring targets;
-- the recall tether is clearly visible without hiding combat;
-- upgrade cards remain legible;
-- mobile controls stay outside the primary combat focus;
-- cross-browser captures remain visually consistent;
-- no blocking clipping or overlap was observed in the reviewed captures.
-
-## Release decision
-
-The implementation and automated release gate are complete. PR #45 remains intentionally unmerged so the owner can perform a final hands-on visual acceptance pass before production changes.
-
-No additional code change is required unless owner acceptance identifies a visual, performance, readability, input, or collision issue.
-
-## Owner acceptance gate
-
-1. Confirm the menu footer displays `v3.3.0-visual-overhaul`.
-2. Start a new run and inspect arena depth, floor detail, border framing, obstacle material treatment, and combat contrast.
-3. Move and dash continuously and confirm the player remains readable and responsive.
-4. Fire, ricochet, recall, and catch the bullet and verify the trail, recall tether, glow, and reticle remain clear.
-5. Fight mixed enemy groups and confirm threat/health arcs help readability rather than adding clutter.
-6. Reach or continue to Wave 7 and verify the Warden remains readable against the upgraded arena.
-7. Check HUD, upgrades, pause, Game Over, and checkpoint Continue/New Run/Menu behavior.
-8. Test mobile landscape and confirm movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
-9. Report any performance drop, excessive glow, visual clutter, dark area, unreadable entity, control regression, or collision mismatch before PR #45 is merged.
+1. Verify workflow succeeds on the v3.4 feature head.
+2. Browser Smoke succeeds across configured projects.
+3. New combat-juice screenshots are manually inspected for clutter/readability.
+4. Existing visual-overhaul, Warden, checkpoint, combat-depth, mobile/touch, input, PWA, and release-handshake tests remain green.
+5. If successful, promote release identity to `v3.4.0-combat-juice`, rerun the final release CI cycle, then present the result for owner acceptance.

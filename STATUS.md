@@ -2,27 +2,34 @@
 
 Last updated: 2026-08-07
 
-## Current milestone
+## Release status
 
-- Milestone: **v3.0.0 — Checkpoint Progression**
-- Working branch: `feature/v3.0.0-checkpoint-progression`
-- Current production code on `main`: **v2.9.0 — Core Combat Depth**
-- Previous release owner acceptance: **confirmed**
-- Implementation on feature branch: **100% complete**
-- Pull Request: **pending**
-- Automated verification: **pending PR execution**
-- Visual review: **pending Browser Smoke artifact**
-- Owner deployed acceptance: **pending after merge**
+- Product: **One Bullet Arena / حلبة الطلقة الواحدة**
+- Current production code on `main`: **v3.0.0 — Checkpoint Progression**
+- Pull Request #42: **squash-merged into `main`**
+- Release merge commit: `dbf91fc793bbaefb534f3afbf6761ad76d195c66`
+- Final tested feature head: `0577bc8cb8e833b56f872e3d4dc50b9e88fcf349`
+- Implementation: **100% complete**
+- Verify #767: **success**
+- Browser Smoke #154: **success**
+- Playwright: **116/116 passed**
+- Unexpected failures: **0**
+- Flaky tests: **0**
+- Skipped tests: **0**
+- Permanent visual captures: **40**
+- New checkpoint captures inspected: **12/12**
+- Owner deployed acceptance: **pending**
+- GitHub Pages public deployment: **not independently confirmed from the assistant environment**
 - Next milestone: **blocked until owner acceptance**
 
-## Requested product behavior
+## Requested product behavior delivered
 
-The owner requested persistent local progression with two explicit choices after death or from the menu:
+The player now has two explicit progression choices:
 
 1. Start a completely new run from Wave 1.
 2. Continue from the highest saved wave reached previously.
 
-The checkpoint is taken at the safe start of a wave. It does not resume from the middle of combat and does not preserve active enemies or hostile projectiles.
+The checkpoint is taken at the safe start of a wave. It never resumes from the middle of combat and never restores unsafe active enemies, hostile projectiles, particles, or a mid-flight bullet.
 
 ## Release identity
 
@@ -38,16 +45,17 @@ The checkpoint is taken at the safe start of a wave. It does not resume from the
 
 - Added `src/core/checkpoint-store.js`.
 - Storage key: `one-bullet-arena-checkpoint-v1`.
-- Checkpoints are stored locally in the browser using `localStorage`.
-- Storage failures or restricted browser storage do not block gameplay.
-- Invalid JSON, incompatible schemas, and malformed checkpoints are ignored safely.
-- Numeric and structural values are validated and bounded before use.
-- Unknown or invalid upgrade identifiers are removed through the approved upgrade normalizer.
-- A lower-wave checkpoint cannot overwrite a higher-wave checkpoint.
-- An equal-wave checkpoint may refresh the saved build and statistics.
+- Checkpoints are stored locally in the current browser profile using `localStorage`.
+- Checkpoints survive refresh, browser close, and offline launches on the same profile.
+- Restricted or unavailable storage never prevents a normal new run.
+- Invalid JSON, malformed values, and incompatible schemas are ignored safely.
+- Values are validated and bounded before restoration.
+- Unknown upgrade identifiers are removed using the approved upgrade normalizer.
+- A lower-wave checkpoint cannot overwrite a higher checkpoint.
+- An equal-wave checkpoint may refresh the stored build and statistics.
 - A higher-wave checkpoint replaces the previous checkpoint.
 
-## Save timing and restored data
+## Save timing and restored progression
 
 A checkpoint is written automatically at the beginning of Wave 2 and every later wave.
 
@@ -65,34 +73,32 @@ The checkpoint preserves:
 - remaining Overdrive duration;
 - Perfect Catch, Precision Kill, Bank Kill, and Overdrive statistics.
 
-The checkpoint intentionally does not preserve:
+On restore:
 
-- enemies currently alive;
-- hostile projectiles;
-- particles and visual effects;
-- the bullet in an unsafe mid-flight position;
-- a partially completed wave.
+- the saved wave starts again with its normal enemy composition;
+- the bullet starts safely in hand;
+- the player position is constrained to the active arena;
+- brief spawn protection is applied;
+- the saved build, health, score, statistics, and Combat Depth state are restored.
 
-On restore, the selected wave starts again with its normal deterministic enemy composition. The player receives brief spawn protection and the bullet starts safely in hand.
-
-## Continue and new-run UX
+## Continue and New Run UX
 
 ### Main menu
 
-When a checkpoint is available, the menu shows:
+When a checkpoint exists, the menu shows:
 
-- the saved wave;
+- saved wave;
 - saved upgrade count;
 - saved score;
 - **Continue from Wave XX**;
 - **New Run from Start**;
 - **Delete Checkpoint**.
 
-Starting a new run does not erase the higher saved checkpoint.
+Starting a new run does not delete the higher saved checkpoint.
 
 ### Game Over
 
-When a checkpoint is available, Game Over shows:
+When a checkpoint exists, Game Over shows:
 
 - **Continue from Wave XX**;
 - **Start from Wave 01**;
@@ -100,12 +106,12 @@ When a checkpoint is available, Game Over shows:
 
 Keyboard shortcuts:
 
-- `C`: continue from the checkpoint;
+- `C`: continue from checkpoint;
 - `N`: start a new run;
 - `Enter` on Game Over: continue when a checkpoint exists, otherwise start a new run;
 - `R`: start a new run from Game Over.
 
-The physical key codes remain layout-independent for Arabic and English keyboard layouts.
+Physical key codes remain stable with Arabic and English keyboard layouts.
 
 ## Architecture and diagnostics
 
@@ -116,28 +122,22 @@ The physical key codes remain layout-independent for Arabic and English keyboard
   - `checkpoint.saved`;
   - `checkpoint.loaded`;
   - `checkpoint.cleared`.
-- QA snapshots expose:
-  - checkpoint runtime and schema versions;
-  - checkpoint availability;
-  - saved wave, score, and upgrade count;
-  - whether the current run was restored;
-  - save timing and local-only storage mode.
+- QA snapshots expose checkpoint availability, saved wave, saved score, saved upgrades, restore status, schema, storage mode, and save timing.
 
-## Verification coverage added
+## Verification completed
 
-### Deterministic tests
+### Deterministic coverage
 
-- schema and wave validation;
-- value clamping and upgrade normalization;
-- highest-wave preservation;
-- equal-wave refresh;
+- schema and required-wave validation;
+- numeric clamping and upgrade normalization;
+- highest-wave preservation and equal-wave refresh;
 - malformed and unavailable storage handling;
-- capture of persistent state without transient entities;
-- checkpoint event catalog and runtime integration;
+- persistent-state capture without transient entities;
+- checkpoint event catalog and runtime activation;
 - Arabic-layout physical `C` and `N` shortcuts;
 - release, Service Worker, and Pages artifact consistency.
 
-### Browser tests
+### Browser coverage
 
 - normal Wave 1 start remains unchanged;
 - creation of a Wave 5 checkpoint;
@@ -146,33 +146,33 @@ The physical key codes remain layout-independent for Arabic and English keyboard
 - restoration of wave, score, health, upgrades, statistics, Momentum, Precision, and Overdrive;
 - Game Over continue behavior;
 - checkpoint clearing;
-- continued compatibility with Core Combat Depth.
+- compatibility with Core Combat Depth, movement, touch controls, wave progression, upgrades, and the existing PWA shell.
 
-### Permanent visual captures
+The final suite passed on:
 
-New captures are generated for every browser project:
+- Desktop Chromium;
+- Mobile Landscape Chromium;
+- Desktop Firefox;
+- Desktop WebKit.
 
-- checkpoint-aware main menu;
-- checkpoint-aware Game Over choices;
-- restored-wave confirmation banner.
+The final visual review contains 28 existing release captures and 12 checkpoint-specific captures covering the checkpoint menu, checkpoint-aware Game Over, and restored-wave confirmation across all four browser projects. No blocking clipping, overlap, responsive-layout, or directionality issue was found.
 
 ## Scope retained
 
-The approved product path remains:
+The product path is now:
 
 `Main Menu → New Run or Continue → Wave Combat → Upgrade → Harder Wave → Defeat → Continue/New Run/Menu`
 
 No multiplayer, currencies, shop, hub, equipment, story, objectives, puzzles, bosses, accounts, cloud saves, or online leaderboard were added.
 
-## Owner acceptance after merge
+## Owner acceptance gate
 
 1. Confirm the footer displays `v3.0.0-checkpoint`.
-2. Start a fresh run and reach at least Wave 3 or Wave 5.
+2. Start a new run and reach at least Wave 3 or Wave 5.
 3. Choose multiple upgrades and note health, score, and Momentum.
-4. Lose the run intentionally.
-5. Confirm Game Over offers Continue and New Run separately.
-6. Continue and verify the correct wave and build are restored.
-7. Return to the menu, refresh or close/reopen the page, and continue again.
-8. Start a fresh run and confirm the higher saved checkpoint remains available.
-9. Delete the checkpoint and confirm the Continue option disappears.
-10. Report any loss of progress, wrong restored value, layout issue, or control regression before the next milestone begins.
+4. Lose intentionally and confirm Continue and New Run are separate choices.
+5. Continue and verify the correct wave and build are restored.
+6. Return to the menu, refresh or close/reopen the page, and continue again.
+7. Start a new run and confirm the higher checkpoint remains available.
+8. Delete the checkpoint and confirm the Continue option disappears.
+9. Report any lost progress, wrong restored value, layout issue, or control regression before the next milestone begins.

@@ -1,6 +1,6 @@
 {
   "name": "one-bullet-arena",
-  "version": "3.2.0-true-2d",
+  "version": "3.3.0-visual-overhaul",
   "private": true,
   "type": "module",
   "description": "A polished one-bullet wave survival game with one focused progression path.",

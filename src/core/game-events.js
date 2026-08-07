@@ -1,4 +1,4 @@
-export const GAME_EVENT_SCHEMA_VERSION = 2;
+export const GAME_EVENT_SCHEMA_VERSION = 3;
 
 export const GAME_EVENTS = Object.freeze({
   RUNTIME_READY: 'runtime.ready',
@@ -26,6 +26,9 @@ export const GAME_EVENTS = Object.freeze({
   MOMENTUM_CHANGED: 'skill.momentum-changed',
   OVERDRIVE_STARTED: 'skill.overdrive-started',
   OVERDRIVE_ENDED: 'skill.overdrive-ended',
+  CHECKPOINT_SAVED: 'checkpoint.saved',
+  CHECKPOINT_LOADED: 'checkpoint.loaded',
+  CHECKPOINT_CLEARED: 'checkpoint.cleared',
 });
 
 export const GAME_EVENT_TYPES = Object.freeze(Object.values(GAME_EVENTS));

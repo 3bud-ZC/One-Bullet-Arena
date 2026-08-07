@@ -1,4 +1,4 @@
-export const GAME_EVENT_SCHEMA_VERSION = 1;
+export const GAME_EVENT_SCHEMA_VERSION = 2;
 
 export const GAME_EVENTS = Object.freeze({
   RUNTIME_READY: 'runtime.ready',
@@ -20,6 +20,12 @@ export const GAME_EVENTS = Object.freeze({
   PLAYER_REVIVED: 'player.revived',
   UPGRADE_OFFERED: 'upgrade.offered',
   UPGRADE_SELECTED: 'upgrade.selected',
+  PERFECT_CATCH: 'skill.perfect-catch',
+  PRECISION_SHOT_FIRED: 'skill.precision-shot-fired',
+  BANK_CHAINED: 'skill.bank-chained',
+  MOMENTUM_CHANGED: 'skill.momentum-changed',
+  OVERDRIVE_STARTED: 'skill.overdrive-started',
+  OVERDRIVE_ENDED: 'skill.overdrive-ended',
 });
 
 export const GAME_EVENT_TYPES = Object.freeze(Object.values(GAME_EVENTS));

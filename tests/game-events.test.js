@@ -16,14 +16,16 @@ import {
 } from '../src/core/game-states.js';
 
 test('game event catalog is unique, frozen, and stable', () => {
-  assert.equal(GAME_EVENT_SCHEMA_VERSION, 1);
+  assert.equal(GAME_EVENT_SCHEMA_VERSION, 2);
   assert.ok(Object.isFrozen(GAME_EVENTS));
   assert.ok(Object.isFrozen(GAME_EVENT_TYPES));
   assert.equal(new Set(GAME_EVENT_TYPES).size, GAME_EVENT_TYPES.length);
-  assert.ok(GAME_EVENT_TYPES.length >= 18);
+  assert.ok(GAME_EVENT_TYPES.length >= 24);
   assert.equal(GAME_EVENTS.RUN_STARTED, 'run.started');
   assert.equal(GAME_EVENTS.WAVE_CLEARED, 'wave.cleared');
   assert.equal(GAME_EVENTS.UPGRADE_SELECTED, 'upgrade.selected');
+  assert.equal(GAME_EVENTS.PERFECT_CATCH, 'skill.perfect-catch');
+  assert.equal(GAME_EVENTS.OVERDRIVE_STARTED, 'skill.overdrive-started');
 });
 
 test('event type guards accept only catalog values', () => {
@@ -46,34 +48,25 @@ test('game state contract matches the runtime state machine', () => {
   assert.throws(() => assertGameState('loading'), /Unknown game state/);
 });
 
-test('event runtime integrates every required gameplay event without editing base combat', async () => {
-  const source = await readFile(new URL('../src/core/event-runtime.js', import.meta.url), 'utf8');
+test('event and combat runtimes integrate required gameplay events without editing base combat', async () => {
+  const eventSource = await readFile(new URL('../src/core/event-runtime.js', import.meta.url), 'utf8');
+  const combatSource = await readFile(new URL('../src/core/combat-depth-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
-  const requiredEvents = [
-    'RUN_STARTED',
-    'RUN_FINISHED',
-    'STATE_CHANGED',
-    'WAVE_STARTED',
-    'WAVE_CLEARED',
-    'ENEMY_SPAWNED',
-    'ENEMY_DAMAGED',
-    'ENEMY_KILLED',
-    'BULLET_FIRED',
-    'BULLET_RECALL_STARTED',
-    'BULLET_CAUGHT',
-    'BULLET_RICOCHETED',
-    'PLAYER_DASHED',
-    'PLAYER_DAMAGED',
-    'PLAYER_SHIELD_ABSORBED',
-    'PLAYER_REVIVED',
-    'UPGRADE_OFFERED',
+  const requiredBaseEvents = [
+    'RUN_STARTED', 'RUN_FINISHED', 'STATE_CHANGED', 'WAVE_STARTED', 'WAVE_CLEARED',
+    'ENEMY_SPAWNED', 'ENEMY_DAMAGED', 'ENEMY_KILLED', 'BULLET_FIRED',
+    'BULLET_RECALL_STARTED', 'BULLET_CAUGHT', 'BULLET_RICOCHETED', 'PLAYER_DASHED',
+    'PLAYER_DAMAGED', 'PLAYER_SHIELD_ABSORBED', 'PLAYER_REVIVED', 'UPGRADE_OFFERED',
     'UPGRADE_SELECTED',
   ];
+  const requiredSkillEvents = [
+    'PERFECT_CATCH', 'PRECISION_SHOT_FIRED', 'BANK_CHAINED', 'MOMENTUM_CHANGED',
+    'OVERDRIVE_STARTED', 'OVERDRIVE_ENDED',
+  ];
 
-  for (const eventName of requiredEvents) {
-    assert.match(source, new RegExp(`GAME_EVENTS\\.${eventName}`));
-  }
-  assert.match(mainSource, /new OneBulletEventRuntime/);
+  for (const eventName of requiredBaseEvents) assert.match(eventSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
+  for (const eventName of requiredSkillEvents) assert.match(combatSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
+  assert.match(mainSource, /new OneBulletCombatDepthRuntime/);
   assert.match(mainSource, /__ONE_BULLET_EVENTS__/);
 });

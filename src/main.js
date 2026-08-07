@@ -1,4 +1,4 @@
-import { OneBulletEventRuntime } from './core/event-runtime.js';
+import { OneBulletCombatDepthRuntime } from './core/combat-depth-runtime.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
@@ -10,7 +10,7 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثو
 canvas.tabIndex = 0;
 canvas.addEventListener('pointerdown', () => canvas.focus());
 
-const game = new OneBulletEventRuntime(canvas, liveRegion);
+const game = new OneBulletCombatDepthRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;

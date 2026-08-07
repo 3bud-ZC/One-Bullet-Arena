@@ -16,11 +16,11 @@ import {
 } from '../src/core/game-states.js';
 
 test('game event catalog is unique, frozen, and stable', () => {
-  assert.equal(GAME_EVENT_SCHEMA_VERSION, 3);
+  assert.equal(GAME_EVENT_SCHEMA_VERSION, 4);
   assert.ok(Object.isFrozen(GAME_EVENTS));
   assert.ok(Object.isFrozen(GAME_EVENT_TYPES));
   assert.equal(new Set(GAME_EVENT_TYPES).size, GAME_EVENT_TYPES.length);
-  assert.ok(GAME_EVENT_TYPES.length >= 27);
+  assert.ok(GAME_EVENT_TYPES.length >= 30);
   assert.equal(GAME_EVENTS.RUN_STARTED, 'run.started');
   assert.equal(GAME_EVENTS.WAVE_CLEARED, 'wave.cleared');
   assert.equal(GAME_EVENTS.UPGRADE_SELECTED, 'upgrade.selected');
@@ -29,6 +29,9 @@ test('game event catalog is unique, frozen, and stable', () => {
   assert.equal(GAME_EVENTS.CHECKPOINT_SAVED, 'checkpoint.saved');
   assert.equal(GAME_EVENTS.CHECKPOINT_LOADED, 'checkpoint.loaded');
   assert.equal(GAME_EVENTS.CHECKPOINT_CLEARED, 'checkpoint.cleared');
+  assert.equal(GAME_EVENTS.WARDEN_GUARD_BLOCKED, 'warden.guard-blocked');
+  assert.equal(GAME_EVENTS.WARDEN_GUARD_BROKEN, 'warden.guard-broken');
+  assert.equal(GAME_EVENTS.WARDEN_GUARD_RESTORED, 'warden.guard-restored');
 });
 
 test('event type guards accept only catalog values', () => {
@@ -55,6 +58,7 @@ test('runtime layers integrate required events without editing base combat', asy
   const eventSource = await readFile(new URL('../src/core/event-runtime.js', import.meta.url), 'utf8');
   const combatSource = await readFile(new URL('../src/core/combat-depth-runtime.js', import.meta.url), 'utf8');
   const checkpointSource = await readFile(new URL('../src/core/checkpoint-runtime.js', import.meta.url), 'utf8');
+  const wardenSource = await readFile(new URL('../src/core/warden-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   const requiredBaseEvents = [
@@ -69,10 +73,12 @@ test('runtime layers integrate required events without editing base combat', asy
     'OVERDRIVE_STARTED', 'OVERDRIVE_ENDED',
   ];
   const requiredCheckpointEvents = ['CHECKPOINT_SAVED', 'CHECKPOINT_LOADED', 'CHECKPOINT_CLEARED'];
+  const requiredWardenEvents = ['WARDEN_GUARD_BLOCKED', 'WARDEN_GUARD_BROKEN', 'WARDEN_GUARD_RESTORED'];
 
   for (const eventName of requiredBaseEvents) assert.match(eventSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
   for (const eventName of requiredSkillEvents) assert.match(combatSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
   for (const eventName of requiredCheckpointEvents) assert.match(checkpointSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
-  assert.match(mainSource, /new OneBulletCheckpointRuntime/);
+  for (const eventName of requiredWardenEvents) assert.match(wardenSource, new RegExp(`GAME_EVENTS\\.${eventName}`));
+  assert.match(mainSource, /new OneBulletWardenRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

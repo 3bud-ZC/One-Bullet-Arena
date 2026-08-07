@@ -7,16 +7,19 @@ Last updated: 2026-08-07
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
 - Milestone: **v3.3.0 — Cinematic Visual Overhaul**
 - Working branch: `feature/v3.3.0-visual-overhaul`
-- Pull Request: **#45 — draft during final verification and owner acceptance**
+- Pull Request: **#45 — draft, awaiting owner visual acceptance**
 - Canonical release version: `3.3.0-visual-overhaul`
 - Canonical release label: `v3.3.0-visual-overhaul`
 - Release channel: `cinematic-visual-overhaul`
 - Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
 - Implementation: **100% complete**
+- Automated verification: **complete and green**
+- Manual capture review: **complete; no blocking visual regression found**
 - Gameplay geometry changed: **no**
 - Collision geometry changed: **no**
 - Combat balance or progression changed: **no**
 - Owner acceptance: **pending**
+- Merge: **blocked only on owner acceptance**
 
 ## Visual overhaul delivered
 
@@ -46,50 +49,57 @@ The active runtime chain for this milestone is:
 - Existing checkpoint saves remain compatible.
 - Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
 
-## Verification completed before final release-identity lock
+## Final v3.3 verification
 
-Verified feature head: `d1624894f86164fa7fda88c042ce60a8595cce81`.
+Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
+
+- Verify #833: **success**.
+- Browser Smoke #171: **success**.
+- Playwright: **148/148 passed**.
+- Expected: **148**.
+- Unexpected failures: **0**.
+- Flaky tests: **0**.
+- Skipped tests: **0**.
+- The final Browser Smoke artifact was generated successfully for the verified release-content head.
+- The final menu capture visibly reports `v3.3.0-visual-overhaul`.
+- Existing combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage remains green.
+
+A previous pre-release-identity verification also passed:
 
 - Verify #831: **success**.
 - Browser Smoke #170: **success**.
 - Playwright: **148/148 passed**.
-- Unexpected browser-test failures: **0**.
-- New visual-overhaul coverage captures menu, combat, bullet recall, and upgrade states across the configured browser projects.
-- Existing combat, checkpoint, Warden, input, mobile, PWA, and release-handshake coverage continued to pass.
 
 ## Manual visual review
 
-The generated Playwright captures were inspected after Browser Smoke #170.
-
-Reviewed states included:
+Generated Playwright captures were reviewed across the final visual-overhaul suite, including representative states for:
 
 1. desktop main menu;
 2. desktop active combat;
 3. desktop bullet recall;
 4. desktop upgrade selection;
-5. mobile-landscape combat;
-6. Firefox combat rendering.
+5. checkpoint/menu states;
+6. Warden and combat-depth states;
+7. mobile-landscape combat and controls;
+8. Firefox/WebKit/Chromium rendering coverage.
 
 The review found no blocking visual regression:
 
 - menu hierarchy and framing remain readable;
+- the final menu shows the canonical `v3.3.0-visual-overhaul` release label;
 - active combat entities remain distinct from the strengthened map;
-- the recall tether is clearly visible without obscuring combat;
+- enemy threat/health arcs add readability without obscuring targets;
+- the recall tether is clearly visible without hiding combat;
 - upgrade cards remain legible;
 - mobile controls stay outside the primary combat focus;
-- Firefox rendering remains consistent with Chromium;
+- cross-browser captures remain visually consistent;
 - no blocking clipping or overlap was observed in the reviewed captures.
 
-## Final v3.3 verification gate
+## Release decision
 
-The canonical v3.3 identity and its test expectations are now aligned. The final CI cycle must run on the release-identity head that contains this status update.
+The implementation and automated release gate are complete. PR #45 remains intentionally unmerged so the owner can perform a final hands-on visual acceptance pass before production changes.
 
-Merge remains blocked unless:
-
-- Verify succeeds;
-- Browser Smoke succeeds;
-- the final release reports `v3.3.0-visual-overhaul`;
-- no new visual, input, checkpoint, combat, Warden, PWA, or cross-browser regression appears.
+No additional code change is required unless owner acceptance identifies a visual, performance, readability, input, or collision issue.
 
 ## Owner acceptance gate
 

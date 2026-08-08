@@ -38,29 +38,36 @@ async function seedCheckpoint(page) {
   });
 }
 
-test('renders the fresh cinematic command menu without runtime errors', async ({ page }, testInfo) => {
+test('renders the fresh cinematic command menu fullscreen without runtime errors', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
   await loadGame(page);
-  const snapshot = await page.evaluate(() => {
+  const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.clearCheckpoint();
     game.goToMenu();
     game.draw();
-    return game.getSnapshot();
+    const frame = document.querySelector('.game-frame').getBoundingClientRect();
+    return {
+      snapshot: game.getSnapshot(),
+      frame: { width: frame.width, height: frame.height },
+      viewport: { width: innerWidth, height: innerHeight },
+    };
   });
 
-  expect(snapshot.checkpointAvailable).toBe(false);
-  expect(snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
-  expect(snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
-  expect(snapshot.rtlTypographyAware).toBe(true);
-  expect(snapshot.smoothHoverInterpolation).toBe(true);
+  expect(result.snapshot.checkpointAvailable).toBe(false);
+  expect(result.snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
+  expect(result.snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
+  expect(result.snapshot.rtlTypographyAware).toBe(true);
+  expect(result.snapshot.smoothHoverInterpolation).toBe(true);
+  expect(Math.abs(result.frame.width - result.viewport.width)).toBeLessThan(1);
+  expect(Math.abs(result.frame.height - result.viewport.height)).toBeLessThan(1);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'fresh-cinematic-menu');
+  await attachCanvas(page, testInfo, 'fresh-fullscreen-menu');
 });
 
-test('captures checkpoint menu, game-over choices, and restored wave', async ({ page }, testInfo) => {
+test('captures checkpoint menu, game-over choices, and restored wave through expansion runtime', async ({ page }, testInfo) => {
   await loadGame(page);
   await seedCheckpoint(page);
 
@@ -69,12 +76,12 @@ test('captures checkpoint menu, game-over choices, and restored wave', async ({ 
   expect(snapshot.checkpointAvailable).toBe(true);
   expect(snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
   expect(snapshot.dashboardPolishActive).toBe(true);
-  expect(snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
-  expect(snapshot.rtlTypographyAware).toBe(true);
-  expect(snapshot.smoothHoverInterpolation).toBe(true);
-  expect(snapshot.gameplayGeometryChanged).toBe(false);
-  expect(snapshot.collisionGeometryChanged).toBe(false);
-  await attachCanvas(page, testInfo, 'checkpoint-cinematic-menu');
+  expect(snapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
+  expect(snapshot.expandingWorldActive).toBe(true);
+  expect(snapshot.unifiedCombatHud).toBe(true);
+  expect(snapshot.gameplayGeometryChanged).toBe(true);
+  expect(snapshot.collisionGeometryChanged).toBe(true);
+  await attachCanvas(page, testInfo, 'checkpoint-expansion-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -104,4 +111,33 @@ test('captures checkpoint menu, game-over choices, and restored wave', async ({ 
   expect(snapshot.wave).toBe(6);
   expect(snapshot.restoredFromCheckpoint).toBe(true);
   await attachCanvas(page, testInfo, 'checkpoint-restored-wave');
+});
+
+test('late game opens the large world, changes encounter pattern, and moves the camera', async ({ page }, testInfo) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await loadGame(page);
+
+  const snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.clearCheckpoint();
+    game.startRun();
+    game.wave = 34;
+    game.startNextWave();
+    game.player.x = 1460;
+    game.player.y = 760;
+    game.updateWorldCamera(1);
+    game.draw();
+    return game.getSnapshot();
+  });
+
+  expect(snapshot.state).toBe('playing');
+  expect(snapshot.wave).toBe(35);
+  expect(snapshot.arenaStage).toBe(7);
+  expect(snapshot.arenaStageCount).toBe(8);
+  expect(snapshot.cameraFollowActive).toBe(true);
+  expect(snapshot.cameraZoom).toBeLessThan(0.9);
+  expect(snapshot.encounterMode).not.toBe('foundation');
+  expect(pageErrors).toEqual([]);
+  await attachCanvas(page, testInfo, 'wave-35-expanded-world');
 });

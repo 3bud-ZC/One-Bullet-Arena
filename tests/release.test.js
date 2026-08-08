@@ -28,6 +28,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   const visualOverhaulRuntimeSource = await readFile(new URL('../src/core/visual-overhaul-runtime.js', import.meta.url), 'utf8');
   const dashboardPolishSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const worldExpansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
+  const unifiedUiSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 
   assert.equal(packageJson.version, RELEASE_VERSION);
@@ -40,6 +41,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(visualOverhaulRuntimeSource, /OneBulletWorld2DRuntime/);
   assert.match(dashboardPolishSource, /OneBulletVisualOverhaulRuntime/);
   assert.match(worldExpansionSource, /OneBulletDashboardPolishRuntime/);
+  assert.match(unifiedUiSource, /OneBulletWorldExpansionRuntime/);
   assert.match(workerSource, /importScripts\('\.\/src\/release-config\.js'\)/);
   assert.match(workerSource, /const CACHE_NAME = RELEASE\.cacheName/);
   assert.match(workerSource, /\.\/src\/core\/event-runtime\.js/);
@@ -51,7 +53,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
-  assert.doesNotMatch(workerSource, /one-bullet-arena-v3\.1\.0-a-warden/);
+  assert.match(workerSource, /\.\/src\/core\/unified-ui-runtime\.js/);
 });
 
 test('service worker keeps an explicit release handshake and network-first fallback', async () => {
@@ -63,6 +65,7 @@ test('service worker keeps an explicit release handshake and network-first fallb
   assert.match(mainSource, /updateViaCache: 'none'/);
   assert.match(mainSource, /registration\.update\(\)/);
   assert.match(mainSource, /controllerchange/);
-  assert.match(mainSource, /OneBulletWorldExpansionRuntime/);
+  assert.match(mainSource, /OneBulletUnifiedUiRuntime/);
+  assert.match(mainSource, /requestGameFullscreen/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

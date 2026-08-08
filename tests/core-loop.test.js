@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   GAME_VERSION, MAX_ACTIVE_ENEMIES, UPGRADES, buildWaveComposition,
   enemyCountForWave, enemyPoolForWave, enemyScaleForWave, normalizedStacks, pickUpgradeChoices,
+  waveEncounterForWave,
 } from '../src/game-data.js';
 import {
   ARENA_STAGE_COUNT, arenaStageForWave, circleRectOverlap, combatSafeZones,
@@ -31,38 +32,49 @@ test('upgrade icons cover every gameplay category', () => {
   }
 });
 
-test('the product has one gradual enemy progression', () => {
+test('the product keeps a readable early enemy progression', () => {
   assert.deepEqual(buildWaveComposition(1), ['scout', 'scout', 'scout']);
   assert.ok(buildWaveComposition(2).every((type) => type === 'scout'));
   assert.deepEqual(enemyPoolForWave(3), ['scout', 'brute']);
   assert.ok(enemyPoolForWave(8).includes('splitter'));
 });
 
-test('wave pressure grows gradually and remains capped', () => {
-  const counts = Array.from({ length: 40 }, (_, index) => enemyCountForWave(index + 1));
+test('wave pressure grows beyond the old late-game plateau and remains capped', () => {
+  const counts = Array.from({ length: 50 }, (_, index) => enemyCountForWave(index + 1));
   assert.equal(counts[0], 3);
   assert.ok(counts.every((count, index) => index === 0 || count >= counts[index - 1]));
   assert.ok(counts.every((count) => count <= MAX_ACTIVE_ENEMIES));
+  assert.equal(MAX_ACTIVE_ENEMIES, 18);
   assert.equal(counts.at(-1), MAX_ACTIVE_ENEMIES);
+  assert.ok(enemyCountForWave(25) > enemyCountForWave(15));
 });
 
-test('dangerous enemy types remain bounded in generated waves', () => {
-  for (let wave = 1; wave <= 60; wave += 1) {
+test('late-game encounter director rotates five distinct combat patterns', () => {
+  const encounters = Array.from({ length: 5 }, (_, index) => waveEncounterForWave(10 + index));
+  assert.equal(new Set(encounters.map((encounter) => encounter.id)).size, 5);
+  assert.deepEqual(encounters.map((encounter) => encounter.id), ['rush', 'crossfire', 'swarm', 'siege', 'hunters']);
+  assert.ok(encounters.every((encounter) => encounter.name.length > 0));
+});
+
+test('dangerous enemy types vary by encounter without overwhelming every wave', () => {
+  for (let wave = 1; wave <= 80; wave += 1) {
     const composition = buildWaveComposition(wave);
     assert.equal(composition.length, enemyCountForWave(wave));
-    assert.ok(composition.filter((type) => type === 'sniper').length <= 1);
-    assert.ok(composition.filter((type) => type === 'charger').length <= 1);
-    assert.ok(composition.filter((type) => type === 'splitter').length <= 1);
+    assert.ok(composition.filter((type) => type === 'sniper').length <= 3);
+    assert.ok(composition.filter((type) => type === 'charger').length <= 3);
+    assert.ok(composition.filter((type) => type === 'splitter').length <= 3);
+    assert.ok(composition.filter((type) => type === 'warden').length <= 3);
     assert.ok(composition.includes('scout'));
   }
 });
 
-test('enemy scaling remains monotonic and bounded', () => {
+test('enemy scaling keeps growing while staying inside hard safety caps', () => {
   const first = enemyScaleForWave(1);
   const tenth = enemyScaleForWave(10);
   const hundredth = enemyScaleForWave(100);
   assert.ok(tenth.health > first.health && tenth.speed > first.speed);
-  assert.ok(hundredth.health <= 2.1 && hundredth.speed <= 1.28 && hundredth.shotSpeed <= 1.32);
+  assert.ok(hundredth.health <= 2.8 && hundredth.speed <= 1.58 && hundredth.shotSpeed <= 1.72);
+  assert.ok(enemyScaleForWave(40).health > enemyScaleForWave(10).health);
 });
 
 test('all upgrade stacks have a real effect boundary', () => {
@@ -89,10 +101,17 @@ test('upgrade choices are unique and avoid the previous cards', () => {
   assert.ok(choices.every((choice) => !previous.includes(choice.id)));
 });
 
-test('the same arena expands automatically without alternate objectives', () => {
-  assert.equal(ARENA_STAGE_COUNT, 4);
-  assert.deepEqual([1, 3, 6, 9, 99].map((wave) => arenaStageForWave(wave).id), [0, 1, 2, 3, 3]);
-  for (const wave of [1, 3, 6, 9]) {
+test('arena now keeps opening into explorable late-game sectors', () => {
+  assert.equal(ARENA_STAGE_COUNT, 8);
+  assert.deepEqual(
+    [1, 3, 6, 9, 13, 18, 25, 35, 99].map((wave) => arenaStageForWave(wave).id),
+    [0, 1, 2, 3, 4, 5, 6, 7, 7],
+  );
+  const stage9 = arenaStageForWave(9);
+  const stage35 = arenaStageForWave(35);
+  assert.ok(stage35.bounds.w > stage9.bounds.w * 2);
+  assert.ok(stage35.bounds.h > stage9.bounds.h * 2);
+  for (const wave of [1, 3, 6, 9, 13, 18, 25, 35]) {
     const stage = arenaStageForWave(wave);
     assert.equal('objective' in stage, false);
     assert.equal('targets' in stage, false);
@@ -106,7 +125,7 @@ test('collision recovery escapes obstacle interiors', () => {
   assert.equal(circleRectOverlap(circle, rect), false);
 });
 
-test('HUD and mobile controls are protected combat zones', () => {
+test('HUD and mobile controls remain protected in the legacy fixed arena', () => {
   assert.deepEqual(hudSafeZones().map((zone) => zone.id), ['hud-left', 'hud-center', 'hud-right']);
   assert.deepEqual(mobileSafeZones().map((zone) => zone.id), ['move', 'recall', 'dash', 'pause']);
   assert.equal(combatSafeZones(false).length, 3);

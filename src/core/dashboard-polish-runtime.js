@@ -444,7 +444,7 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
         () => this.startRun(),
         { primary: true, icon: '▶' },
       );
-      drawText(ctx, 'WASD MOVE   ·   MOUSE FIRE   ·   Q RECALL   ·   SPACE DASH', main.x + main.w / 2, main.y + 398, 8.5, COLORS.muted, 800, 'center', 'ltr');
+      drawText(this.ctx, 'WASD MOVE   ·   MOUSE FIRE   ·   Q RECALL   ·   SPACE DASH', main.x + main.w / 2, main.y + 398, 8.5, COLORS.muted, 800, 'center', 'ltr');
     }
 
     this.drawRecords(rail, checkpoint);

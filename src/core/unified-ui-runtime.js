@@ -25,6 +25,13 @@ const THEME = Object.freeze({
   muted: '#7896a5',
 });
 
+const EXPANDED_PALETTES = Object.freeze([
+  Object.freeze({ primary: '#70d8ff', secondary: '#4977d4', warm: '#e6ba57', danger: '#e35e78' }),
+  Object.freeze({ primary: '#64dfc0', secondary: '#4588d8', warm: '#e3a85a', danger: '#e56570' }),
+  Object.freeze({ primary: '#ab95ff', secondary: '#4b96d4', warm: '#e6c45d', danger: '#df617e' }),
+  Object.freeze({ primary: '#e7c867', secondary: '#5ba4d2', warm: '#ed9d5e', danger: '#e76775' }),
+]);
+
 function drawText(ctx, text, x, y, size, color, weight = 700, align = 'center', direction = 'rtl') {
   ctx.save();
   ctx.direction = direction;
@@ -42,6 +49,12 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
     this.unifiedUiRuntimeVersion = UNIFIED_UI_RUNTIME_VERSION;
   }
 
+  palette() {
+    const stage = this.arenaStage?.id ?? 0;
+    if (stage < 4) return super.palette();
+    return EXPANDED_PALETTES[Math.min(EXPANDED_PALETTES.length - 1, stage - 4)];
+  }
+
   startNextWave() {
     const restoringCheckpoint = Boolean(this.pendingCheckpoint);
     const startingFresh = this.wave <= 0;
@@ -54,6 +67,10 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       this.explorationTrail = [{ x: this.player.x, y: this.player.y }];
       this.explorationDistance = 0;
       this.lastExplorationPoint = { x: this.player.x, y: this.player.y };
+    }
+
+    if (restoringCheckpoint && this.banner) {
+      this.banner.subtitle = 'تم استعادة التطويرات والتقدم عند بداية الموجة';
     }
     return result;
   }
@@ -298,6 +315,7 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       unifiedGameOverOverlay: true,
       unifiedTouchControls: true,
       cleanCameraRunTransitions: true,
+      sectorVisualIdentity: true,
     };
   }
 }

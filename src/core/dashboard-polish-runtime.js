@@ -1,13 +1,34 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
 import { RELEASE_VERSION } from '../release.js';
-import { UI_COLORS, label } from '../ui-renderer.js';
+import { UI_COLORS, UI_FONT } from '../ui-renderer.js';
 import { OneBulletVisualOverhaulRuntime } from './visual-overhaul-runtime.js';
 
-export const DASHBOARD_POLISH_RUNTIME_VERSION = '3.3.5-dashboard-premium-minimal';
-export const DASHBOARD_POLISH_REVISION = 'tactical-command-hud-v10';
+export const DASHBOARD_POLISH_RUNTIME_VERSION = '3.3.6-dashboard-cinematic-command';
+export const DASHBOARD_POLISH_REVISION = 'cinematic-command-menu-v11';
+
+const COLORS = Object.freeze({
+  bgTop: '#061522',
+  bgMid: '#03101c',
+  bgBottom: '#010711',
+  cyan: '#59c8e7',
+  cyanSoft: '#78b9d0',
+  cyanDim: 'rgba(83, 171, 207, 0.22)',
+  line: 'rgba(89, 168, 201, 0.22)',
+  surface: 'rgba(5, 18, 31, 0.82)',
+  surfaceStrong: 'rgba(5, 20, 34, 0.94)',
+  surfaceHover: 'rgba(8, 31, 50, 0.96)',
+  gold: '#e7bf4b',
+  goldText: '#f6df86',
+  goldFill: 'rgba(76, 59, 17, 0.9)',
+  green: '#57d59a',
+  red: '#c85e6c',
+  text: '#f1f6f8',
+  textSoft: '#b4c9d3',
+  muted: '#6f91a3',
+});
 
 function techPath(ctx, x, y, w, h, cut = 12) {
-  const c = Math.max(4, Math.min(cut, Math.min(w, h) / 3));
+  const c = Math.max(3, Math.min(cut, Math.min(w, h) / 3));
   ctx.beginPath();
   ctx.moveTo(x + c, y);
   ctx.lineTo(x + w - c, y);
@@ -20,16 +41,15 @@ function techPath(ctx, x, y, w, h, cut = 12) {
   ctx.closePath();
 }
 
-function hexPath(ctx, cx, cy, radius) {
-  ctx.beginPath();
-  for (let index = 0; index < 6; index += 1) {
-    const angle = Math.PI / 6 + index * Math.PI / 3;
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-    if (index === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
+function drawText(ctx, text, x, y, size, color, weight = 700, align = 'center', direction = 'rtl') {
+  ctx.save();
+  ctx.direction = direction;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${weight} ${size}px ${UI_FONT}`;
+  ctx.fillStyle = color;
+  ctx.fillText(String(text), x, y);
+  ctx.restore();
 }
 
 export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRuntime {
@@ -37,61 +57,75 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
     super(canvas, liveRegion);
     this.dashboardPolishRuntimeVersion = DASHBOARD_POLISH_RUNTIME_VERSION;
     this.checkpointDashboardRevision = DASHBOARD_POLISH_REVISION;
+    this.dashboardHoverMix = Object.create(null);
   }
 
-  drawDashboardBackdrop() {
+  hoverMix(key, active) {
+    const current = Number(this.dashboardHoverMix[key] || 0);
+    const target = active ? 1 : 0;
+    const next = current + (target - current) * 0.2;
+    this.dashboardHoverMix[key] = Math.abs(next - target) < 0.01 ? target : next;
+    return this.dashboardHoverMix[key];
+  }
+
+  drawBackdrop() {
     const ctx = this.ctx;
     ctx.save();
 
-    const bg = ctx.createRadialGradient(WIDTH / 2, 240, 40, WIDTH / 2, 360, 780);
-    bg.addColorStop(0, '#061a2a');
-    bg.addColorStop(0.5, '#03101e');
-    bg.addColorStop(1, '#010711');
-    ctx.fillStyle = bg;
+    const background = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+    background.addColorStop(0, COLORS.bgTop);
+    background.addColorStop(0.48, COLORS.bgMid);
+    background.addColorStop(1, COLORS.bgBottom);
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    ctx.strokeStyle = 'rgba(67, 148, 194, 0.045)';
+    const focus = ctx.createRadialGradient(WIDTH * 0.44, 270, 40, WIDTH * 0.44, 300, 540);
+    focus.addColorStop(0, 'rgba(37, 119, 159, 0.12)');
+    focus.addColorStop(0.5, 'rgba(16, 64, 91, 0.045)');
+    focus.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = focus;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.strokeStyle = 'rgba(71, 139, 171, 0.035)';
     ctx.lineWidth = 1;
-    for (let x = 72; x < WIDTH; x += 96) {
+    for (let x = 80; x < WIDTH; x += 120) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, HEIGHT);
       ctx.stroke();
     }
-    for (let y = 64; y < HEIGHT; y += 96) {
+    for (let y = 80; y < HEIGHT; y += 120) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(WIDTH, y);
       ctx.stroke();
     }
 
-    ctx.strokeStyle = 'rgba(50, 136, 187, 0.055)';
-    for (const radius of [360, 520]) {
-      ctx.beginPath();
-      ctx.arc(WIDTH / 2, 210, radius, Math.PI * 1.08, Math.PI * 1.92);
-      ctx.stroke();
-    }
-
+    const vignette = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 250, WIDTH / 2, HEIGHT / 2, 760);
+    vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vignette.addColorStop(1, 'rgba(0, 3, 9, 0.52)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
     ctx.restore();
   }
 
-  drawOuterTechFrame() {
+  drawFrame() {
     const ctx = this.ctx;
-    const x = 22;
-    const y = 20;
-    const w = WIDTH - 44;
-    const h = HEIGHT - 40;
+    const x = 28;
+    const y = 24;
+    const w = WIDTH - 56;
+    const h = HEIGHT - 48;
 
     ctx.save();
-    techPath(ctx, x, y, w, h, 20);
-    ctx.strokeStyle = 'rgba(66, 163, 212, 0.34)';
+    techPath(ctx, x, y, w, h, 18);
+    ctx.strokeStyle = 'rgba(72, 156, 194, 0.24)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(68, 190, 239, 0.66)';
+    const arm = 56;
+    const inset = 14;
+    ctx.strokeStyle = 'rgba(76, 190, 230, 0.56)';
     ctx.lineWidth = 1.5;
-    const arm = 58;
-    const inset = 16;
     for (const [cx, cy, sx, sy] of [
       [x + inset, y + inset, 1, 1],
       [x + w - inset, y + inset, -1, 1],
@@ -107,272 +141,315 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
     ctx.restore();
   }
 
-  drawSurface(rect, accent = 'rgba(61, 150, 196, 0.5)', fill = 'rgba(3, 15, 28, 0.88)', options = {}) {
+  drawSurface(rect, options = {}) {
     const ctx = this.ctx;
-    const hovered = Boolean(options.hovered);
-    const glow = Number(options.glow || 0);
+    const fill = options.fill || COLORS.surface;
+    const border = options.border || 'rgba(73, 156, 194, 0.38)';
     const cut = Number(options.cut || 14);
+    const shadow = Number(options.shadow || 0);
 
     ctx.save();
-    if (glow > 0) {
-      ctx.shadowColor = accent;
-      ctx.shadowBlur = glow;
+    if (shadow > 0) {
+      ctx.shadowColor = options.shadowColor || border;
+      ctx.shadowBlur = shadow;
     }
     techPath(ctx, rect.x, rect.y, rect.w, rect.h, cut);
     ctx.fillStyle = fill;
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = accent;
-    ctx.globalAlpha = hovered ? 0.9 : 0.58;
-    ctx.lineWidth = hovered ? 1.5 : 1;
+    ctx.strokeStyle = border;
+    ctx.lineWidth = Number(options.lineWidth || 1);
     ctx.stroke();
-    ctx.restore();
-  }
-
-  drawHex(cx, cy, accent, glyph, radius = 16, emphasis = false) {
-    const ctx = this.ctx;
-    ctx.save();
-    if (emphasis) {
-      ctx.shadowColor = accent;
-      ctx.shadowBlur = 4;
-    }
-    hexPath(ctx, cx, cy, radius);
-    ctx.fillStyle = 'rgba(4, 21, 35, 0.9)';
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = accent;
-    ctx.globalAlpha = emphasis ? 0.9 : 0.62;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    label(ctx, glyph, cx, cy + 4, Math.max(9, radius * 0.6), accent, 900);
     ctx.restore();
   }
 
   drawHeader(checkpoint) {
     const ctx = this.ctx;
-    const statusColor = checkpoint ? '#55d59a' : '#5ac8e9';
+    const statusColor = checkpoint ? COLORS.green : COLORS.cyan;
 
-    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 42, 10, '#53cce9', 900);
-    label(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 92, 39, UI_COLORS.text, 900);
+    drawText(ctx, 'ONE BULLET ARENA', WIDTH / 2, 48, 10, COLORS.cyan, 900, 'center', 'ltr');
+    drawText(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 95, 36, COLORS.text, 900);
 
-    ctx.fillStyle = 'rgba(83, 176, 218, 0.16)';
-    ctx.fillRect(WIDTH / 2 - 255, 113, 510, 1);
+    const pill = { x: WIDTH / 2 - 142, y: 116, w: 284, h: 34 };
+    this.drawSurface(pill, {
+      fill: 'rgba(4, 19, 30, 0.62)',
+      border: checkpoint ? 'rgba(76, 192, 139, 0.42)' : 'rgba(74, 175, 211, 0.4)',
+      cut: 9,
+    });
 
-    this.drawHex(WIDTH / 2 - 142, 137, statusColor, checkpoint ? '✓' : '◆', 11, false);
-    label(
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pill.x + 25, pill.y + 17, 6, 0, Math.PI * 2);
+    ctx.fillStyle = statusColor;
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    ctx.restore();
+
+    drawText(
       ctx,
-      checkpoint ? 'نقطة الحفظ جاهزة  ·  حفظ محلي' : 'جولة جديدة جاهزة  ·  حفظ محلي',
-      WIDTH / 2 + 12,
-      142,
-      10.5,
+      checkpoint ? 'نقطة الحفظ جاهزة  ·  محفوظ محليًا' : 'جاهز لجولة جديدة  ·  حفظ محلي',
+      pill.x + pill.w / 2 + 10,
+      pill.y + 22,
+      10,
       statusColor,
-      900,
+      800,
     );
   }
 
-  drawMetric(x, y, glyph, title, value) {
+  drawMetric(rect, title, value, accent) {
     const ctx = this.ctx;
-    this.drawHex(x, y, '#4cb9dc', glyph, 14, false);
-    label(ctx, title, x + 29, y - 2, 8.5, '#72bddb', 800, 'left');
-    label(ctx, String(value), x + 29, y + 16, 12.5, '#c1e4f2', 900, 'left');
+    this.drawSurface(rect, {
+      fill: 'rgba(6, 23, 38, 0.56)',
+      border: 'rgba(78, 153, 186, 0.2)',
+      cut: 8,
+    });
+
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.78;
+    ctx.fillRect(rect.x + 12, rect.y + 12, 2, rect.h - 24);
+    ctx.globalAlpha = 1;
+
+    drawText(ctx, title, rect.x + 26, rect.y + 20, 8.5, COLORS.cyanSoft, 800, 'left');
+    drawText(ctx, String(value), rect.x + 26, rect.y + 42, 15, COLORS.text, 900, 'left', 'ltr');
   }
 
   drawHero(main, checkpoint) {
     const ctx = this.ctx;
-    const accent = checkpoint ? '#f0c84e' : '#66cfe9';
     const wave = checkpoint ? String(checkpoint.wave).padStart(2, '0') : '01';
     const cx = main.x + main.w / 2;
+    const waveColor = checkpoint ? COLORS.goldText : '#89def0';
 
-    label(
+    drawText(
       ctx,
-      checkpoint ? 'نقطة الحفظ النشطة' : 'جولة جديدة',
+      checkpoint ? 'نقطة الحفظ النشطة' : 'بداية جديدة',
       cx,
-      main.y + 44,
+      main.y + 43,
       10,
-      checkpoint ? '#56d697' : '#62cde9',
-      900,
+      checkpoint ? COLORS.green : COLORS.cyan,
+      800,
     );
 
     ctx.save();
-    const glow = ctx.createRadialGradient(cx, main.y + 108, 0, cx, main.y + 108, 220);
-    glow.addColorStop(0, checkpoint ? 'rgba(240, 196, 55, 0.075)' : 'rgba(75, 190, 225, 0.07)');
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(main.x + 70, main.y + 50, main.w - 140, 120);
+    const aura = ctx.createRadialGradient(cx, main.y + 112, 0, cx, main.y + 112, 210);
+    aura.addColorStop(0, checkpoint ? 'rgba(224, 179, 48, 0.08)' : 'rgba(69, 176, 208, 0.07)');
+    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(main.x + 90, main.y + 55, main.w - 180, 120);
     ctx.restore();
 
-    label(ctx, `WAVE ${wave}`, cx, main.y + 124, 62, accent, 900);
-    label(
+    drawText(ctx, `WAVE ${wave}`, cx, main.y + 126, 60, waveColor, 900, 'center', 'ltr');
+    drawText(
       ctx,
       checkpoint ? 'آخر نقطة حفظ جاهزة للمتابعة' : 'طلقة واحدة. استرجعها. واصل القتال.',
       cx,
       main.y + 158,
-      13,
-      '#dce8ee',
-      800,
+      12.5,
+      COLORS.textSoft,
+      700,
     );
 
-    ctx.fillStyle = 'rgba(89, 169, 204, 0.16)';
-    ctx.fillRect(main.x + 150, main.y + 176, main.w - 300, 1);
-
     if (checkpoint) {
-      this.drawMetric(main.x + 216, main.y + 205, '⇈', 'الترقيات', checkpoint.stats.upgrades.toLocaleString('en-US'));
-      ctx.fillStyle = 'rgba(92, 168, 204, 0.14)';
-      ctx.fillRect(cx, main.y + 190, 1, 32);
-      this.drawMetric(cx + 77, main.y + 205, '◎', 'نقاط الجولة', checkpoint.score.toLocaleString('en-US'));
+      const metricW = 186;
+      const metricY = main.y + 181;
+      this.drawMetric(
+        { x: cx - metricW - 9, y: metricY, w: metricW, h: 54 },
+        'الترقيات',
+        checkpoint.stats.upgrades.toLocaleString('en-US'),
+        '#55bddd',
+      );
+      this.drawMetric(
+        { x: cx + 9, y: metricY, w: metricW, h: 54 },
+        'نقاط الجولة',
+        checkpoint.score.toLocaleString('en-US'),
+        '#55bddd',
+      );
     } else {
-      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', cx, main.y + 208, 9, '#7bb9d3', 900);
+      drawText(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', cx, main.y + 212, 8.5, COLORS.muted, 800, 'center', 'ltr');
     }
   }
 
-  drawActionButton(rect, text, accent, action, options = {}) {
+  drawAction(rect, key, text, action, options = {}) {
     const ctx = this.ctx;
     const hovered = this.menuHover(rect);
+    const mix = this.hoverMix(key, hovered);
     const primary = Boolean(options.primary);
     const danger = Boolean(options.danger);
     const icon = options.icon || '';
 
-    const fill = danger
-      ? hovered ? 'rgba(58, 14, 24, 0.94)' : 'rgba(24, 8, 16, 0.78)'
+    const idleFill = danger
+      ? 'rgba(28, 9, 17, 0.36)'
       : primary
-        ? hovered ? 'rgba(76, 59, 15, 0.97)' : 'rgba(48, 39, 14, 0.91)'
-        : hovered ? 'rgba(8, 36, 58, 0.96)' : 'rgba(4, 20, 34, 0.84)';
+        ? COLORS.goldFill
+        : 'rgba(5, 22, 37, 0.62)';
+    const hoverFill = danger
+      ? 'rgba(64, 17, 28, 0.72)'
+      : primary
+        ? 'rgba(102, 79, 22, 0.96)'
+        : COLORS.surfaceHover;
 
-    this.drawSurface(rect, accent, fill, {
-      cut: primary ? 13 : 10,
-      hovered,
-      glow: primary ? (hovered ? 7 : 2) : 0,
+    const border = danger
+      ? `rgba(200, 94, 108, ${0.34 + mix * 0.5})`
+      : primary
+        ? `rgba(231, 191, 75, ${0.62 + mix * 0.32})`
+        : `rgba(80, 161, 197, ${0.28 + mix * 0.45})`;
+
+    this.drawSurface(rect, {
+      fill: mix > 0.02 ? hoverFill : idleFill,
+      border,
+      cut: primary ? 12 : 9,
+      shadow: primary ? 2 + mix * 5 : 0,
+      shadowColor: COLORS.gold,
     });
 
     if (primary) {
-      ctx.fillStyle = hovered ? '#f7d458' : '#e4bc42';
-      ctx.fillRect(rect.x + 1, rect.y + 12, 3, rect.h - 24);
+      const sheen = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y);
+      sheen.addColorStop(0, 'rgba(255, 226, 113, 0)');
+      sheen.addColorStop(0.5, `rgba(255, 226, 113, ${0.035 + mix * 0.045})`);
+      sheen.addColorStop(1, 'rgba(255, 226, 113, 0)');
+      ctx.save();
+      techPath(ctx, rect.x + 2, rect.y + 2, rect.w - 4, rect.h - 4, 10);
+      ctx.fillStyle = sheen;
+      ctx.fill();
+      ctx.restore();
     }
 
-    if (icon) {
-      label(ctx, icon, rect.x + 38, rect.y + rect.h / 2 + 6, primary ? 19 : 15, accent, 900);
-    }
-    label(
-      ctx,
-      text,
-      rect.x + rect.w / 2 + (icon ? 8 : 0),
-      rect.y + rect.h / 2 + 6,
-      primary ? 16 : danger ? 10.5 : 13.5,
-      primary ? '#f8df86' : danger ? '#db6b79' : '#82bed8',
-      900,
-    );
+    const color = danger ? COLORS.red : primary ? COLORS.goldText : '#91cbe0';
+    if (icon) drawText(ctx, icon, rect.x + 34, rect.y + rect.h / 2 + 6, primary ? 18 : 14, color, 900, 'center', 'ltr');
+    drawText(ctx, text, rect.x + rect.w / 2 + (icon ? 7 : 0), rect.y + rect.h / 2 + 6, primary ? 15.5 : danger ? 10.5 : 13, color, 900);
+
     this.addUiRegion(rect.x, rect.y, rect.w, rect.h, action);
   }
 
-  drawRecordRow(rect, arTitle, enTitle, value, accent, glyph) {
+  drawRecordRow(rect, title, subtitle, value, accent) {
     const ctx = this.ctx;
-    const rowFill = 'rgba(4, 19, 33, 0.72)';
-    this.drawSurface(rect, 'rgba(73, 150, 188, 0.34)', rowFill, { cut: 10 });
+    const cy = rect.y + rect.h / 2;
 
-    this.drawHex(rect.x + 38, rect.y + rect.h / 2, accent, glyph, 16, false);
-    const textX = rect.x + 70;
-    label(ctx, arTitle, textX, rect.y + 31, 10.5, accent, 900, 'left');
-    label(ctx, enTitle, textX, rect.y + 48, 7, '#699eb7', 800, 'left');
+    ctx.fillStyle = 'rgba(73, 151, 187, 0.11)';
+    ctx.fillRect(rect.x, rect.y + rect.h - 1, rect.w, 1);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(rect.x + 18, cy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    ctx.restore();
+
+    drawText(ctx, title, rect.x + 36, rect.y + 29, 10.5, accent, 900, 'left');
+    drawText(ctx, subtitle, rect.x + 36, rect.y + 47, 7.2, COLORS.muted, 800, 'left', 'ltr');
 
     const valueText = String(value);
     const valueSize = valueText.length >= 9 ? 16 : valueText.length >= 7 ? 17.5 : valueText.length >= 5 ? 19 : 22;
-    label(ctx, valueText, rect.x + rect.w - 16, rect.y + rect.h / 2 + 8, valueSize, '#e8f0f3', 900, 'right');
+    drawText(ctx, valueText, rect.x + rect.w, cy + 7, valueSize, COLORS.text, 900, 'right', 'ltr');
   }
 
-  drawBottomHintBar(checkpoint) {
+  drawRecords(rail, checkpoint) {
     const ctx = this.ctx;
-    const y = 648;
+    drawText(ctx, 'سجل الجولة', rail.x + 2, rail.y + 33, 16, COLORS.cyan, 900, 'left');
+    drawText(ctx, 'RUN RECORDS', rail.x + 2, rail.y + 52, 7.5, COLORS.muted, 900, 'left', 'ltr');
 
-    ctx.fillStyle = 'rgba(72, 150, 189, 0.12)';
-    ctx.fillRect(230, y - 1, 820, 1);
+    const rowX = rail.x + 2;
+    const rowW = rail.w - 4;
+    this.drawRecordRow(
+      { x: rowX, y: rail.y + 78, w: rowW, h: 76 },
+      'أفضل موجة',
+      'BEST WAVE',
+      this.highWave,
+      '#66c8e4',
+    );
+    this.drawRecordRow(
+      { x: rowX, y: rail.y + 168, w: rowW, h: 76 },
+      'أعلى نتيجة',
+      'HIGH SCORE',
+      this.highScore.toLocaleString('en-US'),
+      '#dfbb50',
+    );
+    this.drawRecordRow(
+      { x: rowX, y: rail.y + 258, w: rowW, h: 76 },
+      checkpoint ? 'نقطة الحفظ' : 'حالة الحفظ',
+      checkpoint ? 'CHECKPOINT' : 'SAVE STATUS',
+      checkpoint ? `WAVE ${checkpoint.wave}` : 'EMPTY',
+      checkpoint ? COLORS.green : '#7f96a2',
+    );
 
-    label(ctx, checkpoint ? '[ C ]  متابعة الجولة' : '[ ENTER ]  ابدأ الجولة', 350, y + 23, 10.5, '#88b6cb', 800);
-    label(ctx, '[ N ]  جولة جديدة', 640, y + 23, 10.5, '#88b6cb', 800);
-    label(ctx, '▣  التقدم محفوظ محليًا', 925, y + 23, 10.5, '#7fbfa8', 800);
+    const statusY = rail.y + 368;
+    ctx.fillStyle = checkpoint ? 'rgba(78, 195, 140, 0.08)' : 'rgba(85, 156, 190, 0.07)';
+    ctx.fillRect(rail.x + 2, statusY, rail.w - 4, 42);
+    drawText(
+      ctx,
+      checkpoint ? 'الحفظ التلقائي نشط' : 'لا توجد نقطة حفظ بعد',
+      rail.x + rail.w / 2,
+      statusY + 26,
+      9.5,
+      checkpoint ? COLORS.green : COLORS.cyanSoft,
+      800,
+    );
+  }
+
+  drawFooterHints(checkpoint) {
+    const ctx = this.ctx;
+    const y = 656;
+    ctx.fillStyle = 'rgba(79, 158, 193, 0.1)';
+    ctx.fillRect(248, y - 13, 784, 1);
+
+    drawText(ctx, checkpoint ? 'C   متابعة' : 'ENTER   ابدأ', 360, y + 13, 9, COLORS.muted, 800, 'center', 'ltr');
+    drawText(ctx, 'N   جولة جديدة', 640, y + 13, 9, COLORS.muted, 800, 'center', 'ltr');
+    drawText(ctx, 'LOCAL SAVE   ON', 918, y + 13, 9, '#6eaa91', 800, 'center', 'ltr');
   }
 
   drawMenu() {
     const checkpoint = this.hasContinueCheckpoint() ? this.savedCheckpoint : null;
-    const ctx = this.ctx;
-    const main = { x: 136, y: 174, w: 680, h: 430 };
-    const rail = { x: 842, y: 174, w: 304, h: 430 };
+    const main = { x: 126, y: 172, w: 720, h: 430 };
+    const rail = { x: 888, y: 178, w: 270, h: 420 };
 
-    this.drawDashboardBackdrop();
-    this.drawOuterTechFrame();
+    this.drawBackdrop();
+    this.drawFrame();
     this.drawHeader(checkpoint);
 
-    this.drawSurface(main, 'rgba(66, 152, 194, 0.5)', 'rgba(3, 15, 28, 0.83)', { cut: 16 });
-    this.drawSurface(rail, 'rgba(66, 152, 194, 0.44)', 'rgba(3, 15, 28, 0.78)', { cut: 16 });
+    this.drawSurface(main, {
+      fill: 'rgba(4, 17, 30, 0.76)',
+      border: 'rgba(75, 157, 193, 0.34)',
+      cut: 16,
+    });
 
     this.drawHero(main, checkpoint);
 
     if (checkpoint) {
-      this.drawActionButton(
-        { x: main.x + 48, y: main.y + 245, w: main.w - 96, h: 56 },
+      this.drawAction(
+        { x: main.x + 58, y: main.y + 251, w: main.w - 116, h: 58 },
+        'continue',
         `متابعة الجولة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
-        '#e5bd45',
         () => this.continueFromCheckpoint(),
         { primary: true, icon: '▶' },
       );
-      this.drawActionButton(
-        { x: main.x + 48, y: main.y + 315, w: main.w - 96, h: 42 },
+      this.drawAction(
+        { x: main.x + 58, y: main.y + 324, w: main.w - 116, h: 44 },
+        'new-run',
         'جولة جديدة من البداية',
-        '#347fa8',
         () => this.startRun(),
         { icon: '↻' },
       );
-      this.drawActionButton(
-        { x: main.x + 190, y: main.y + 376, w: main.w - 380, h: 28 },
+      this.drawAction(
+        { x: main.x + 218, y: main.y + 386, w: main.w - 436, h: 28 },
+        'delete-save',
         'حذف نقطة الحفظ',
-        '#a84655',
         () => this.clearCheckpoint(),
         { danger: true },
       );
     } else {
-      this.drawActionButton(
-        { x: main.x + 48, y: main.y + 274, w: main.w - 96, h: 58 },
+      this.drawAction(
+        { x: main.x + 58, y: main.y + 278, w: main.w - 116, h: 60 },
+        'start-run',
         'ابدأ الجولة',
-        '#e5bd45',
         () => this.startRun(),
         { primary: true, icon: '▶' },
       );
-      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 390, 9, '#6f91a2', 800);
+      drawText(ctx, 'WASD MOVE   ·   MOUSE FIRE   ·   Q RECALL   ·   SPACE DASH', main.x + main.w / 2, main.y + 398, 8.5, COLORS.muted, 800, 'center', 'ltr');
     }
 
-    label(ctx, 'سجلات الجولة', rail.x + rail.w / 2, rail.y + 41, 17, '#64b9da', 900);
-    ctx.fillStyle = 'rgba(79, 157, 194, 0.16)';
-    ctx.fillRect(rail.x + 34, rail.y + 60, rail.w - 68, 1);
-
-    const rowX = rail.x + 20;
-    const rowW = rail.w - 40;
-    this.drawRecordRow(
-      { x: rowX, y: rail.y + 82, w: rowW, h: 82 },
-      'أفضل موجة',
-      'BEST WAVE',
-      this.highWave,
-      '#54bddf',
-      '⌾',
-    );
-    this.drawRecordRow(
-      { x: rowX, y: rail.y + 177, w: rowW, h: 82 },
-      'أعلى نتيجة',
-      'HIGH SCORE',
-      this.highScore.toLocaleString('en-US'),
-      '#d9b747',
-      '◎',
-    );
-    this.drawRecordRow(
-      { x: rowX, y: rail.y + 272, w: rowW, h: 82 },
-      checkpoint ? 'نقطة الحفظ' : 'حالة الحفظ',
-      checkpoint ? 'CHECKPOINT' : 'SAVE STATUS',
-      checkpoint ? `WAVE ${checkpoint.wave}` : 'EMPTY',
-      checkpoint ? '#55c993' : '#728491',
-      '▣',
-    );
-
-    this.drawBottomHintBar(checkpoint);
-    label(ctx, `v${RELEASE_VERSION}`, WIDTH - 30, HEIGHT - 13, 8, '#466d82', 800, 'right');
+    this.drawRecords(rail, checkpoint);
+    this.drawFooterHints(checkpoint);
+    drawText(this.ctx, `v${RELEASE_VERSION}`, WIDTH - 31, HEIGHT - 13, 7.5, '#456b7d', 800, 'right', 'ltr');
   }
 
   getSnapshot() {
@@ -381,6 +458,9 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
       dashboardPolishRuntimeVersion: DASHBOARD_POLISH_RUNTIME_VERSION,
       checkpointDashboardRevision: DASHBOARD_POLISH_REVISION,
       dashboardPolishActive: true,
+      dashboardVisualStyle: 'premium-cinematic-command',
+      rtlTypographyAware: true,
+      smoothHoverInterpolation: true,
       gameplayGeometryChanged: false,
       collisionGeometryChanged: false,
     };

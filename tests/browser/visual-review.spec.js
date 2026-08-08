@@ -14,17 +14,17 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v3.3 visual overhaul release and existing combat states', async ({ page }, testInfo) => {
+test('captures the v3.4 expanding-world release and existing combat states', async ({ page }, testInfo) => {
   test.setTimeout(60000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('3.3.0-visual-overhaul');
-  expect(menuSnapshot.releaseChannel).toBe('cinematic-visual-overhaul');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.3.0-visual-overhaul');
+  expect(menuSnapshot.releaseVersion).toBe('3.4.0-expanding-world');
+  expect(menuSnapshot.releaseChannel).toBe('expanding-world');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.4.0-expanding-world');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('3.3.0-visual-overhaul');
+  expect(menuSnapshot.eventFoundationVersion).toBe('3.4.0-expanding-world');
   expect(menuSnapshot.eventSchemaVersion).toBe(4);
   expect(menuSnapshot.gameEventBusActive).toBe(true);
   expect(menuSnapshot.combatDepthActive).toBe(true);
@@ -39,15 +39,19 @@ test('captures the v3.3 visual overhaul release and existing combat states', asy
   expect(menuSnapshot.visualOverhaulActive).toBe(true);
   expect(menuSnapshot.visualOverhaulRuntimeVersion).toBe('3.3.0-visual-overhaul');
   expect(menuSnapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
+  expect(menuSnapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
+  expect(menuSnapshot.unifiedUiRuntimeVersion).toBe('3.4.0-unified-ui');
+  expect(menuSnapshot.expandingWorldActive).toBe(true);
+  expect(menuSnapshot.unifiedInterfaceLanguage).toBe(true);
   expect(menuSnapshot.stableHudDuringShake).toBe(true);
-  expect(menuSnapshot.gameplayGeometryChanged).toBe(false);
-  expect(menuSnapshot.collisionGeometryChanged).toBe(false);
+  expect(menuSnapshot.gameplayGeometryChanged).toBe(true);
+  expect(menuSnapshot.collisionGeometryChanged).toBe(true);
   expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('3.3.0-visual-overhaul');
+  expect(menuSnapshot.uiLayoutVersion).toBe('3.4.0-expanding-world');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'visual-overhaul-release-menu');
+  await attachCanvas(page, testInfo, 'expanding-world-release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -61,7 +65,7 @@ test('captures the v3.3 visual overhaul release and existing combat states', asy
     game.comboTimer = 2.4;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'visual-overhaul-combat-hud');
+  await attachCanvas(page, testInfo, 'expanding-world-combat-hud');
 
   const catchSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -137,8 +141,8 @@ test('captures the v3.3 visual overhaul release and existing combat states', asy
   });
   expect(upgradeSnapshot.state).toBe('upgrade');
   expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
-  expect(upgradeSnapshot.redesignedUpgradeCards).toBe(true);
-  await attachCanvas(page, testInfo, 'upgrade-cards');
+  expect(upgradeSnapshot.unifiedUpgradeCards).toBe(true);
+  await attachCanvas(page, testInfo, 'unified-upgrade-cards');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -154,5 +158,5 @@ test('captures the v3.3 visual overhaul release and existing combat states', asy
     game.maxCombo = 11;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'game-over');
+  await attachCanvas(page, testInfo, 'unified-game-over');
 });

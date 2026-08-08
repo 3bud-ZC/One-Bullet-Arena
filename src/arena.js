@@ -51,6 +51,90 @@ const ARENA_STAGES = Object.freeze([
       Object.freeze({ x: 1030, y: 190, w: 128, h: 44 }),
     ]),
   }),
+  Object.freeze({
+    id: 4,
+    name: 'القطاع الخارجي',
+    startsAtWave: 13,
+    bounds: Object.freeze({ x: -130, y: -70, w: 1540, h: 860 }),
+    obstacles: Object.freeze([
+      Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
+      Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
+      Object.freeze({ x: 500, y: 116, w: 150, h: 46 }),
+      Object.freeze({ x: 630, y: 558, w: 150, h: 46 }),
+      Object.freeze({ x: 122, y: 486, w: 128, h: 44 }),
+      Object.freeze({ x: 1030, y: 190, w: 128, h: 44 }),
+      Object.freeze({ x: -42, y: 248, w: 118, h: 46 }),
+      Object.freeze({ x: 1204, y: 454, w: 132, h: 46 }),
+      Object.freeze({ x: 522, y: -18, w: 156, h: 44 }),
+      Object.freeze({ x: 704, y: 694, w: 156, h: 44 }),
+    ]),
+  }),
+  Object.freeze({
+    id: 5,
+    name: 'الحلقة الصناعية',
+    startsAtWave: 18,
+    bounds: Object.freeze({ x: -300, y: -170, w: 1880, h: 1060 }),
+    obstacles: Object.freeze([
+      Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
+      Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
+      Object.freeze({ x: 500, y: 116, w: 150, h: 46 }),
+      Object.freeze({ x: 630, y: 558, w: 150, h: 46 }),
+      Object.freeze({ x: 122, y: 486, w: 128, h: 44 }),
+      Object.freeze({ x: 1030, y: 190, w: 128, h: 44 }),
+      Object.freeze({ x: -106, y: 116, w: 148, h: 48 }),
+      Object.freeze({ x: -158, y: 536, w: 176, h: 48 }),
+      Object.freeze({ x: 1260, y: 84, w: 170, h: 48 }),
+      Object.freeze({ x: 1350, y: 552, w: 154, h: 48 }),
+      Object.freeze({ x: 392, y: -100, w: 54, h: 166 }),
+      Object.freeze({ x: 834, y: 664, w: 54, h: 166 }),
+    ]),
+  }),
+  Object.freeze({
+    id: 6,
+    name: 'المصفوفة المفتوحة',
+    startsAtWave: 25,
+    bounds: Object.freeze({ x: -480, y: -270, w: 2240, h: 1260 }),
+    obstacles: Object.freeze([
+      Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
+      Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
+      Object.freeze({ x: 500, y: 116, w: 150, h: 46 }),
+      Object.freeze({ x: 630, y: 558, w: 150, h: 46 }),
+      Object.freeze({ x: -260, y: 38, w: 180, h: 48 }),
+      Object.freeze({ x: -330, y: 642, w: 186, h: 48 }),
+      Object.freeze({ x: 1432, y: 40, w: 178, h: 48 }),
+      Object.freeze({ x: 1510, y: 676, w: 170, h: 48 }),
+      Object.freeze({ x: 40, y: -164, w: 54, h: 180 }),
+      Object.freeze({ x: 1180, y: -112, w: 54, h: 180 }),
+      Object.freeze({ x: 146, y: 792, w: 54, h: 178 }),
+      Object.freeze({ x: 1086, y: 816, w: 54, h: 154 }),
+      Object.freeze({ x: -86, y: 338, w: 128, h: 44 }),
+      Object.freeze({ x: 1290, y: 338, w: 128, h: 44 }),
+    ]),
+  }),
+  Object.freeze({
+    id: 7,
+    name: 'الحزام النهائي',
+    startsAtWave: 35,
+    bounds: Object.freeze({ x: -650, y: -365, w: 2580, h: 1450 }),
+    obstacles: Object.freeze([
+      Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
+      Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
+      Object.freeze({ x: 500, y: 116, w: 150, h: 46 }),
+      Object.freeze({ x: 630, y: 558, w: 150, h: 46 }),
+      Object.freeze({ x: -430, y: -70, w: 190, h: 50 }),
+      Object.freeze({ x: -486, y: 704, w: 196, h: 50 }),
+      Object.freeze({ x: 1580, y: -88, w: 190, h: 50 }),
+      Object.freeze({ x: 1654, y: 760, w: 186, h: 50 }),
+      Object.freeze({ x: -142, y: -244, w: 56, h: 196 }),
+      Object.freeze({ x: 1362, y: -218, w: 56, h: 196 }),
+      Object.freeze({ x: -82, y: 876, w: 56, h: 184 }),
+      Object.freeze({ x: 1308, y: 882, w: 56, h: 178 }),
+      Object.freeze({ x: -286, y: 338, w: 148, h: 46 }),
+      Object.freeze({ x: 1422, y: 338, w: 148, h: 46 }),
+      Object.freeze({ x: 220, y: -122, w: 164, h: 46 }),
+      Object.freeze({ x: 898, y: 896, w: 164, h: 46 }),
+    ]),
+  }),
 ]);
 
 const HUD_SAFE_ZONES = Object.freeze([
@@ -76,7 +160,7 @@ export function arenaStageForWave(wave) {
 }
 
 export function isArenaUnlockWave(wave) {
-  return [3, 6, 9].includes(Math.max(1, Math.trunc(Number(wave) || 1)));
+  return [3, 6, 9, 13, 18, 25, 35].includes(Math.max(1, Math.trunc(Number(wave) || 1)));
 }
 
 export function hudSafeZones() {

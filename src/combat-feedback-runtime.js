@@ -10,6 +10,7 @@ const IMPACT_PROFILES = Object.freeze({
   brute: Object.freeze({ sparks: 13, radius: 54, shake: 5.8, color: '#ffab4f' }),
   sniper: Object.freeze({ sparks: 10, radius: 44, shake: 4.2, color: '#b887ff' }),
   charger: Object.freeze({ sparks: 12, radius: 50, shake: 5.1, color: '#5df2a6' }),
+  warden: Object.freeze({ sparks: 15, radius: 60, shake: 6.2, color: '#67ddff' }),
   splitter: Object.freeze({ sparks: 12, radius: 52, shake: 4.8, color: '#ff7fd3' }),
 });
 

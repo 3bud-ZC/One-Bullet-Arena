@@ -41,16 +41,19 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('boot and service worker activate the cinematic dashboard above visual overhaul', async () => {
+test('cinematic dashboard remains active below the expanding world runtime', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletDashboardPolishRuntime/);
+  const expansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
+  assert.match(mainSource, /OneBulletWorldExpansionRuntime/);
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(dashboardSource, /cinematic-command-menu-v11/);
   assert.match(dashboardSource, /premium-cinematic-command/);
   assert.match(dashboardSource, /rtlTypographyAware: true/);
   assert.match(dashboardSource, /smoothHoverInterpolation: true/);
+  assert.match(expansionSource, /extends OneBulletDashboardPolishRuntime/);
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
 });

@@ -1,73 +1,132 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 
-## Current release
+## Current development release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.3.0 — Cinematic Visual Overhaul**
+- Release candidate: **v3.4.0 — Expanding World**
 - Production branch: `main`
-- Pull Request: **#45 — merged on 2026-08-07**
-- Merge commit: `89180967be3f64f8b6ee6e8a5f18a3d5338b963f`
-- Pages publishing fix: `6828f382c636ca708ec78c0ae3993a4bcc354459`
-- Canonical release version: `3.3.0-visual-overhaul`
-- Canonical release label: `v3.3.0-visual-overhaul`
-- Release channel: `cinematic-visual-overhaul`
-- Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
-- v3.3 implementation: **complete and merged**
-- v3.3 automated verification baseline: **green**
-- v3.3 manual visual acceptance: **accepted before merge**
-- Production publishing: **enabled from `main` through GitHub Pages workflow**
+- Canonical release version: `3.4.0-expanding-world`
+- Canonical release label: `v3.4.0-expanding-world`
+- Release channel: `expanding-world`
+- Service Worker cache: `one-bullet-arena-v3.4.0-expanding-world`
+- Previous accepted release: **v3.3.0 — Cinematic Visual Overhaul**
+- v3.4 automated verification: **pending latest GitHub Actions result**
+- v3.4 manual gameplay/visual acceptance: **pending**
+- Production publishing: **GitHub Pages deploys only after `npm run verify:all` succeeds**
 
-## Post-release maintenance — 2026-08-08
+## v3.4 scope — Expanding World
 
-- Added the missing dedicated combat-impact profile for the Wave 7 Warden so successful Warden hits no longer fall back to the Scout impact profile.
-- Added a regression test asserting the Warden keeps distinct impact color, spark count, radius, and shake weight.
-- Corrected the README enemy roster from five archetypes to six and documented the Warden's directional guard behavior.
-- Removed stale release-state documentation that incorrectly described PR #45 as draft/unmerged and owner acceptance as pending.
+This is a gameplay-and-presentation release, not a render-only patch. It intentionally changes world and collision geometry after the original arena progression.
 
-These maintenance changes do not alter arena geometry, collision geometry, enemy health, movement speed, wave composition, upgrade values, checkpoint schemas, or progression rules.
+### Fullscreen presentation
 
-## Visual overhaul delivered
+- The browser shell now fills `100vw × 100dvh` instead of rendering the game as a centered 16:9 card.
+- First direct canvas interaction attempts Browser Fullscreen when permitted.
+- `Enter` / `Space` start gestures also request fullscreen when allowed.
+- `F` remains the explicit fullscreen toggle.
+- QA/browser-test mode does not force fullscreen.
 
-- Added `src/core/visual-overhaul-runtime.js` above the accepted True 2D runtime.
-- Strengthened the industrial arena with ambient deck nodes, stage-aware energy accents, floor scan/detail passes, stronger physical borders, corner framing, and obstacle material detail.
-- Added enemy health/threat arcs and clearer impact readability without changing enemy hitboxes.
-- Added hostile projectile glow without changing projectile collision geometry.
-- Added player dash-ready and shield visual layers without changing movement or defensive values.
-- Added a readable bullet recall tether, additional bullet glow, and a secondary aiming-reticle treatment.
-- Added stronger cinematic framing for the main menu, combat HUD, upgrade selection, pause, Game Over, banners, and touch controls.
-- Strengthened the browser shell with a richer sci-fi frame and background treatment while preserving mobile-landscape behavior.
-- `prefers-reduced-motion` support remains active for non-essential motion and shell effects.
+### Expanding arena and camera
 
-## Architecture
+The arena now contains eight progression stages:
 
-The active runtime chain is:
+1. Wave 1 — Central combat room.
+2. Wave 3 — Side wings.
+3. Wave 6 — Outer corridors.
+4. Wave 9 — Original full arena.
+5. Wave 13 — Outer sector.
+6. Wave 18 — Industrial ring.
+7. Wave 25 — Open matrix.
+8. Wave 35 — Final belt.
 
-`VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+The Wave 35 arena is more than twice the width and height of the original Wave 9 arena.
 
-- `VisualOverhaul` remains render-only.
-- `World2D` contract: `3.2.0-true-2d`.
-- Warden contract: `3.1.0-a-warden`.
-- Checkpoint Progression contract: `3.0.0-checkpoint`.
-- Combat Depth contract: `2.9.0-combat`.
+`src/core/world-expansion-runtime.js` adds:
+
+- smooth player-follow camera;
+- directional camera lead;
+- stage-dependent zoom;
+- screen-to-world pointer conversion so aiming remains correct under the camera;
+- player-relative enemy spawning for large maps;
+- exploration distance/trail state;
+- late-sector minimap showing player, viewport, and explored route;
+- expanded-world floor/deck rendering;
+- a screen-space combat HUD that remains stable while the world camera moves.
+
+### Late-game encounter director
+
+The previous late-game pressure plateau has been replaced by a five-pattern encounter rotation from Wave 10 onward:
+
+- `rush` — fast Charger pressure;
+- `crossfire` — ranged Sniper pressure;
+- `swarm` — Splitter-heavy crowd pressure;
+- `siege` — Warden/Brute armored pressure;
+- `hunters` — mixed elite pressure.
+
+Additional changes:
+
+- active enemy cap increased from 14 to 18;
+- enemy count continues to grow after Wave 15 instead of effectively stopping;
+- late health, movement speed, and projectile speed continue scaling inside explicit hard caps;
+- encounter profiles apply different health/speed/projectile pressure multipliers;
+- dangerous enemy counts remain bounded per wave.
+
+### Unified visual language
+
+The runtime chain now unifies the major screens rather than mixing the old UI with the redesigned dashboard:
+
+- cinematic command/checkpoint menu;
+- combat HUD;
+- upgrade selection;
+- pause overlay;
+- Game Over / checkpoint continuation;
+- wave/sector banners;
+- touch controls.
+
+Arabic copy uses RTL rendering while English labels and numeric telemetry use LTR rendering where the new UI layer owns the text.
+
+## Active runtime chain
+
+The final boot chain is:
+
+`UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+
+Current contracts:
+
+- Unified UI: `3.4.0-unified-ui`.
+- World Expansion: `3.4.0-expanding-world`.
+- Dashboard: `3.3.6-dashboard-cinematic-command` / `cinematic-command-menu-v11`.
+- Visual Overhaul: `3.3.0-visual-overhaul`.
+- World2D: `3.2.0-true-2d`.
+- Warden: `3.1.0-a-warden`.
+- Checkpoint Progression: `3.0.0-checkpoint`.
+- Combat Depth: `2.9.0-combat`.
 - Gameplay event schema: `4`.
 - Checkpoint schema: `1`.
-- Existing checkpoint saves remain compatible.
 
-## v3.3 release verification baseline
+Existing checkpoint schema remains unchanged; saved runs are restored into the arena stage selected by their saved wave.
 
-Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
+## Verification added for v3.4
 
-- Verify #833: **success**.
-- Browser Smoke #171: **success**.
-- Playwright: **148/148 passed**.
-- Unexpected failures: **0**.
-- Flaky tests: **0**.
-- Skipped tests: **0**.
-- Final Browser Smoke artifact generated successfully.
-- Final menu capture reported `v3.3.0-visual-overhaul`.
-- Combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage was green at the release gate.
+The release gate now includes explicit checks for:
+
+- late-game enemy-count growth and safety caps;
+- five rotating encounter profiles;
+- eight arena stages and late-stage world dimensions;
+- progressive camera zoom and camera clamping;
+- camera/exploration/minimap runtime contracts;
+- fullscreen viewport CSS;
+- world-expansion and unified-UI Service Worker caching;
+- final runtime boot through `OneBulletUnifiedUiRuntime`;
+- Fresh Menu with no checkpoint;
+- Checkpoint Menu and restore flow;
+- Wave 35 expanded-world camera capture;
+- unified Upgrade Selection;
+- unified Pause overlay;
+- unified Game Over overlay;
+- retained Warden, combat-depth, checkpoint, True2D, and visual-overhaul behavior under the v3.4 runtime chain.
 
 ## Production workflow
 
@@ -76,11 +135,28 @@ Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
 1. dependency installation;
 2. Chromium, Firefox, and WebKit Playwright installation;
 3. `npm run verify:all`;
-4. static-site assembly and release-handshake checks;
-5. GitHub Pages deployment.
+4. static-site assembly;
+5. release/runtime/fullscreen deployment-contract checks;
+6. GitHub Pages deployment.
 
-The deployment uses `concurrency: pages` with `cancel-in-progress: true`, so the newest `main` revision is the authoritative deployment candidate.
+`concurrency: pages` with `cancel-in-progress: true` means only the newest `main` revision should be treated as the deployment candidate.
 
-## Current development rule
+## Acceptance gate
 
-All new game development and bug fixes should start from the current `main` branch, preserve unrelated production behavior, include targeted verification where practical, and keep this file synchronized with material release-state changes.
+Do **not** mark v3.4 accepted until all of the following are true:
+
+- latest Verify workflow is green;
+- latest Deploy GitHub Pages workflow is green;
+- Fresh Menu loads without runtime errors;
+- checkpoint continuation still restores a real saved run;
+- Wave 13+ camera movement feels controlled rather than disorienting;
+- Wave 18+ visibly reveals space beyond one fixed screen;
+- Wave 25/35 minimap and camera remain readable;
+- late-wave encounters feel meaningfully different rather than only numerically harder;
+- Upgrade, Pause, Game Over, Dashboard, and combat HUD feel like the same product;
+- desktop fullscreen behavior works through direct interaction and `F`;
+- mobile landscape remains playable.
+
+## Previous accepted baseline
+
+v3.3.0 remains the last fully accepted baseline until the v3.4 acceptance gate above is closed. Its prior automated verification was green and its manual visual acceptance was completed before merge.

@@ -23,7 +23,12 @@ if (qaMode) {
 }
 
 document.addEventListener('keydown', async (event) => {
-  if (event.key.toLowerCase() !== 'f') return;
+  const key = event.key.toLowerCase();
+  if (!qaMode && !document.fullscreenElement && ['enter', ' '].includes(key)) {
+    await requestGameFullscreen();
+    return;
+  }
+  if (key !== 'f') return;
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await requestGameFullscreen();

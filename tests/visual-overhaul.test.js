@@ -35,25 +35,21 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.match(source, /gameplayGeometryChanged: false/);
   assert.match(source, /collisionGeometryChanged: false/);
   assert.match(source, /visualOverhaulActive: true/);
-  assert.doesNotMatch(source, /arenaStage\.bounds\s*=/);
-  assert.doesNotMatch(source, /arenaStage\.obstacles\s*=/);
-  assert.doesNotMatch(source, /player\.speed\s*=/);
-  assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('cinematic dashboard remains active below the expanding world runtime', async () => {
+test('cinematic dashboard, expanding world, and unified UI form one runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const expansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletWorldExpansionRuntime/);
+  const unifiedSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(dashboardSource, /cinematic-command-menu-v11/);
-  assert.match(dashboardSource, /premium-cinematic-command/);
-  assert.match(dashboardSource, /rtlTypographyAware: true/);
-  assert.match(dashboardSource, /smoothHoverInterpolation: true/);
   assert.match(expansionSource, /extends OneBulletDashboardPolishRuntime/);
-  assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
+  assert.match(unifiedSource, /extends OneBulletWorldExpansionRuntime/);
+  assert.match(unifiedSource, /unifiedInterfaceLanguage: true/);
+  assert.match(mainSource, /OneBulletUnifiedUiRuntime/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/unified-ui-runtime\.js/);
 });

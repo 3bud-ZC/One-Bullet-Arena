@@ -26,7 +26,7 @@ test('art-direction and interface-redesign runtimes own the visual layer without
   expect(snapshot.artDirectionRuntimeVersion).toBe('3.5.0-art-direction-refinement');
   expect(snapshot.interfaceRedesignActive).toBe(true);
   expect(snapshot.interfaceRedesignRuntimeVersion).toBe('3.5.0-interface-redesign');
-  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v3');
+  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v4');
   expect(snapshot.upgradeArtDirectionRevision).toBe('category-upgrade-cards-v3');
   expect(snapshot.desktopViewportMode).toBe('edge-to-edge-browser-viewport');
   expect(snapshot.tacticalHudRevision).toBe('three-module-dashboard-v2');
@@ -36,10 +36,10 @@ test('art-direction and interface-redesign runtimes own the visual layer without
   expect(snapshot.overlayFrameNoiseReduced).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(false);
   expect(snapshot.collisionGeometryChanged).toBe(false);
-  await attachCanvas(page, testInfo, 'interface-redesign-fresh-menu');
+  await attachCanvas(page, testInfo, 'interface-redesign-fresh-menu-v4');
 });
 
-test('checkpoint menu uses the command-center hierarchy', async ({ page }, testInfo) => {
+test('checkpoint menu uses the v4 hero-and-record-rail hierarchy', async ({ page }, testInfo) => {
   await loadGame(page);
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -53,8 +53,8 @@ test('checkpoint menu uses the command-center hierarchy', async ({ page }, testI
     game.draw();
   });
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v3');
-  await attachCanvas(page, testInfo, 'interface-redesign-checkpoint-menu');
+  expect(snapshot.menuArtDirectionRevision).toBe('checkpoint-command-center-v4');
+  await attachCanvas(page, testInfo, 'interface-redesign-checkpoint-menu-v4');
 });
 
 test('desktop browser shell fills the available viewport without Fullscreen API', async ({ page }, testInfo) => {

@@ -24,6 +24,16 @@ test('lethal impact profiles increase weight without changing enemy identity', (
   assert.ok(lethal.freeze > normal.freeze);
 });
 
+test('Warden has dedicated heavy impact feedback instead of Scout fallback', () => {
+  const warden = combatFeedbackProfile('warden', false);
+  const scout = combatFeedbackProfile('scout', false);
+
+  assert.equal(warden.color, '#67ddff');
+  assert.ok(warden.sparks > scout.sparks);
+  assert.ok(warden.radius > scout.radius);
+  assert.ok(warden.shake > scout.shake);
+});
+
 test('unknown enemies fall back to a deterministic scout profile', () => {
   assert.deepEqual(
     combatFeedbackProfile('unknown-enemy', false),

@@ -39,7 +39,8 @@ Clearing enemies and choosing an ability are the only requirements for progressi
 - One recoverable ricochet bullet.
 - Manual bullet recall.
 - Dash with invulnerability frames.
-- Five enemy archetypes introduced gradually: Scout, Brute, Sniper, Charger, and Splitter.
+- Six enemy archetypes introduced gradually: Scout, Brute, Sniper, Charger, Warden, and Splitter.
+- The Warden enters from Wave 7 with a directional guard that rewards flanking or guard-breaking shots.
 - Bounded increases to enemy population, health, movement speed, and projectile speed.
 - A maximum of fourteen active enemies.
 - Readable Charger and Sniper attack telegraphs.

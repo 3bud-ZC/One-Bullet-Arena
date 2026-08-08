@@ -10,11 +10,39 @@ import {
 import { GAME_EVENTS } from './game-events.js';
 
 export const CHECKPOINT_RUNTIME_VERSION = '3.0.0-checkpoint';
+export const CHECKPOINT_DASHBOARD_REVISION = 'tactical-command-hud-v5';
+
+function techPath(ctx, x, y, w, h, cut = 14) {
+  const c = Math.max(4, Math.min(cut, Math.min(w, h) / 3));
+  ctx.beginPath();
+  ctx.moveTo(x + c, y);
+  ctx.lineTo(x + w - c, y);
+  ctx.lineTo(x + w, y + c);
+  ctx.lineTo(x + w, y + h - c);
+  ctx.lineTo(x + w - c, y + h);
+  ctx.lineTo(x + c, y + h);
+  ctx.lineTo(x, y + h - c);
+  ctx.lineTo(x, y + c);
+  ctx.closePath();
+}
+
+function hexPath(ctx, cx, cy, radius) {
+  ctx.beginPath();
+  for (let index = 0; index < 6; index += 1) {
+    const angle = Math.PI / 6 + index * Math.PI / 3;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
 
 export class OneBulletCheckpointRuntime extends OneBulletCombatDepthRuntime {
   constructor(canvas, liveRegion = null) {
     super(canvas, liveRegion);
     this.checkpointRuntimeVersion = CHECKPOINT_RUNTIME_VERSION;
+    this.checkpointDashboardRevision = CHECKPOINT_DASHBOARD_REVISION;
     this.checkpointStore = new CheckpointStore();
     this.savedCheckpoint = this.checkpointStore.load();
     this.pendingCheckpoint = null;
@@ -158,94 +186,315 @@ export class OneBulletCheckpointRuntime extends OneBulletCombatDepthRuntime {
     return Boolean(this.savedCheckpoint && this.savedCheckpoint.wave >= 2);
   }
 
-  drawMenuRecord(x, y, w, title, value, accent) {
+  menuHover(rect) {
+    return this.pointer.x >= rect.x && this.pointer.x <= rect.x + rect.w
+      && this.pointer.y >= rect.y && this.pointer.y <= rect.y + rect.h;
+  }
+
+  drawDashboardBackdrop() {
     const ctx = this.ctx;
-    panel(ctx, x, y, w, 58, accent, 'rgba(5,11,27,0.88)', 3);
-    label(ctx, title, x + 15, y + 21, 8, UI_COLORS.muted, 900, 'left');
-    label(ctx, value, x + w - 15, y + 42, 18, UI_COLORS.text, 900, 'right');
+    ctx.save();
+    const bg = ctx.createRadialGradient(WIDTH / 2, 300, 80, WIDTH / 2, 360, 760);
+    bg.addColorStop(0, 'rgba(4, 22, 43, 0.97)');
+    bg.addColorStop(0.55, 'rgba(1, 11, 26, 0.985)');
+    bg.addColorStop(1, 'rgba(0, 5, 16, 0.995)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.globalAlpha = 0.13;
+    ctx.strokeStyle = '#169cff';
+    ctx.lineWidth = 1;
+    for (let x = 32; x < WIDTH; x += 48) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, HEIGHT);
+      ctx.stroke();
+    }
+    for (let y = 28; y < HEIGHT; y += 48) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(WIDTH, y);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#20a9ff';
+    for (const radius of [220, 320, 440, 560]) {
+      ctx.beginPath();
+      ctx.arc(WIDTH / 2, 226, radius, Math.PI * 0.97, Math.PI * 2.03);
+      ctx.stroke();
+    }
+    ctx.setLineDash([4, 9]);
+    ctx.globalAlpha = 0.28;
+    ctx.beginPath();
+    ctx.arc(WIDTH / 2, 224, 270, Math.PI * 1.08, Math.PI * 1.92);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  drawOuterTechFrame() {
+    const ctx = this.ctx;
+    ctx.save();
+    const x = 14;
+    const y = 14;
+    const w = WIDTH - 28;
+    const h = HEIGHT - 28;
+    techPath(ctx, x, y, w, h, 24);
+    ctx.strokeStyle = '#159dff';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = '#118fe9';
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    techPath(ctx, x + 8, y + 8, w - 16, h - 16, 19);
+    ctx.strokeStyle = 'rgba(69, 179, 255, 0.38)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.strokeStyle = '#19a9ff';
+    ctx.lineWidth = 3;
+    const L = 78;
+    for (const [cx, cy, sx, sy] of [
+      [x + 18, y + 18, 1, 1],
+      [x + w - 18, y + 18, -1, 1],
+      [x + 18, y + h - 18, 1, -1],
+      [x + w - 18, y + h - 18, -1, -1],
+    ]) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + sy * L);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx + sx * L, cy);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = '#24b7ff';
+    for (let i = 0; i < 14; i += 1) {
+      ctx.fillRect(26, 150 + i * 22, 7, 3);
+      ctx.fillRect(WIDTH - 33, 150 + i * 22, 7, 3);
+    }
+    ctx.restore();
+  }
+
+  drawTechPanel(rect, accent, fill = 'rgba(2, 13, 30, 0.94)', glow = 5) {
+    const ctx = this.ctx;
+    ctx.save();
+    if (glow > 0) {
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = glow;
+    }
+    techPath(ctx, rect.x, rect.y, rect.w, rect.h, 16);
+    const gradient = ctx.createLinearGradient(rect.x, rect.y, rect.x, rect.y + rect.h);
+    gradient.addColorStop(0, fill);
+    gradient.addColorStop(1, 'rgba(1, 7, 20, 0.98)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.7;
+    ctx.stroke();
+
+    techPath(ctx, rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14, 11);
+    ctx.strokeStyle = 'rgba(101, 184, 255, 0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rect.x + 22, rect.y + 3);
+    ctx.lineTo(rect.x + Math.min(176, rect.w * 0.34), rect.y + 3);
+    ctx.moveTo(rect.x + rect.w - 22, rect.y + rect.h - 3);
+    ctx.lineTo(rect.x + rect.w - Math.min(148, rect.w * 0.3), rect.y + rect.h - 3);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawHexIcon(cx, cy, accent, glyph) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 9;
+    hexPath(ctx, cx, cy, 23);
+    ctx.fillStyle = 'rgba(3, 18, 34, 0.96)';
+    ctx.fill();
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    label(ctx, glyph, cx, cy + 7, 19, accent, 900);
+    ctx.restore();
+  }
+
+  drawMenuRecord(rect, arTitle, enTitle, value, accent, glyph) {
+    const ctx = this.ctx;
+    this.drawTechPanel(rect, accent, 'rgba(3, 18, 35, 0.94)', 4);
+    this.drawHexIcon(rect.x + 48, rect.y + rect.h / 2, accent, glyph);
+    label(ctx, arTitle, rect.x + 92, rect.y + 31, 13, accent, 900, 'left');
+    label(ctx, enTitle, rect.x + 92, rect.y + 51, 9, '#7fc7ff', 900, 'left');
+    label(ctx, value, rect.x + rect.w - 22, rect.y + rect.h / 2 + 10, 25, UI_COLORS.text, 900, 'right');
+  }
+
+  drawTechButton(rect, text, accent, action, options = {}) {
+    const ctx = this.ctx;
+    const hovered = this.menuHover(rect);
+    const primary = Boolean(options.primary);
+    const danger = Boolean(options.danger);
+    const icon = options.icon || '';
+    const baseFill = danger
+      ? 'rgba(35, 5, 15, 0.94)'
+      : primary
+        ? 'rgba(57, 42, 5, 0.96)'
+        : 'rgba(3, 17, 38, 0.95)';
+    const hoverFill = danger
+      ? 'rgba(67, 8, 22, 0.98)'
+      : primary
+        ? 'rgba(91, 65, 5, 0.99)'
+        : 'rgba(6, 35, 66, 0.99)';
+
+    this.drawTechPanel(rect, accent, hovered ? hoverFill : baseFill, hovered || primary ? 13 : 4);
+    if (icon) label(ctx, icon, rect.x + 42, rect.y + rect.h / 2 + 8, 23, accent, 900);
+    label(ctx, text, rect.x + rect.w / 2 + (icon ? 16 : 0), rect.y + rect.h / 2 + 7, primary ? 20 : 16, primary ? UI_COLORS.bullet : danger ? '#ff7184' : '#80c7ff', 900);
+    this.addUiRegion(rect.x, rect.y, rect.w, rect.h, action);
+  }
+
+  drawBottomCommandBar(checkpoint) {
+    const ctx = this.ctx;
+    const rect = { x: 190, y: 650, w: 900, h: 46 };
+    this.drawTechPanel(rect, 'rgba(34, 158, 255, 0.78)', 'rgba(2, 12, 27, 0.96)', 3);
+    const y = rect.y + 29;
+    label(ctx, '▶', rect.x + 55, y, 14, '#57c7ff', 900);
+    label(ctx, checkpoint ? 'متابعة الجولة' : 'ابدأ الجولة', rect.x + 92, y, 12, '#9fd9ff', 800, 'left');
+    label(ctx, checkpoint ? 'C' : 'ENTER', rect.x + 225, y, 11, UI_COLORS.player, 900);
+    ctx.fillStyle = 'rgba(80, 170, 235, 0.35)';
+    ctx.fillRect(rect.x + 285, rect.y + 10, 1, 26);
+    label(ctx, '↻', rect.x + 340, y, 15, '#57c7ff', 900);
+    label(ctx, 'جولة جديدة', rect.x + 375, y, 12, '#9fd9ff', 800, 'left');
+    label(ctx, 'N', rect.x + 493, y, 11, UI_COLORS.player, 900);
+    ctx.fillRect(rect.x + 545, rect.y + 10, 1, 26);
+    label(ctx, '▣', rect.x + 602, y, 14, '#57c7ff', 900);
+    label(ctx, 'التقدم يُحفظ محليًا', rect.x + 640, y, 12, '#9fd9ff', 800, 'left');
   }
 
   drawMenu() {
     const checkpoint = this.hasContinueCheckpoint() ? this.savedCheckpoint : null;
     const ctx = this.ctx;
-    const main = { x: 282, y: 226, w: 506, h: 332 };
-    const rail = { x: 808, y: 226, w: 202, h: 332 };
+    const main = { x: 120, y: 190, w: 690, h: 438 };
+    const rail = { x: 830, y: 190, w: 330, h: 438 };
 
-    this.drawMenuOrbit();
-    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 72, 12, UI_COLORS.player, 900);
-    label(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 166, 40, UI_COLORS.text, 900);
+    this.drawDashboardBackdrop();
+    this.drawOuterTechFrame();
+
+    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 58, 12, '#31dfff', 900);
+    label(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 132, 44, UI_COLORS.text, 900);
     label(
       ctx,
-      checkpoint ? 'CHECKPOINT READY // LOCAL SAVE' : 'NEW RUN // SINGLE ROUND',
+      checkpoint ? '✓  نقطة الحفظ جاهزة  //  حفظ محلي' : '◆  الجولة جاهزة  //  حفظ محلي',
       WIDTH / 2,
-      202,
-      10,
+      166,
+      13,
       checkpoint ? UI_COLORS.success : UI_COLORS.player,
       900,
     );
 
-    panel(ctx, main.x, main.y, main.w, main.h, checkpoint ? UI_COLORS.bullet : UI_COLORS.player, 'rgba(4,10,24,0.93)', 5);
-    panel(ctx, rail.x, rail.y, rail.w, rail.h, UI_COLORS.electric, 'rgba(4,10,24,0.88)', 4);
+    this.drawTechPanel(main, '#1aa8ff', 'rgba(2, 14, 31, 0.965)', 7);
+    this.drawTechPanel(rail, '#18a8ff', 'rgba(2, 14, 31, 0.955)', 7);
+
+    label(ctx, 'سجلات الجولة', rail.x + rail.w / 2, rail.y + 41, 18, '#55c7ff', 900);
+    ctx.fillStyle = 'rgba(42, 167, 245, 0.32)';
+    ctx.fillRect(rail.x + 30, rail.y + 62, rail.w - 60, 1);
 
     if (checkpoint) {
-      label(ctx, 'ACTIVE CHECKPOINT', main.x + 24, main.y + 31, 9, UI_COLORS.success, 900, 'left');
-      label(ctx, `WAVE ${String(checkpoint.wave).padStart(2, '0')}`, main.x + main.w / 2, main.y + 108, 54, UI_COLORS.bullet, 900);
-      label(ctx, 'آخر نقطة حفظ جاهزة للمتابعة', main.x + main.w / 2, main.y + 146, 16, UI_COLORS.text, 800);
-      label(
-        ctx,
-        `${checkpoint.stats.upgrades} UPGRADES  ·  ${checkpoint.score.toLocaleString('en-US')} RUN SCORE`,
-        main.x + main.w / 2,
-        main.y + 176,
-        10,
-        UI_COLORS.muted,
-        800,
-      );
+      label(ctx, 'نقطة الحفظ النشطة   ▣', main.x + main.w / 2, main.y + 43, 13, UI_COLORS.success, 900);
 
-      this.drawButton(
+      ctx.save();
+      const waveGlow = ctx.createRadialGradient(main.x + main.w / 2, main.y + 126, 20, main.x + main.w / 2, main.y + 126, 210);
+      waveGlow.addColorStop(0, 'rgba(255, 197, 44, 0.17)');
+      waveGlow.addColorStop(1, 'rgba(255, 197, 44, 0)');
+      ctx.fillStyle = waveGlow;
+      ctx.fillRect(main.x + 50, main.y + 56, main.w - 100, 150);
+      ctx.restore();
+
+      label(ctx, '»', main.x + 145, main.y + 138, 30, UI_COLORS.bullet, 900);
+      label(ctx, `WAVE ${String(checkpoint.wave).padStart(2, '0')}`, main.x + main.w / 2, main.y + 150, 60, UI_COLORS.bullet, 900);
+      label(ctx, '«', main.x + main.w - 145, main.y + 138, 30, UI_COLORS.bullet, 900);
+      label(ctx, 'آخر نقطة حفظ جاهزة للمتابعة', main.x + main.w / 2, main.y + 184, 16, UI_COLORS.text, 800);
+
+      ctx.fillStyle = 'rgba(63, 175, 245, 0.32)';
+      ctx.fillRect(main.x + 132, main.y + 206, main.w - 264, 1);
+      this.drawHexIcon(main.x + 255, main.y + 236, '#32c5ff', '⇈');
+      label(ctx, 'الترقيات', main.x + 298, main.y + 226, 10, '#64cfff', 800, 'left');
+      label(ctx, checkpoint.stats.upgrades.toLocaleString('en-US'), main.x + 298, main.y + 248, 16, '#8edcff', 900, 'left');
+      this.drawHexIcon(main.x + 430, main.y + 236, '#32c5ff', '◎');
+      label(ctx, 'نقاط الجولة', main.x + 473, main.y + 226, 10, '#64cfff', 800, 'left');
+      label(ctx, checkpoint.score.toLocaleString('en-US'), main.x + 473, main.y + 248, 16, '#8edcff', 900, 'left');
+
+      this.drawTechButton(
+        { x: main.x + 44, y: main.y + 274, w: main.w - 88, h: 62 },
         `متابعة الجولة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
-        main.x + 38,
-        main.y + 205,
-        main.w - 76,
-        64,
+        '#ffd441',
         () => this.continueFromCheckpoint(),
-        true,
+        { primary: true, icon: '▶' },
       );
-      this.drawButton('جولة جديدة من البداية', main.x + 38, main.y + 282, main.w - 76, 38, () => this.startRun());
+      this.drawTechButton(
+        { x: main.x + 44, y: main.y + 348, w: main.w - 88, h: 48 },
+        'جولة جديدة من البداية',
+        '#238ee8',
+        () => this.startRun(),
+        { icon: '↻' },
+      );
+      this.drawTechButton(
+        { x: main.x + 142, y: main.y + 406, w: main.w - 284, h: 38 },
+        'حذف نقطة الحفظ',
+        '#ff4f63',
+        () => this.clearCheckpoint(),
+        { danger: true, icon: '▥' },
+      );
     } else {
-      label(ctx, 'RUN READY', main.x + 24, main.y + 31, 9, UI_COLORS.player, 900, 'left');
-      label(ctx, 'WAVE 01', main.x + main.w / 2, main.y + 108, 54, UI_COLORS.player, 900);
-      label(ctx, 'طلقة واحدة. استرجعها. واصل القتال.', main.x + main.w / 2, main.y + 146, 16, UI_COLORS.text, 800);
-      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', main.x + main.w / 2, main.y + 176, 10, UI_COLORS.muted, 800);
-      this.drawButton('ابدأ الجولة', main.x + 38, main.y + 214, main.w - 76, 66, () => this.startRun(), true);
-      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 309, 9, UI_COLORS.muted, 800);
+      label(ctx, 'جولة جديدة   ◆', main.x + main.w / 2, main.y + 43, 13, UI_COLORS.player, 900);
+      label(ctx, 'WAVE 01', main.x + main.w / 2, main.y + 150, 60, UI_COLORS.player, 900);
+      label(ctx, 'طلقة واحدة. استرجعها. واصل القتال.', main.x + main.w / 2, main.y + 184, 16, UI_COLORS.text, 800);
+      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', main.x + main.w / 2, main.y + 234, 11, '#77bde8', 900);
+      this.drawTechButton(
+        { x: main.x + 44, y: main.y + 282, w: main.w - 88, h: 68 },
+        'ابدأ الجولة',
+        '#ffd441',
+        () => this.startRun(),
+        { primary: true, icon: '▶' },
+      );
+      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 394, 10, UI_COLORS.muted, 800);
     }
 
-    label(ctx, 'RUN RECORDS', rail.x + 18, rail.y + 29, 9, UI_COLORS.electric, 900, 'left');
-    this.drawMenuRecord(rail.x + 12, rail.y + 48, rail.w - 24, 'BEST WAVE', this.highWave, UI_COLORS.player);
-    this.drawMenuRecord(rail.x + 12, rail.y + 116, rail.w - 24, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), UI_COLORS.bullet);
     this.drawMenuRecord(
-      rail.x + 12,
-      rail.y + 184,
-      rail.w - 24,
+      { x: rail.x + 26, y: rail.y + 92, w: rail.w - 52, h: 88 },
+      'أفضل موجة',
+      'BEST WAVE',
+      this.highWave,
+      '#32c8ff',
+      '⌾',
+    );
+    this.drawMenuRecord(
+      { x: rail.x + 26, y: rail.y + 198, w: rail.w - 52, h: 88 },
+      'أعلى نتيجة',
+      'HIGH SCORE',
+      this.highScore.toLocaleString('en-US'),
+      '#ffd441',
+      '◎',
+    );
+    this.drawMenuRecord(
+      { x: rail.x + 26, y: rail.y + 304, w: rail.w - 52, h: 88 },
+      checkpoint ? 'نقطة الحفظ' : 'حالة الحفظ',
       checkpoint ? 'CHECKPOINT' : 'SAVE STATUS',
       checkpoint ? `WAVE ${checkpoint.wave}` : 'EMPTY',
-      checkpoint ? UI_COLORS.success : UI_COLORS.muted,
+      checkpoint ? '#34ef9a' : '#6784a5',
+      '▣',
     );
 
-    if (checkpoint) {
-      this.drawButton('حذف الحفظ', rail.x + 14, rail.y + 264, rail.w - 28, 40, () => this.clearCheckpoint());
-    } else {
-      label(ctx, 'AUTO SAVE', rail.x + rail.w / 2, rail.y + 286, 9, UI_COLORS.success, 900);
-      label(ctx, 'يبدأ من WAVE 02', rail.x + rail.w / 2, rail.y + 305, 9, UI_COLORS.muted, 700);
-    }
-
-    const controls = this.touchMode
-      ? 'TAP TO SELECT  ·  PROGRESS SAVES LOCALLY'
-      : checkpoint
-        ? 'C CONTINUE  ·  N NEW RUN  ·  PROGRESS SAVES LOCALLY'
-        : 'ENTER START  ·  PROGRESS SAVES LOCALLY';
-    label(ctx, controls, WIDTH / 2, 628, 9, UI_COLORS.muted, 800);
-    label(ctx, `v${RELEASE_VERSION}`, WIDTH - 24, 696, 10, '#63739a', 700, 'right');
+    this.drawBottomCommandBar(checkpoint);
+    label(ctx, `v${RELEASE_VERSION}`, WIDTH - 26, HEIGHT - 16, 9, '#5d91b9', 800, 'right');
   }
 
   drawGameOver() {
@@ -303,6 +552,7 @@ export class OneBulletCheckpointRuntime extends OneBulletCombatDepthRuntime {
     return {
       ...super.getSnapshot(),
       checkpointRuntimeVersion: CHECKPOINT_RUNTIME_VERSION,
+      checkpointDashboardRevision: CHECKPOINT_DASHBOARD_REVISION,
       checkpointSchemaVersion: CHECKPOINT_SCHEMA_VERSION,
       checkpointProgressionActive: true,
       checkpointAvailable: this.hasContinueCheckpoint(),

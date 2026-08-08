@@ -27,5 +27,7 @@ test('main boots the unified UI runtime and preserves fullscreen entry', async (
   assert.match(main, /OneBulletUnifiedUiRuntime/);
   assert.match(main, /requestFullscreen/);
   assert.match(main, /navigationUI: 'hide'/);
-  assert.match(main, /event\.key\.toLowerCase\(\) !== 'f'/);
+  assert.match(main, /const key = event\.key\.toLowerCase\(\)/);
+  assert.match(main, /\['enter', ' '\]\.includes\(key\)/);
+  assert.match(main, /if \(key !== 'f'\) return/);
 });

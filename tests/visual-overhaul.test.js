@@ -41,13 +41,16 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('boot and service worker activate the dashboard polish above visual overhaul', async () => {
+test('boot and service worker activate the cinematic dashboard above visual overhaul', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   assert.match(mainSource, /OneBulletDashboardPolishRuntime/);
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
-  assert.match(dashboardSource, /tactical-command-hud-v10/);
+  assert.match(dashboardSource, /cinematic-command-menu-v11/);
+  assert.match(dashboardSource, /premium-cinematic-command/);
+  assert.match(dashboardSource, /rtlTypographyAware: true/);
+  assert.match(dashboardSource, /smoothHoverInterpolation: true/);
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
 });

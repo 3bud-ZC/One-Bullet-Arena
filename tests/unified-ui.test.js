@@ -13,6 +13,8 @@ test('unified UI owns all major non-combat overlays and clean run transitions', 
   assert.match(source, /startNextWave\(\)/);
   assert.match(source, /restoringCheckpoint/);
   assert.match(source, /this\.worldCamera\.x = this\.player\.x/);
+  assert.match(source, /this\.explorationTrail = \[\{ x: this\.player\.x, y: this\.player\.y \}\]/);
+  assert.match(source, /تم استعادة التطويرات والتقدم عند بداية الموجة/);
   assert.match(source, /drawUpgradeSelection\(\)/);
   assert.match(source, /drawPause\(\)/);
   assert.match(source, /drawGameOver\(\)/);
@@ -24,6 +26,14 @@ test('unified UI owns all major non-combat overlays and clean run transitions', 
   assert.match(source, /unifiedPauseOverlay: true/);
   assert.match(source, /unifiedGameOverOverlay: true/);
   assert.match(source, /cleanCameraRunTransitions: true/);
+  assert.match(source, /sectorVisualIdentity: true/);
+});
+
+test('late-game sectors own distinct restrained palettes', async () => {
+  const source = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
+  assert.match(source, /const EXPANDED_PALETTES = Object\.freeze/);
+  assert.match(source, /if \(stage < 4\) return super\.palette\(\)/);
+  assert.match(source, /EXPANDED_PALETTES\[Math\.min\(EXPANDED_PALETTES\.length - 1, stage - 4\)\]/);
 });
 
 test('main boots the unified UI runtime and preserves fullscreen entry', async () => {

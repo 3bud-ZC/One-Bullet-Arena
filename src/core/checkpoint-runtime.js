@@ -158,52 +158,93 @@ export class OneBulletCheckpointRuntime extends OneBulletCombatDepthRuntime {
     return Boolean(this.savedCheckpoint && this.savedCheckpoint.wave >= 2);
   }
 
-  drawMenu() {
-    if (!this.hasContinueCheckpoint()) {
-      super.drawMenu();
-      return;
-    }
-
-    const checkpoint = this.savedCheckpoint;
+  drawMenuRecord(x, y, w, title, value, accent) {
     const ctx = this.ctx;
-    const pulse = 1 + Math.sin(this.elapsed * 2.1) * 0.018;
+    panel(ctx, x, y, w, 58, accent, 'rgba(5,11,27,0.88)', 3);
+    label(ctx, title, x + 15, y + 21, 8, UI_COLORS.muted, 900, 'left');
+    label(ctx, value, x + w - 15, y + 42, 18, UI_COLORS.text, 900, 'right');
+  }
+
+  drawMenu() {
+    const checkpoint = this.hasContinueCheckpoint() ? this.savedCheckpoint : null;
+    const ctx = this.ctx;
+    const main = { x: 282, y: 226, w: 506, h: 332 };
+    const rail = { x: 808, y: 226, w: 202, h: 332 };
 
     this.drawMenuOrbit();
-    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 72, 13, UI_COLORS.player, 900);
-    ctx.save();
-    ctx.translate(WIDTH / 2, 146);
-    ctx.scale(pulse, pulse);
-    label(ctx, 'حلبة الطلقة', 0, 0, 57, UI_COLORS.text, 900);
-    label(ctx, 'الواحدة', 0, 58, 57, UI_COLORS.bullet, 900);
-    ctx.restore();
-
-    label(ctx, 'CHECKPOINT PROGRESSION ONLINE', WIDTH / 2, 247, 11, UI_COLORS.success, 900);
-    label(ctx, `آخر نقطة حفظ: WAVE ${String(checkpoint.wave).padStart(2, '0')}  ·  ${checkpoint.stats.upgrades} UPGRADES  ·  ${checkpoint.score.toLocaleString('en-US')} SCORE`, WIDTH / 2, 277, 13, UI_COLORS.text, 800);
-
-    this.drawButton(
-      `متابعة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
-      WIDTH / 2 + 14,
-      306,
-      300,
-      58,
-      () => this.continueFromCheckpoint(),
-      true,
+    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 72, 12, UI_COLORS.player, 900);
+    label(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 166, 40, UI_COLORS.text, 900);
+    label(
+      ctx,
+      checkpoint ? 'CHECKPOINT READY // LOCAL SAVE' : 'NEW RUN // SINGLE ROUND',
+      WIDTH / 2,
+      202,
+      10,
+      checkpoint ? UI_COLORS.success : UI_COLORS.player,
+      900,
     );
-    this.drawButton('جولة جديدة من البداية', WIDTH / 2 - 314, 306, 300, 58, () => this.startRun());
 
-    this.drawMenuFeatureCard(122, 395, 316, '01', 'احفظ', 'تُحفظ أعلى موجة تلقائيًا عند بدايتها.', UI_COLORS.success);
-    this.drawMenuFeatureCard(482, 395, 316, '02', 'استكمل', 'ارجع بنفس التطويرات والتقدم المحفوظ.', UI_COLORS.electric);
-    this.drawMenuFeatureCard(842, 395, 316, '03', 'اختر', 'ابدأ من الصفر أو استخدم نقطة الحفظ.', UI_COLORS.player);
+    panel(ctx, main.x, main.y, main.w, main.h, checkpoint ? UI_COLORS.bullet : UI_COLORS.player, 'rgba(4,10,24,0.93)', 5);
+    panel(ctx, rail.x, rail.y, rail.w, rail.h, UI_COLORS.electric, 'rgba(4,10,24,0.88)', 4);
 
-    this.drawStatChip(292, 550, 220, 'CHECKPOINT', `WAVE ${checkpoint.wave}`);
-    this.drawStatChip(530, 550, 220, 'BEST WAVE', this.highWave);
-    this.drawStatChip(768, 550, 220, 'HIGH SCORE', this.highScore.toLocaleString('en-US'));
+    if (checkpoint) {
+      label(ctx, 'ACTIVE CHECKPOINT', main.x + 24, main.y + 31, 9, UI_COLORS.success, 900, 'left');
+      label(ctx, `WAVE ${String(checkpoint.wave).padStart(2, '0')}`, main.x + main.w / 2, main.y + 108, 54, UI_COLORS.bullet, 900);
+      label(ctx, 'آخر نقطة حفظ جاهزة للمتابعة', main.x + main.w / 2, main.y + 146, 16, UI_COLORS.text, 800);
+      label(
+        ctx,
+        `${checkpoint.stats.upgrades} UPGRADES  ·  ${checkpoint.score.toLocaleString('en-US')} RUN SCORE`,
+        main.x + main.w / 2,
+        main.y + 176,
+        10,
+        UI_COLORS.muted,
+        800,
+      );
 
-    this.drawButton('حذف نقطة الحفظ', WIDTH / 2 - 115, 616, 230, 42, () => this.clearCheckpoint());
+      this.drawButton(
+        `متابعة الجولة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
+        main.x + 38,
+        main.y + 205,
+        main.w - 76,
+        64,
+        () => this.continueFromCheckpoint(),
+        true,
+      );
+      this.drawButton('جولة جديدة من البداية', main.x + 38, main.y + 282, main.w - 76, 38, () => this.startRun());
+    } else {
+      label(ctx, 'RUN READY', main.x + 24, main.y + 31, 9, UI_COLORS.player, 900, 'left');
+      label(ctx, 'WAVE 01', main.x + main.w / 2, main.y + 108, 54, UI_COLORS.player, 900);
+      label(ctx, 'طلقة واحدة. استرجعها. واصل القتال.', main.x + main.w / 2, main.y + 146, 16, UI_COLORS.text, 800);
+      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', main.x + main.w / 2, main.y + 176, 10, UI_COLORS.muted, 800);
+      this.drawButton('ابدأ الجولة', main.x + 38, main.y + 214, main.w - 76, 66, () => this.startRun(), true);
+      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 309, 9, UI_COLORS.muted, 800);
+    }
+
+    label(ctx, 'RUN RECORDS', rail.x + 18, rail.y + 29, 9, UI_COLORS.electric, 900, 'left');
+    this.drawMenuRecord(rail.x + 12, rail.y + 48, rail.w - 24, 'BEST WAVE', this.highWave, UI_COLORS.player);
+    this.drawMenuRecord(rail.x + 12, rail.y + 116, rail.w - 24, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), UI_COLORS.bullet);
+    this.drawMenuRecord(
+      rail.x + 12,
+      rail.y + 184,
+      rail.w - 24,
+      checkpoint ? 'CHECKPOINT' : 'SAVE STATUS',
+      checkpoint ? `WAVE ${checkpoint.wave}` : 'EMPTY',
+      checkpoint ? UI_COLORS.success : UI_COLORS.muted,
+    );
+
+    if (checkpoint) {
+      this.drawButton('حذف الحفظ', rail.x + 14, rail.y + 264, rail.w - 28, 40, () => this.clearCheckpoint());
+    } else {
+      label(ctx, 'AUTO SAVE', rail.x + rail.w / 2, rail.y + 286, 9, UI_COLORS.success, 900);
+      label(ctx, 'يبدأ من WAVE 02', rail.x + rail.w / 2, rail.y + 305, 9, UI_COLORS.muted, 700);
+    }
+
     const controls = this.touchMode
-      ? 'TAP A BUTTON TO CHOOSE  ·  PROGRESS IS SAVED LOCALLY'
-      : 'C CONTINUE  ·  N NEW RUN  ·  PROGRESS IS SAVED LOCALLY';
-    label(ctx, controls, WIDTH / 2, 686, 10, UI_COLORS.muted, 800);
+      ? 'TAP TO SELECT  ·  PROGRESS SAVES LOCALLY'
+      : checkpoint
+        ? 'C CONTINUE  ·  N NEW RUN  ·  PROGRESS SAVES LOCALLY'
+        : 'ENTER START  ·  PROGRESS SAVES LOCALLY';
+    label(ctx, controls, WIDTH / 2, 628, 9, UI_COLORS.muted, 800);
     label(ctx, `v${RELEASE_VERSION}`, WIDTH - 24, 696, 10, '#63739a', 700, 'right');
   }
 

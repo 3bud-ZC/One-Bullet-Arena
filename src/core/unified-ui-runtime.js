@@ -42,6 +42,22 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
     this.unifiedUiRuntimeVersion = UNIFIED_UI_RUNTIME_VERSION;
   }
 
+  startNextWave() {
+    const restoringCheckpoint = Boolean(this.pendingCheckpoint);
+    const startingFresh = this.wave <= 0;
+    const result = super.startNextWave();
+
+    if (this.worldCamera && (startingFresh || restoringCheckpoint)) {
+      this.worldCamera.x = this.player.x;
+      this.worldCamera.y = this.player.y;
+      this.worldCamera.zoom = this.worldCamera.targetZoom;
+      this.explorationTrail = [{ x: this.player.x, y: this.player.y }];
+      this.explorationDistance = 0;
+      this.lastExplorationPoint = { x: this.player.x, y: this.player.y };
+    }
+    return result;
+  }
+
   drawModalBackdrop(alpha = 0.8) {
     const ctx = this.ctx;
     const overlay = ctx.createLinearGradient(0, 0, 0, HEIGHT);
@@ -281,6 +297,7 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       unifiedPauseOverlay: true,
       unifiedGameOverOverlay: true,
       unifiedTouchControls: true,
+      cleanCameraRunTransitions: true,
     };
   }
 }

@@ -1,7 +1,7 @@
-import { clamp, pointInsideRect } from '../arena.js';
+import { pointInsideRect } from '../arena.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
 import { RELEASE_VERSION } from '../release.js';
-import { UI_COLORS, label, roundedRect } from '../ui-renderer.js';
+import { UI_COLORS, label } from '../ui-renderer.js';
 import { OneBulletArtDirectionRuntime } from './art-direction-runtime.js';
 
 export const INTERFACE_REDESIGN_RUNTIME_VERSION = '3.5.0-interface-redesign';
@@ -117,131 +117,287 @@ export class OneBulletInterfaceRedesignRuntime extends OneBulletArtDirectionRunt
     const checkpoint = this.hasContinueCheckpoint() ? this.savedCheckpoint : null;
     const palette = this.palette();
 
-    ctx.save();
-    const wash = ctx.createRadialGradient(WIDTH / 2, 270, 80, WIDTH / 2, 300, 620);
-    wash.addColorStop(0, 'rgba(8, 28, 58, 0.22)');
-    wash.addColorStop(0.58, 'rgba(3, 12, 29, 0.14)');
-    wash.addColorStop(1, 'rgba(0, 2, 8, 0.62)');
-    ctx.fillStyle = wash;
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.restore();
-
-    this.drawMenuOrbit();
-    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 66, 12, UI_COLORS.player, 900);
-    label(ctx, 'حلبة الطلقة', WIDTH / 2, 125, 48, UI_COLORS.text, 900);
-    label(ctx, 'الواحدة', WIDTH / 2, 177, 48, UI_COLORS.bullet, 900);
+    this.drawMenuBackdrop(palette);
+    label(ctx, 'ONE BULLET ARENA', WIDTH / 2, 46, 10, UI_COLORS.player, 900);
+    label(ctx, 'حلبة الطلقة الواحدة', WIDTH / 2, 96, 40, UI_COLORS.text, 900);
+    label(
+      ctx,
+      checkpoint ? 'نقطة الحفظ جاهزة — اختر كيف تريد مواصلة الجولة' : 'طلقة واحدة. استعدها. طوّر أسلوبك. واصل الصمود.',
+      WIDTH / 2,
+      126,
+      11,
+      UI_COLORS.muted,
+      700,
+    );
 
     if (checkpoint) this.drawCheckpointCommandCenter(checkpoint, palette);
     else this.drawFreshRunCommandCenter(palette);
 
-    label(ctx, `v${RELEASE_VERSION}`, WIDTH - 20, HEIGHT - 16, 9, '#6f82a7', 800, 'right');
+    const footer = this.touchMode
+      ? 'PROGRESS SAVED LOCALLY  ·  TAP TO SELECT'
+      : 'C CONTINUE  ·  N NEW RUN  ·  PROGRESS SAVED LOCALLY';
+    label(ctx, footer, 120, HEIGHT - 18, 8, '#7183a4', 800, 'left');
+    label(ctx, `v${RELEASE_VERSION}`, WIDTH - 20, HEIGHT - 18, 8, '#7183a4', 800, 'right');
+  }
+
+  drawMenuBackdrop(palette) {
+    const ctx = this.ctx;
+    ctx.save();
+    const wash = ctx.createRadialGradient(WIDTH * 0.48, 300, 90, WIDTH * 0.48, 330, 650);
+    wash.addColorStop(0, 'rgba(8, 27, 54, 0.28)');
+    wash.addColorStop(0.58, 'rgba(2, 10, 25, 0.22)');
+    wash.addColorStop(1, 'rgba(0, 2, 8, 0.72)');
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = palette.primary;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(120, 145);
+    ctx.lineTo(WIDTH - 120, 145);
+    ctx.moveTo(120, 604);
+    ctx.lineTo(WIDTH - 120, 604);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = palette.warm;
+    ctx.fillRect(WIDTH / 2 - 28, 143, 56, 2);
+    ctx.restore();
   }
 
   drawCheckpointCommandCenter(checkpoint, palette) {
-    const ctx = this.ctx;
-    label(ctx, 'CHECKPOINT PROGRESSION ONLINE', WIDTH / 2, 214, 10, UI_COLORS.success, 900);
-    label(
-      ctx,
-      `WAVE ${String(checkpoint.wave).padStart(2, '0')}  ·  ${checkpoint.stats.upgrades} UPGRADES  ·  ${checkpoint.score.toLocaleString('en-US')} SCORE  ·  آخر نقطة حفظ`,
-      WIDTH / 2,
-      239,
+    const hero = { x: 120, y: 166, w: 704, h: 404 };
+    const rail = { x: 846, y: 166, w: 314, h: 404 };
+    const wave = String(checkpoint.wave).padStart(2, '0');
+    const upgrades = checkpoint.stats?.upgrades ?? 0;
+    const score = Number(checkpoint.score || 0).toLocaleString('en-US');
+
+    drawPanel(this.ctx, hero, 'rgba(91, 136, 196, 0.58)', 'rgba(3, 9, 23, 0.93)');
+    drawPanel(this.ctx, rail, 'rgba(91, 136, 196, 0.42)', 'rgba(3, 8, 20, 0.9)');
+
+    label(this.ctx, 'CHECKPOINT // ONLINE', hero.x + 30, hero.y + 34, 9, UI_COLORS.success, 900, 'left');
+    label(this.ctx, 'واصل من آخر نقطة حفظ', hero.x + hero.w - 30, hero.y + 70, 24, UI_COLORS.text, 900, 'right');
+    drawRtlBlock(
+      this.ctx,
+      'كل التطويرات والتقدم المحفوظ سيعودان كما هما. المتابعة هي الإجراء الرئيسي، ويمكنك بدء جولة جديدة من اللوحة الجانبية.',
+      hero.x + hero.w - 30,
+      hero.y + 98,
+      465,
+      20,
       11,
-      UI_COLORS.text,
-      800,
+      UI_COLORS.muted,
+      650,
+      2,
     );
 
-    this.drawCommandButton(
-      { x: 654, y: 258, w: 302, h: 54 },
-      `متابعة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
+    this.drawWaveIdentity(hero.x + 30, hero.y + 132, wave, palette.warm);
+    this.drawCheckpointMetric(hero.x + 250, hero.y + 147, 196, 'UPGRADES', upgrades, '#6ba5ff');
+    this.drawCheckpointMetric(hero.x + 466, hero.y + 147, 208, 'RUN SCORE', score, palette.primary);
+
+    this.drawMenuAction(
+      { x: hero.x + 28, y: hero.y + 278, w: hero.w - 56, h: 78 },
+      'متابعة الجولة',
+      `WAVE ${wave}  //  RESTORE CHECKPOINT`,
       UI_COLORS.bullet,
       () => this.continueFromCheckpoint(),
       true,
+      this.touchMode ? null : 'C',
     );
-    this.drawCommandButton(
-      { x: 324, y: 258, w: 302, h: 54 },
-      'جولة جديدة من البداية',
-      '#6f86b8',
-      () => this.startRun(),
-    );
+    label(this.ctx, 'يتم الحفظ محليًا عند بداية أعلى موجة وصلت إليها.', hero.x + 30, hero.y + 384, 9, UI_COLORS.muted, 700, 'left');
 
-    const cards = [
-      { x: 142, number: '01', title: 'احفظ', text: 'تُحفظ أعلى موجة تلقائيًا عند بدايتها.', accent: UI_COLORS.success, glyph: '▣' },
-      { x: 490, number: '02', title: 'استكمل', text: 'ارجع بنفس التطويرات والتقدم المحفوظ.', accent: '#5f9dff', glyph: '⇧' },
-      { x: 838, number: '03', title: 'اختر', text: 'ابدأ من الصفر أو استخدم نقطة الحفظ.', accent: palette.primary, glyph: '⚑' },
-    ];
-    cards.forEach((card) => this.drawCommandCard(card.x, 338, 300, 142, card));
-
-    this.drawStatCell(270, 510, 230, 'CHECKPOINT', `WAVE ${checkpoint.wave}`, UI_COLORS.success);
-    this.drawStatCell(525, 510, 230, 'BEST WAVE', this.highWave, '#5f9dff');
-    this.drawStatCell(780, 510, 230, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), palette.primary);
-
-    this.drawCommandButton({ x: 515, y: 592, w: 250, h: 42 }, 'حذف نقطة الحفظ', UI_COLORS.danger, () => this.clearCheckpoint());
-    const controls = this.touchMode
-      ? 'TAP A BUTTON TO CHOOSE  ·  PROGRESS IS SAVED LOCALLY'
-      : 'C CONTINUE  ·  N NEW RUN  ·  PROGRESS IS SAVED LOCALLY';
-    label(ctx, controls, WIDTH / 2, 680, 9, UI_COLORS.muted, 800);
+    this.drawRecordRail(rail, checkpoint, palette);
   }
 
   drawFreshRunCommandCenter(palette) {
-    const ctx = this.ctx;
-    label(ctx, 'ONE SHOT  ·  ONE RECALL  ·  KEEP MOVING', WIDTH / 2, 219, 10, UI_COLORS.muted, 900);
-    label(ctx, 'استخدم الارتداد، استعد الطلقة، واصمد أمام الموجات المتصاعدة.', WIDTH / 2, 246, 13, UI_COLORS.text, 700);
-    this.drawCommandButton({ x: 460, y: 270, w: 360, h: 58 }, 'ابدأ الجولة', UI_COLORS.bullet, () => this.startRun(), true);
+    const hero = { x: 120, y: 166, w: 704, h: 404 };
+    const rail = { x: 846, y: 166, w: 314, h: 404 };
 
-    const cards = [
-      { x: 142, number: '01', title: 'أطلق', text: 'طلقة واحدة، كل زاوية وارتداد لهما قيمة.', accent: UI_COLORS.bullet, glyph: '◆' },
-      { x: 490, number: '02', title: 'استعد', text: 'استدعِ الطلقة وتحرك لالتقاطها من جديد.', accent: '#5f9dff', glyph: '↺' },
-      { x: 838, number: '03', title: 'تطوّر', text: 'اختر تطويرًا واحدًا بعد كل موجة.', accent: palette.primary, glyph: '⇧' },
-    ];
-    cards.forEach((card) => this.drawCommandCard(card.x, 360, 300, 142, card));
-    this.drawStatCell(390, 535, 240, 'BEST WAVE', this.highWave, '#5f9dff');
-    this.drawStatCell(650, 535, 240, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), palette.primary);
-    const controls = this.touchMode
-      ? 'LEFT STICK MOVE  ·  TAP FIRE  ·  RECALL / DASH'
-      : 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH  ·  P PAUSE';
-    label(ctx, controls, WIDTH / 2, 680, 9, UI_COLORS.muted, 800);
+    drawPanel(this.ctx, hero, 'rgba(91, 136, 196, 0.58)', 'rgba(3, 9, 23, 0.93)');
+    drawPanel(this.ctx, rail, 'rgba(91, 136, 196, 0.42)', 'rgba(3, 8, 20, 0.9)');
+
+    label(this.ctx, 'NEW RUN // READY', hero.x + 30, hero.y + 34, 9, UI_COLORS.player, 900, 'left');
+    label(this.ctx, 'ابدأ جولة جديدة', hero.x + hero.w - 30, hero.y + 76, 28, UI_COLORS.text, 900, 'right');
+    drawRtlBlock(
+      this.ctx,
+      'قاعدة واحدة فقط: أطلق الطلقة، استخدم الارتدادات بذكاء، ثم استدعها إليك قبل أن تحاصرك الموجة.',
+      hero.x + hero.w - 30,
+      hero.y + 110,
+      540,
+      22,
+      12,
+      UI_COLORS.muted,
+      650,
+      2,
+    );
+
+    this.drawRunFlow(hero.x + 30, hero.y + 174, hero.w - 60, palette);
+    this.drawMenuAction(
+      { x: hero.x + 28, y: hero.y + 278, w: hero.w - 56, h: 78 },
+      'ابدأ الجولة',
+      'NEW RUN  //  WAVE 01',
+      UI_COLORS.bullet,
+      () => this.startRun(),
+      true,
+      this.touchMode ? null : 'ENTER',
+    );
+    label(this.ctx, 'لا توجد عملات أو متجر أو تقدم دائم — كل جولة تعتمد على اختياراتك.', hero.x + 30, hero.y + 384, 9, UI_COLORS.muted, 700, 'left');
+
+    this.drawFreshRunRail(rail, palette);
   }
 
-  drawCommandCard(x, y, w, h, card) {
+  drawWaveIdentity(x, y, wave, accent) {
     const ctx = this.ctx;
-    drawPanel(ctx, { x, y, w, h }, card.accent, 'rgba(4, 12, 29, 0.88)');
-    label(ctx, card.number, x + 20, y + 26, 9, card.accent, 900, 'left');
-
     ctx.save();
-    ctx.globalAlpha = 0.78;
-    ctx.strokeStyle = card.accent;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x + 55, y + 76, 29, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.strokeStyle = 'rgba(126, 157, 205, 0.24)';
+    ctx.lineWidth = 1;
+    chamferPath(ctx, x, y, 192, 116, 12);
+    ctx.fill();
     ctx.stroke();
-    ctx.globalAlpha = 0.18;
-    ctx.beginPath();
-    ctx.arc(x + 55, y + 76, 40, 0, Math.PI * 2);
-    ctx.stroke();
+    label(ctx, 'WAVE', x + 20, y + 27, 9, UI_COLORS.muted, 900, 'left');
+    label(ctx, wave, x + 20, y + 92, 58, accent, 900, 'left');
     ctx.restore();
-    label(ctx, card.glyph, x + 55, y + 84, 22, card.accent, 900);
-    label(ctx, card.title, x + w - 24, y + 52, 22, UI_COLORS.text, 900, 'right');
-    drawRtlBlock(ctx, card.text, x + w - 24, y + 88, w - 118, 21, 11, UI_COLORS.muted, 650, 2);
   }
 
-  drawStatCell(x, y, w, title, value, accent) {
+  drawCheckpointMetric(x, y, w, title, value, accent) {
     const ctx = this.ctx;
-    drawPanel(ctx, { x, y, w, h: 56 }, 'rgba(106, 139, 193, 0.62)', 'rgba(4, 10, 24, 0.82)');
-    label(ctx, title, x + 16, y + 21, 8, UI_COLORS.muted, 900, 'left');
-    label(ctx, value, x + w - 16, y + 39, 18, UI_COLORS.text, 900, 'right');
     ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.strokeStyle = 'rgba(126, 157, 205, 0.2)';
+    ctx.lineWidth = 1;
+    chamferPath(ctx, x, y, w, 86, 10);
+    ctx.fill();
+    ctx.stroke();
     ctx.fillStyle = accent;
-    ctx.fillRect(x + 2, y + 10, 3, 36);
+    ctx.fillRect(x + 14, y + 14, 3, 58);
+    label(ctx, title, x + 30, y + 30, 8, UI_COLORS.muted, 900, 'left');
+    label(ctx, value, x + 30, y + 65, 20, UI_COLORS.text, 900, 'left');
     ctx.restore();
   }
 
-  drawCommandButton(rect, text, accent, action, primary = false) {
+  drawRecordRail(rect, checkpoint, palette) {
+    const ctx = this.ctx;
+    label(ctx, 'RUN RECORD', rect.x + 24, rect.y + 34, 9, UI_COLORS.player, 900, 'left');
+    label(ctx, 'سجل الجولة', rect.x + rect.w - 24, rect.y + 62, 17, UI_COLORS.text, 900, 'right');
+
+    this.drawRecordRow(rect.x + 20, rect.y + 84, rect.w - 40, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), palette.primary);
+    this.drawRecordRow(rect.x + 20, rect.y + 148, rect.w - 40, 'BEST WAVE', this.highWave, '#6ba5ff');
+    this.drawRecordRow(rect.x + 20, rect.y + 212, rect.w - 40, 'CHECKPOINT', `WAVE ${checkpoint.wave}`, UI_COLORS.success);
+
+    this.drawMenuAction(
+      { x: rect.x + 20, y: rect.y + 290, w: rect.w - 40, h: 52 },
+      'جولة جديدة',
+      'RESET CURRENT RUN',
+      '#7188b8',
+      () => this.startRun(),
+      false,
+      this.touchMode ? null : 'N',
+    );
+    this.drawMenuAction(
+      { x: rect.x + 20, y: rect.y + 350, w: rect.w - 40, h: 34 },
+      'حذف نقطة الحفظ',
+      null,
+      UI_COLORS.danger,
+      () => this.clearCheckpoint(),
+      false,
+      null,
+      true,
+    );
+  }
+
+  drawFreshRunRail(rect, palette) {
+    const ctx = this.ctx;
+    label(ctx, 'PILOT RECORD', rect.x + 24, rect.y + 34, 9, UI_COLORS.player, 900, 'left');
+    label(ctx, 'أفضل نتائجك', rect.x + rect.w - 24, rect.y + 62, 17, UI_COLORS.text, 900, 'right');
+
+    this.drawRecordRow(rect.x + 20, rect.y + 84, rect.w - 40, 'HIGH SCORE', this.highScore.toLocaleString('en-US'), palette.primary);
+    this.drawRecordRow(rect.x + 20, rect.y + 148, rect.w - 40, 'BEST WAVE', this.highWave, '#6ba5ff');
+    this.drawRecordRow(rect.x + 20, rect.y + 212, rect.w - 40, 'SAVE', 'LOCAL', UI_COLORS.success);
+
+    label(ctx, 'QUICK CONTROLS', rect.x + 24, rect.y + 306, 8, UI_COLORS.muted, 900, 'left');
+    const controls = this.touchMode
+      ? ['LEFT // MOVE', 'RIGHT // FIRE', 'RECALL + DASH']
+      : ['WASD // MOVE', 'MOUSE // FIRE', 'Q // RECALL   SPACE // DASH'];
+    controls.forEach((text, index) => label(ctx, text, rect.x + 24, rect.y + 330 + index * 20, 8, index === 2 ? palette.warm : '#9eacc6', 800, 'left'));
+  }
+
+  drawRunFlow(x, y, w, palette) {
+    const ctx = this.ctx;
+    const gap = 12;
+    const cellW = (w - gap * 2) / 3;
+    const steps = [
+      ['01', 'FIRE', 'أطلق'],
+      ['02', 'RICOCHET', 'ارتد'],
+      ['03', 'RECALL', 'استعد'],
+    ];
+
+    steps.forEach(([number, code, arabic], index) => {
+      const cellX = x + index * (cellW + gap);
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.025)';
+      ctx.strokeStyle = 'rgba(112, 148, 199, 0.24)';
+      ctx.lineWidth = 1;
+      chamferPath(ctx, cellX, y, cellW, 76, 9);
+      ctx.fill();
+      ctx.stroke();
+      label(ctx, number, cellX + 14, y + 22, 8, index === 2 ? palette.primary : UI_COLORS.muted, 900, 'left');
+      label(ctx, code, cellX + 14, y + 44, 10, index === 0 ? palette.warm : index === 2 ? palette.primary : '#88a4cf', 900, 'left');
+      label(ctx, arabic, cellX + cellW - 14, y + 60, 11, UI_COLORS.text, 800, 'right');
+      ctx.restore();
+    });
+  }
+
+  drawRecordRow(x, y, w, title, value, accent) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.strokeStyle = 'rgba(112, 148, 199, 0.18)';
+    ctx.lineWidth = 1;
+    chamferPath(ctx, x, y, w, 54, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = accent;
+    ctx.fillRect(x + 10, y + 10, 2, 34);
+    label(ctx, title, x + 22, y + 22, 7, UI_COLORS.muted, 900, 'left');
+    label(ctx, value, x + w - 18, y + 36, 16, UI_COLORS.text, 900, 'right');
+    ctx.restore();
+  }
+
+  drawMenuAction(rect, title, meta, accent, action, primary = false, keyHint = null, danger = false) {
+    const ctx = this.ctx;
     const hovered = pointInsideRect(this.pointer, rect);
-    const fill = primary
-      ? hovered ? 'rgba(70, 57, 15, 0.98)' : 'rgba(48, 39, 13, 0.96)'
-      : hovered ? 'rgba(15, 29, 56, 0.97)' : 'rgba(5, 11, 26, 0.94)';
-    drawPanel(this.ctx, rect, accent, fill, hovered || primary ? 12 : 0);
-    label(this.ctx, text, rect.x + rect.w / 2, rect.y + rect.h / 2 + 6, 15, primary ? UI_COLORS.bullet : UI_COLORS.text, 900);
+    let fill = hovered ? 'rgba(14, 27, 51, 0.98)' : 'rgba(5, 11, 25, 0.96)';
+    if (primary) fill = hovered ? 'rgba(72, 57, 14, 0.99)' : 'rgba(48, 39, 12, 0.98)';
+    if (danger) fill = hovered ? 'rgba(46, 12, 22, 0.92)' : 'rgba(18, 8, 16, 0.86)';
+
+    drawPanel(ctx, rect, accent, fill, hovered || primary ? 10 : 0);
+    if (primary) {
+      const gradient = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y);
+      gradient.addColorStop(0, 'rgba(255,230,109,0.04)');
+      gradient.addColorStop(1, 'rgba(255,230,109,0.15)');
+      ctx.save();
+      chamferPath(ctx, rect.x + 2, rect.y + 2, rect.w - 4, rect.h - 4, 12);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    if (keyHint) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.045)';
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1;
+      chamferPath(ctx, rect.x + 16, rect.y + Math.max(8, (rect.h - 28) / 2), Math.max(34, keyHint.length * 9 + 18), 28, 6);
+      ctx.fill();
+      ctx.stroke();
+      label(ctx, keyHint, rect.x + 33, rect.y + rect.h / 2 + 4, 8, accent, 900, 'left');
+      ctx.restore();
+    }
+
+    const titleColor = danger ? '#ff8499' : primary ? UI_COLORS.bullet : UI_COLORS.text;
+    label(ctx, title, rect.x + rect.w - 18, rect.y + (meta ? 25 : rect.h / 2 + 5), meta ? 16 : 12, titleColor, 900, 'right');
+    if (meta) label(ctx, meta, rect.x + rect.w - 18, rect.y + rect.h - 14, 7, primary ? '#d9c77b' : UI_COLORS.muted, 800, 'right');
     this.addUiRegion(rect.x, rect.y, rect.w, rect.h, action);
   }
 
@@ -352,7 +508,7 @@ export class OneBulletInterfaceRedesignRuntime extends OneBulletArtDirectionRunt
       releaseVersion: RELEASE_VERSION,
       interfaceRedesignRuntimeVersion: INTERFACE_REDESIGN_RUNTIME_VERSION,
       interfaceRedesignActive: true,
-      menuArtDirectionRevision: 'checkpoint-command-center-v3',
+      menuArtDirectionRevision: 'checkpoint-command-center-v4',
       upgradeArtDirectionRevision: 'category-upgrade-cards-v3',
       gameplayGeometryChanged: false,
       collisionGeometryChanged: false,

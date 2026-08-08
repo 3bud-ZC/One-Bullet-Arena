@@ -1,25 +1,32 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 
-## Current milestone
+## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.3.0 — Cinematic Visual Overhaul**
-- Working branch: `feature/v3.3.0-visual-overhaul`
-- Pull Request: **#45 — draft, awaiting owner visual acceptance**
+- Release: **v3.3.0 — Cinematic Visual Overhaul**
+- Production branch: `main`
+- Pull Request: **#45 — merged on 2026-08-07**
+- Merge commit: `89180967be3f64f8b6ee6e8a5f18a3d5338b963f`
+- Pages publishing fix: `6828f382c636ca708ec78c0ae3993a4bcc354459`
 - Canonical release version: `3.3.0-visual-overhaul`
 - Canonical release label: `v3.3.0-visual-overhaul`
 - Release channel: `cinematic-visual-overhaul`
 - Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
-- Implementation: **100% complete**
-- Automated verification: **complete and green**
-- Manual capture review: **complete; no blocking visual regression found**
-- Gameplay geometry changed: **no**
-- Collision geometry changed: **no**
-- Combat balance or progression changed: **no**
-- Owner acceptance: **pending**
-- Merge: **blocked only on owner acceptance**
+- v3.3 implementation: **complete and merged**
+- v3.3 automated verification baseline: **green**
+- v3.3 manual visual acceptance: **accepted before merge**
+- Production publishing: **enabled from `main` through GitHub Pages workflow**
+
+## Post-release maintenance — 2026-08-08
+
+- Added the missing dedicated combat-impact profile for the Wave 7 Warden so successful Warden hits no longer fall back to the Scout impact profile.
+- Added a regression test asserting the Warden keeps distinct impact color, spark count, radius, and shake weight.
+- Corrected the README enemy roster from five archetypes to six and documented the Warden's directional guard behavior.
+- Removed stale release-state documentation that incorrectly described PR #45 as draft/unmerged and owner acceptance as pending.
+
+These maintenance changes do not alter arena geometry, collision geometry, enemy health, movement speed, wave composition, upgrade values, checkpoint schemas, or progression rules.
 
 ## Visual overhaul delivered
 
@@ -35,80 +42,45 @@ Last updated: 2026-08-07
 
 ## Architecture
 
-The active runtime chain for this milestone is:
+The active runtime chain is:
 
 `VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
-- `VisualOverhaul` is render-only.
-- `World2D` remains the accepted lower visual/world contract at `3.2.0-true-2d`.
-- Warden contract remains `3.1.0-a-warden`.
-- Checkpoint Progression contract remains `3.0.0-checkpoint`.
-- Combat Depth contract remains `2.9.0-combat`.
-- Gameplay event schema remains `4`.
-- Checkpoint schema remains `1`.
+- `VisualOverhaul` remains render-only.
+- `World2D` contract: `3.2.0-true-2d`.
+- Warden contract: `3.1.0-a-warden`.
+- Checkpoint Progression contract: `3.0.0-checkpoint`.
+- Combat Depth contract: `2.9.0-combat`.
+- Gameplay event schema: `4`.
+- Checkpoint schema: `1`.
 - Existing checkpoint saves remain compatible.
-- Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
 
-## Final v3.3 verification
+## v3.3 release verification baseline
 
 Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
 
 - Verify #833: **success**.
 - Browser Smoke #171: **success**.
 - Playwright: **148/148 passed**.
-- Expected: **148**.
 - Unexpected failures: **0**.
 - Flaky tests: **0**.
 - Skipped tests: **0**.
-- The final Browser Smoke artifact was generated successfully for the verified release-content head.
-- The final menu capture visibly reports `v3.3.0-visual-overhaul`.
-- Existing combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage remains green.
+- Final Browser Smoke artifact generated successfully.
+- Final menu capture reported `v3.3.0-visual-overhaul`.
+- Combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage was green at the release gate.
 
-A previous pre-release-identity verification also passed:
+## Production workflow
 
-- Verify #831: **success**.
-- Browser Smoke #170: **success**.
-- Playwright: **148/148 passed**.
+`.github/workflows/deploy-pages.yml` runs on every push to `main` and performs:
 
-## Manual visual review
+1. dependency installation;
+2. Chromium, Firefox, and WebKit Playwright installation;
+3. `npm run verify:all`;
+4. static-site assembly and release-handshake checks;
+5. GitHub Pages deployment.
 
-Generated Playwright captures were reviewed across the final visual-overhaul suite, including representative states for:
+The deployment uses `concurrency: pages` with `cancel-in-progress: true`, so the newest `main` revision is the authoritative deployment candidate.
 
-1. desktop main menu;
-2. desktop active combat;
-3. desktop bullet recall;
-4. desktop upgrade selection;
-5. checkpoint/menu states;
-6. Warden and combat-depth states;
-7. mobile-landscape combat and controls;
-8. Firefox/WebKit/Chromium rendering coverage.
+## Current development rule
 
-The review found no blocking visual regression:
-
-- menu hierarchy and framing remain readable;
-- the final menu shows the canonical `v3.3.0-visual-overhaul` release label;
-- active combat entities remain distinct from the strengthened map;
-- enemy threat/health arcs add readability without obscuring targets;
-- the recall tether is clearly visible without hiding combat;
-- upgrade cards remain legible;
-- mobile controls stay outside the primary combat focus;
-- cross-browser captures remain visually consistent;
-- no blocking clipping or overlap was observed in the reviewed captures.
-
-## Release decision
-
-The implementation and automated release gate are complete. PR #45 remains intentionally unmerged so the owner can perform a final hands-on visual acceptance pass before production changes.
-
-No additional code change is required unless owner acceptance identifies a visual, performance, readability, input, or collision issue.
-
-## Owner acceptance gate
-
-1. Confirm the menu footer displays `v3.3.0-visual-overhaul`.
-2. Start a new run and inspect arena depth, floor detail, border framing, obstacle material treatment, and combat contrast.
-3. Move and dash continuously and confirm the player remains readable and responsive.
-4. Fire, ricochet, recall, and catch the bullet and verify the trail, recall tether, glow, and reticle remain clear.
-5. Fight mixed enemy groups and confirm threat/health arcs help readability rather than adding clutter.
-6. Reach or continue to Wave 7 and verify the Warden remains readable against the upgraded arena.
-7. Check HUD, upgrades, pause, Game Over, and checkpoint Continue/New Run/Menu behavior.
-8. Test mobile landscape and confirm movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
-9. Report any performance drop, excessive glow, visual clutter, dark area, unreadable entity, control regression, or collision mismatch before PR #45 is merged.
+All new game development and bug fixes should start from the current `main` branch, preserve unrelated production behavior, include targeted verification where practical, and keep this file synchronized with material release-state changes.

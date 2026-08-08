@@ -61,6 +61,7 @@ The presentation stack is render/UI only. It does not mutate combat geometry, ba
 ## Final verification for environment pass
 
 Verified environment code head: `25df1ff8bb3bc6b2311c457ef2f02ef8ebe6d61d`.
+Documentation-only STATUS updates followed that verified code head.
 
 - Verify #959: **success**.
 - Browser Smoke #226: **success**.

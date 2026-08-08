@@ -38,6 +38,28 @@ async function seedCheckpoint(page) {
   });
 }
 
+test('renders the fresh cinematic command menu without runtime errors', async ({ page }, testInfo) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+
+  await loadGame(page);
+  const snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.clearCheckpoint();
+    game.goToMenu();
+    game.draw();
+    return game.getSnapshot();
+  });
+
+  expect(snapshot.checkpointAvailable).toBe(false);
+  expect(snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
+  expect(snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
+  expect(snapshot.rtlTypographyAware).toBe(true);
+  expect(snapshot.smoothHoverInterpolation).toBe(true);
+  expect(pageErrors).toEqual([]);
+  await attachCanvas(page, testInfo, 'fresh-cinematic-menu');
+});
+
 test('captures checkpoint menu, game-over choices, and restored wave', async ({ page }, testInfo) => {
   await loadGame(page);
   await seedCheckpoint(page);
@@ -45,11 +67,14 @@ test('captures checkpoint menu, game-over choices, and restored wave', async ({ 
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
-  expect(snapshot.checkpointDashboardRevision).toBe('tactical-command-hud-v10');
+  expect(snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
   expect(snapshot.dashboardPolishActive).toBe(true);
+  expect(snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
+  expect(snapshot.rtlTypographyAware).toBe(true);
+  expect(snapshot.smoothHoverInterpolation).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(false);
   expect(snapshot.collisionGeometryChanged).toBe(false);
-  await attachCanvas(page, testInfo, 'checkpoint-menu');
+  await attachCanvas(page, testInfo, 'checkpoint-cinematic-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

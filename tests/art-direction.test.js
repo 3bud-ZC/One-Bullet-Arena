@@ -23,17 +23,21 @@ test('art direction runtime is a render-only refinement layer', async () => {
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('interface redesign owns checkpoint menu and category upgrade cards without gameplay mutation', async () => {
+test('interface redesign owns the v4 checkpoint hierarchy and category upgrade cards without gameplay mutation', async () => {
   assert.equal(INTERFACE_REDESIGN_RUNTIME_VERSION, '3.5.0-interface-redesign');
   const source = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
   assert.match(source, /extends OneBulletArtDirectionRuntime/);
-  assert.match(source, /checkpoint-command-center-v3/);
+  assert.match(source, /checkpoint-command-center-v4/);
   assert.match(source, /category-upgrade-cards-v3/);
   assert.match(source, /drawCheckpointCommandCenter/);
+  assert.match(source, /drawRecordRail/);
+  assert.match(source, /drawMenuAction/);
   assert.match(source, /drawCategoryUpgradeCard/);
   assert.match(source, /interfaceRedesignActive: true/);
   assert.match(source, /gameplayGeometryChanged: false/);
   assert.match(source, /collisionGeometryChanged: false/);
+  assert.doesNotMatch(source, /title: 'احفظ'/);
+  assert.doesNotMatch(source, /title: 'استكمل'/);
   assert.doesNotMatch(source, /arenaStage\.bounds\s*=/);
   assert.doesNotMatch(source, /arenaStage\.obstacles\s*=/);
   assert.doesNotMatch(source, /player\.speed\s*=/);

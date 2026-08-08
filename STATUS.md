@@ -29,8 +29,8 @@ The top presentation layers do not mutate combat geometry, balance, progression,
 
 - Player rebuilt as a tactical interceptor with layered hull, wing plates, reactor core, muzzle rail, engine exhaust, dash trails, and readiness arcs.
 - Recoverable bullet rebuilt as a reactor-core projectile with layered rings, stronger trackable trail, recall tether, and directional muzzle flash.
-- Enemy silhouettes are now differentiated by geometry as well as color: Scout diamond drone, Brute armored chassis, Sniper hex platform, Charger directional wedge, Splitter segmented pentagon, and Warden octagonal boss chassis.
-- Hostile shots are now directional energy bolts rather than generic glowing circles.
+- Enemy silhouettes are differentiated by geometry as well as color: Scout diamond drone, Brute armored chassis, Sniper hex platform, Charger directional wedge, Splitter segmented pentagon, and Warden octagonal boss chassis.
+- Hostile shots are directional energy bolts rather than generic glowing circles.
 - Obstacles retain the existing collision rectangles while receiving restrained inset/marker detailing.
 - Existing v3.5 viewport, HUD, map/Locked Sectors, checkpoint/menu, and Upgrade redesign remain active beneath this graphics layer.
 

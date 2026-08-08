@@ -1,4 +1,4 @@
-import { OneBulletWorldExpansionRuntime } from './core/world-expansion-runtime.js';
+import { OneBulletUnifiedUiRuntime } from './core/unified-ui-runtime.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
@@ -7,11 +7,14 @@ const canvas = document.querySelector('#game-canvas');
 const liveRegion = document.querySelector('#game-status');
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
 
-canvas.tabIndex = 0;
-canvas.addEventListener('pointerdown', () => canvas.focus());
-
-const game = new OneBulletWorldExpansionRuntime(canvas, liveRegion);
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
+canvas.tabIndex = 0;
+canvas.addEventListener('pointerdown', () => {
+  canvas.focus();
+  if (!qaMode && !document.fullscreenElement) requestGameFullscreen();
+});
+
+const game = new OneBulletUnifiedUiRuntime(canvas, liveRegion);
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;
   window.__ONE_BULLET_RELEASE__ = RELEASE_INFO;
@@ -23,11 +26,21 @@ document.addEventListener('keydown', async (event) => {
   if (event.key.toLowerCase() !== 'f') return;
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.documentElement.requestFullscreen();
+    else await requestGameFullscreen();
   } catch {
     // Fullscreen is optional and never blocks gameplay.
   }
 });
+
+async function requestGameFullscreen() {
+  try {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    }
+  } catch {
+    // Browsers can deny fullscreen outside a direct user gesture.
+  }
+}
 
 if ('serviceWorker' in navigator && !qaMode) {
   registerServiceWorker().catch(() => {

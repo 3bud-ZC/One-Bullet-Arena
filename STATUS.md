@@ -6,14 +6,14 @@ Last updated: 2026-08-08
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
 - Live baseline on `main`: **v3.3.0 — Cinematic Visual Overhaul**
-- Current milestone: **v3.5 — Art Direction & Viewport Refinement**
+- Current milestone: **v3.5 — Art Direction, Interface & Graphics Refinement**
 - Working branch: `feature/v3.5.0-art-direction-refinement`
 - Pull Request: **#48 — draft, awaiting owner visual acceptance**
 - Current canonical release identity: `3.3.0-visual-overhaul`
 - v3.5 release promotion: **not locked yet; keep v3.3 identity until owner acceptance**
-- Implementation status: **95% complete**
+- Implementation status: **98% complete**
 - Automated verification: **green**
-- Manual capture review: **complete for the current interface pass**
+- Manual capture review: **complete for current graphics pass**
 - Gameplay geometry changed: **no**
 - Collision geometry changed: **no**
 - Combat balance/progression changed: **no**
@@ -23,122 +23,111 @@ Last updated: 2026-08-08
 
 - PR #45 (`v3.3.0-visual-overhaul`) is merged to `main`.
 - GitHub Pages deployment was repaired through PR #47 after the deploy workflow was found to be hard-coded to the older Warden boot runtime.
-- The Pages build gate now tracks the active visual runtime chain instead of the obsolete v3.1 boot check.
+- The Pages build gate tracks the active presentation runtime chain.
 
 ## v3.5 work completed
 
 ### Desktop viewport
 
-- Added `art-direction.css` as a dedicated presentation layer.
 - Desktop browser mode fills **100vw × 100dvh** without requiring the Fullscreen API.
-- Removed the boxed browser shell, outer rounded container, large browser-frame border, and desktop shell padding.
-- The canvas and game frame occupy the full available browser viewport on desktop.
-- Existing mobile-landscape behavior remains available through the lower responsive layer.
+- Removed boxed 16:9 browser chrome, desktop shell padding, and the large outer rounded frame.
+- Existing mobile-landscape responsive behavior remains supported.
 
 ### Dashboard / HUD
 
-- Added `OneBulletArtDirectionRuntime` above `OneBulletVisualOverhaulRuntime`.
-- Rebuilt the gameplay HUD as three restrained tactical modules:
-  - left: bullet state + recall readiness;
-  - center: game identity + wave + enemies + score + upgrades + arena stage;
-  - right: HP + segmented Dash/Shield state.
+- Rebuilt gameplay HUD as three restrained tactical modules: bullet/recall, run/wave, HP/dash/shield.
 - Reduced duplicate borders, repeated chrome, and excessive glow.
 
 ### Map / arena
 
-- Replaced the noisy floor-detail pass with a cleaner sector grid and restrained radar rings.
-- Simplified arena borders to structural lines plus four corner brackets.
-- Added visual **Locked Sectors** around early arena stages so unused screen space reads as future deck/expansion space rather than empty black area.
-- Locked sectors show subtle grid/hatching, structural boundaries, and next-unlock information where space allows.
-- Arena expansion geometry remains unchanged.
+- Added cleaner sector-grid treatment, restrained radar rings, simplified arena borders, and visual Locked Sectors.
+- Locked Sectors make unavailable early-stage space read as future deck structure without becoming playable space.
+- Arena bounds and expansion geometry remain unchanged.
 
 ### Shapes / obstacles
 
-- Replaced nested rounded obstacle frames with cleaner chamfered tactical blocks.
-- Reduced decorative bolts, repeated inner borders, and stripe noise.
-- Existing obstacle rectangles and collision data remain unchanged.
-
-### Overlay/frame cleanup
-
-- Removed the extra VisualOverhaul wrapper frame from Upgrade Selection.
-- Removed the extra wrapper frame from Pause and Game Over while retaining Checkpoint behavior.
-- Removed the redundant VisualOverhaul touch-control ring layer.
-- Simplified banner presentation using the accepted lower visual-design presentation.
+- Replaced nested rounded obstacle styling with chamfered tactical blocks.
+- Added restrained inset detailing and central tactical markers while preserving the same rectangles and collision data.
 
 ### Checkpoint / main menu redesign
 
 - Added `OneBulletInterfaceRedesignRuntime` above the ArtDirection layer.
-- Rebuilt the main menu as a tactical command-center composition inspired by the approved visual references.
-- Added a stronger Arabic title hierarchy with restrained radar framing.
-- Rebuilt checkpoint presentation around clear Continue / New Run decisions.
-- Added three structured checkpoint cards for Save / Continue / Choose.
-- Rebuilt checkpoint, best-wave, and high-score cells as compact tactical stat modules.
-- Kept Delete Checkpoint visually separated as a destructive action.
-- Improved Arabic RTL wrapping so menu card copy no longer truncates incorrectly.
+- Rebuilt fresh menu and checkpoint menu as a tactical command-center composition.
+- Improved Continue/New Run hierarchy, checkpoint cards, stat cells, delete action separation, and Arabic RTL wrapping.
 
 ### Upgrade screen redesign
 
-- Rebuilt Upgrade Selection as three large category-driven tactical cards.
-- Added visual upgrade categories including `VITALITY`, `DEFENSE`, `MOTION`, `RECALL`, `RICOCHET`, `IMPACT`, and `BALLISTICS`.
-- Each category now has its own accent color, glyph, header treatment, and level indicators.
-- Added hover lift/glow without changing selection behavior.
-- Reworked current/next level presentation to explicit `CURRENT` and `NEXT` values to avoid RTL arrow reversal.
-- Improved RTL text wrapping for names and descriptions.
+- Rebuilt Upgrade Selection as large category-driven cards.
+- Added distinct `VITALITY`, `DEFENSE`, `MOTION`, `RECALL`, `RICOCHET`, `IMPACT`, and `BALLISTICS` identities.
+- Added category colors/glyphs, stronger hover state, level dots, explicit `CURRENT`/`NEXT`, and improved Arabic wrapping.
 - Upgrade values, stack limits, and gameplay effects remain unchanged.
+
+### Combat graphics refinement
+
+- Added `OneBulletGraphicsRefinementRuntime` as the new top presentation runtime.
+- Rebuilt the player as a layered **tactical interceptor** silhouette with hull, wing plates, reactor core, muzzle rail, engine exhaust, dash trails, and restrained readiness arcs.
+- Rebuilt the recoverable bullet as a brighter **reactor-core projectile** with a cleaner rotating core, layered energy rings, improved trail, recall tether, and directional muzzle flash.
+- Rebuilt enemy silhouettes so combat types are identifiable by geometry as well as color:
+  - Scout: rotating diamond drone;
+  - Brute: armored square chassis with side armor;
+  - Sniper: hexagonal ranged platform with forward rail;
+  - Charger: aggressive directional wedge;
+  - Splitter: segmented pentagonal core;
+  - Warden: large octagonal boss chassis with rotating inner frame and external guard rails.
+- Rebuilt hostile shots as directional energy bolts with readable motion trails instead of generic glowing circles.
+- Added restrained enemy outer threat arcs without changing hitboxes.
+- Graphics pass remains presentation-only: no player/enemy speed, health, damage, radius, collision, spawn, wave, or progression values changed.
 
 ## Active runtime chain
 
-`InterfaceRedesign → ArtDirection → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+`GraphicsRefinement → InterfaceRedesign → ArtDirection → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
-- `InterfaceRedesign` is presentation/UI only.
-- `ArtDirection` is presentation/render only.
-- `VisualOverhaul` remains active beneath both layers.
+- `GraphicsRefinement`, `InterfaceRedesign`, and `ArtDirection` are presentation-only.
+- `VisualOverhaul` remains active beneath them.
 - World2D, Warden, Checkpoint, CombatDepth, event schema, save schema, combat values, and progression contracts are unchanged.
 
-## Final automated verification for current interface pass
+## Final automated verification for current graphics pass
 
-Verified code head: `2155f7a0650b8938b21bee7353e90d4ca27282c0`.
+Verified code head: `3fda1278879d84ee606de69d6e06523e5703d35a`.
 
-- Verify #905: **success**.
-- Browser Smoke #199: **success**.
-- Playwright tests: **168 total**.
-- Expected/passed: **167**.
+- Verify #927: **success**.
+- Browser Smoke #210: **success**.
+- Playwright tests: **180 total**.
+- Expected/passed: **179**.
 - Unexpected failures: **0**.
 - Flaky: **0**.
 - Skipped: **1** — intentional mobile skip for the desktop-only viewport-dimension assertion.
 - Browser coverage includes desktop Chromium, Firefox, WebKit, and mobile landscape.
-- Desktop viewport assertion confirms the game frame and canvas match the browser viewport while `document.fullscreenElement` is false.
-- Interface captures cover fresh menu, checkpoint menu, combat, Upgrade Selection, Pause, mobile landscape, and cross-browser states.
+- Dedicated graphics captures cover menu, mixed enemy combat lineup, recoverable bullet/recall state, hostile projectile, and Warden presentation across configured browser projects.
 
 ## Manual capture review
 
 Current capture review confirms:
 
-- the checkpoint/menu hierarchy is substantially closer to the approved tactical reference direction;
-- Continue and New Run choices are visually distinct;
-- checkpoint feature cards and stat cells remain readable without nested-frame clutter;
-- Upgrade cards have clear category identity and hierarchy;
-- `CURRENT 0 / NEXT 1` level copy renders correctly after the RTL polish fix;
-- early arena stages retain meaningful Locked Sectors;
-- dashboard, map, and redesigned interfaces remain visually consistent;
+- player silhouette is more readable and visually distinct from enemies;
+- Scout, Brute, Sniper, Charger, and Splitter can be differentiated by silhouette instead of color alone;
+- Warden reads as a larger boss-class target;
+- the bullet remains visually dominant enough to track during recall without overpowering the scene;
+- hostile projectile direction is easier to read;
+- the new graphics remain coherent with the tactical HUD, Locked Sectors, and map styling;
 - no blocking clipping or browser regression was found;
 - no gameplay or collision geometry changed.
 
 ## Remaining work before v3.5 release lock
 
-- Owner hands-on review of the current visual pass.
-- Inspect unusual desktop aspect ratios during owner review; the gameplay simulation remains the fixed 1280×720 logical world while the desktop presentation fills the browser viewport.
-- Apply any owner-reported spacing, scaling, darkness, glow, or readability corrections.
+- Owner hands-on visual review of the current graphics pass.
+- Apply any requested final polish to silhouettes, brightness, scaling, map darkness, or VFX density.
+- Inspect unusual desktop aspect ratios during owner review.
 - Promote release metadata from v3.3 to the final v3.5 identity only after visual acceptance.
 - Run one final Verify + Browser Smoke gate after the release identity is locked.
 - Merge PR #48 and deploy GitHub Pages only after owner approval.
 
 ## Owner acceptance gate
 
-1. Confirm the game fills the browser content area without using Fullscreen mode.
-2. Check the three-module top dashboard during active combat.
-3. Start Wave 1 and inspect Locked Sectors, arena border, and obstacles.
-4. Inspect the redesigned fresh menu and checkpoint menu.
-5. Inspect multiple Upgrade offers and confirm category colors, Arabic copy, `CURRENT/NEXT`, level dots, and hover states are clear.
-6. Check Pause, Game Over, checkpoint continuation, and mobile landscape.
-7. Report any stretching, excessive darkness, glow, clutter, clipping, unreadable labels, or spacing issue before merge.
+1. Inspect the new player interceptor during movement and Dash.
+2. Fire, ricochet, recall, and catch the bullet and verify its path stays readable.
+3. Fight Scout / Brute / Sniper / Charger / Splitter together and judge silhouette clarity.
+4. Inspect the Warden and confirm it visually reads as boss-class.
+5. Check hostile projectiles during dense combat.
+6. Check Dashboard, map, Upgrade, Menu/Checkpoint, Pause, Game Over, and mobile landscape together with the new graphics.
+7. Report any excessive glow, darkness, clutter, tiny details, confusing silhouette, stretching, or readability issue before merge.

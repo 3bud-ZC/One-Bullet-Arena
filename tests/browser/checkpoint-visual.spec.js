@@ -45,6 +45,7 @@ test('captures checkpoint menu, game-over choices, and restored wave', async ({ 
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
+  expect(snapshot.checkpointDashboardRevision).toBe('tactical-command-hud-v5');
   await attachCanvas(page, testInfo, 'checkpoint-menu');
 
   await page.evaluate(() => {

@@ -14,7 +14,7 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures layered menu, combat map, and Warden arena states', async ({ page }, testInfo) => {
+test('captures layered menu, combat map, and Warden arena states inside the expanded world', async ({ page }, testInfo) => {
   test.setTimeout(75000);
   await loadGame(page);
 
@@ -27,6 +27,7 @@ test('captures layered menu, combat map, and Warden arena states', async ({ page
   expect(snapshot.world2DRuntimeVersion).toBe('3.2.0-true-2d');
   expect(snapshot.layeredFloorTiles).toBe(true);
   expect(snapshot.environmentalDepth).toBe(true);
+  expect(snapshot.expandingWorldActive).toBe(true);
   await attachCanvas(page, testInfo, 'true-2d-menu-map');
 
   snapshot = await page.evaluate(() => {
@@ -57,7 +58,8 @@ test('captures layered menu, combat map, and Warden arena states', async ({ page
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('playing');
-  expect(snapshot.gameplayGeometryChanged).toBe(false);
+  expect(snapshot.gameplayGeometryChanged).toBe(true);
+  expect(snapshot.collisionGeometryChanged).toBe(true);
   await attachCanvas(page, testInfo, 'true-2d-combat-map');
 
   snapshot = await page.evaluate(() => {

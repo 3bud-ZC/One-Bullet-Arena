@@ -141,30 +141,30 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
       ctx,
       checkpoint ? 'نقطة الحفظ النشطة' : 'جولة جديدة',
       rect.x + rect.w / 2,
-      rect.y + 29,
+      rect.y + 28,
       11,
       checkpoint ? UI_COLORS.success : UI_COLORS.player,
       900,
     );
 
     ctx.save();
-    const glow = ctx.createRadialGradient(rect.x + rect.w / 2, rect.y + 91, 10, rect.x + rect.w / 2, rect.y + 91, 230);
+    const glow = ctx.createRadialGradient(rect.x + rect.w / 2, rect.y + 87, 10, rect.x + rect.w / 2, rect.y + 87, 230);
     glow.addColorStop(0, checkpoint ? 'rgba(255, 198, 43, 0.18)' : 'rgba(40, 199, 255, 0.14)');
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(rect.x + 36, rect.y + 38, rect.w - 72, 116);
+    ctx.fillRect(rect.x + 36, rect.y + 36, rect.w - 72, 112);
     ctx.restore();
 
     const wave = checkpoint ? String(checkpoint.wave).padStart(2, '0') : '01';
-    label(ctx, '»', rect.x + 122, rect.y + 104, 27, accent, 900);
-    label(ctx, `WAVE ${wave}`, rect.x + rect.w / 2, rect.y + 113, 56, accent, 900);
-    label(ctx, '«', rect.x + rect.w - 122, rect.y + 104, 27, accent, 900);
+    label(ctx, '»', rect.x + 122, rect.y + 98, 27, accent, 900);
+    label(ctx, `WAVE ${wave}`, rect.x + rect.w / 2, rect.y + 107, 54, accent, 900);
+    label(ctx, '«', rect.x + rect.w - 122, rect.y + 98, 27, accent, 900);
 
     label(
       ctx,
       checkpoint ? 'آخر نقطة حفظ جاهزة للمتابعة' : 'طلقة واحدة. استرجعها. واصل القتال.',
       rect.x + rect.w / 2,
-      rect.y + 145,
+      rect.y + 139,
       14,
       UI_COLORS.text,
       800,
@@ -182,9 +182,9 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
     ctx.stroke();
     ctx.restore();
 
-    this.drawHex(rect.x + 32, rect.y + rect.h / 2, accent, glyph, 17);
-    label(ctx, title, rect.x + 60, rect.y + 24, 9, '#6ccbf4', 800, 'left');
-    label(ctx, String(value), rect.x + 60, rect.y + 46, 15, '#b5e8ff', 900, 'left');
+    this.drawHex(rect.x + 31, rect.y + rect.h / 2, accent, glyph, 16);
+    label(ctx, title, rect.x + 58, rect.y + 22, 9, '#6ccbf4', 800, 'left');
+    label(ctx, String(value), rect.x + 58, rect.y + 42, 14, '#b5e8ff', 900, 'left');
   }
 
   drawActionButton(rect, text, accent, action, options = {}) {
@@ -222,7 +222,7 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
       text,
       rect.x + rect.w / 2 + (icon ? 12 : 0),
       rect.y + rect.h / 2 + 7,
-      primary ? 18 : danger ? 13 : 15,
+      primary ? 18 : danger ? 12 : 15,
       primary ? '#ffe779' : danger ? '#ff7689' : '#80cfff',
       900,
     );
@@ -297,61 +297,61 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
     ctx.fillStyle = 'rgba(45, 170, 245, 0.27)';
     ctx.fillRect(rail.x + 30, rail.y + 60, rail.w - 60, 1);
 
-    const hero = { x: main.x + 34, y: main.y + 34, w: main.w - 68, h: 176 };
+    const hero = { x: main.x + 34, y: main.y + 34, w: main.w - 68, h: 168 };
     this.drawHeroModule(hero, checkpoint);
 
     if (checkpoint) {
-      const metricY = main.y + 224;
+      const metricY = main.y + 216;
       this.drawMetricCard(
-        { x: main.x + 70, y: metricY, w: 226, h: 58 },
+        { x: main.x + 70, y: metricY, w: 226, h: 54 },
         '⇈',
         'الترقيات',
         checkpoint.stats.upgrades.toLocaleString('en-US'),
       );
       this.drawMetricCard(
-        { x: main.x + 404, y: metricY, w: 226, h: 58 },
+        { x: main.x + 404, y: metricY, w: 226, h: 54 },
         '◎',
         'نقاط الجولة',
         checkpoint.score.toLocaleString('en-US'),
       );
 
       this.drawActionButton(
-        { x: main.x + 42, y: main.y + 296, w: main.w - 84, h: 62 },
+        { x: main.x + 42, y: main.y + 286, w: main.w - 84, h: 56 },
         `متابعة الجولة من WAVE ${String(checkpoint.wave).padStart(2, '0')}`,
         '#ffd441',
         () => this.continueFromCheckpoint(),
         { primary: true, icon: '▶' },
       );
       this.drawActionButton(
-        { x: main.x + 42, y: main.y + 370, w: main.w - 84, h: 46 },
+        { x: main.x + 42, y: main.y + 352, w: main.w - 84, h: 42 },
         'جولة جديدة من البداية',
         '#278fe9',
         () => this.startRun(),
         { icon: '↻' },
       );
       this.drawActionButton(
-        { x: main.x + 148, y: main.y + 426, w: main.w - 296, h: 34 },
+        { x: main.x + 154, y: main.y + 402, w: main.w - 308, h: 28 },
         'حذف نقطة الحفظ',
         '#ff5065',
         () => this.clearCheckpoint(),
         { danger: true, icon: '▥' },
       );
     } else {
-      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', main.x + main.w / 2, main.y + 252, 10, '#72c6ef', 900);
+      label(ctx, 'FIRE  ·  RICOCHET  ·  RECALL  ·  SURVIVE', main.x + main.w / 2, main.y + 238, 10, '#72c6ef', 900);
       this.drawActionButton(
-        { x: main.x + 42, y: main.y + 286, w: main.w - 84, h: 66 },
+        { x: main.x + 42, y: main.y + 278, w: main.w - 84, h: 62 },
         'ابدأ الجولة',
         '#ffd441',
         () => this.startRun(),
         { primary: true, icon: '▶' },
       );
-      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 401, 10, UI_COLORS.muted, 800);
+      label(ctx, 'WASD MOVE  ·  MOUSE FIRE  ·  Q RECALL  ·  SPACE DASH', main.x + main.w / 2, main.y + 392, 10, UI_COLORS.muted, 800);
     }
 
     const cardX = rail.x + 24;
     const cardW = rail.w - 48;
     this.drawRecordCard(
-      { x: cardX, y: rail.y + 82, w: cardW, h: 92 },
+      { x: cardX, y: rail.y + 80, w: cardW, h: 90 },
       'أفضل موجة',
       'BEST WAVE',
       this.highWave,
@@ -359,7 +359,7 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
       '⌾',
     );
     this.drawRecordCard(
-      { x: cardX, y: rail.y + 190, w: cardW, h: 92 },
+      { x: cardX, y: rail.y + 185, w: cardW, h: 90 },
       'أعلى نتيجة',
       'HIGH SCORE',
       this.highScore.toLocaleString('en-US'),
@@ -367,7 +367,7 @@ export class OneBulletDashboardPolishRuntime extends OneBulletVisualOverhaulRunt
       '◎',
     );
     this.drawRecordCard(
-      { x: cardX, y: rail.y + 298, w: cardW, h: 92 },
+      { x: cardX, y: rail.y + 290, w: cardW, h: 90 },
       checkpoint ? 'نقطة الحفظ' : 'حالة الحفظ',
       checkpoint ? 'CHECKPOINT' : 'SAVE STATUS',
       checkpoint ? `WAVE ${checkpoint.wave}` : 'EMPTY',

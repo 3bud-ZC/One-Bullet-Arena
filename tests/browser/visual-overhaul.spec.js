@@ -14,7 +14,7 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('visual overhaul activates across menu, combat, recall, and upgrade states', async ({ page }, testInfo) => {
+test('visual overhaul remains active inside the expanding world across major states', async ({ page }, testInfo) => {
   test.setTimeout(75000);
   await loadGame(page);
 
@@ -26,8 +26,9 @@ test('visual overhaul activates across menu, combat, recall, and upgrade states'
   expect(snapshot.visualOverhaulActive).toBe(true);
   expect(snapshot.visualOverhaulRuntimeVersion).toBe('3.3.0-visual-overhaul');
   expect(snapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
-  expect(snapshot.gameplayGeometryChanged).toBe(false);
-  expect(snapshot.collisionGeometryChanged).toBe(false);
+  expect(snapshot.expandingWorldActive).toBe(true);
+  expect(snapshot.gameplayGeometryChanged).toBe(true);
+  expect(snapshot.collisionGeometryChanged).toBe(true);
   await attachCanvas(page, testInfo, 'visual-overhaul-menu');
 
   snapshot = await page.evaluate(() => {
@@ -56,6 +57,7 @@ test('visual overhaul activates across menu, combat, recall, and upgrade states'
   expect(snapshot.enemyReadabilityPass).toBe(true);
   expect(snapshot.enhancedArenaDepth).toBe(true);
   expect(snapshot.enhancedHudChrome).toBe(true);
+  expect(snapshot.unifiedCombatHud).toBe(true);
   await attachCanvas(page, testInfo, 'visual-overhaul-combat');
 
   snapshot = await page.evaluate(() => {

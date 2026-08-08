@@ -52,11 +52,14 @@ test('desktop shell uses the full browser viewport without requiring fullscreen 
 test('boot and PWA shell include the final v3.5 visual runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const graphicsSource = await readFile(new URL('../src/core/graphics-refinement-runtime.js', import.meta.url), 'utf8');
+  const environmentSource = await readFile(new URL('../src/core/environment-art-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletGraphicsRefinementRuntime/);
+  assert.match(mainSource, /OneBulletEnvironmentArtRuntime/);
   assert.match(graphicsSource, /extends OneBulletInterfaceRedesignRuntime/);
+  assert.match(environmentSource, /extends OneBulletGraphicsRefinementRuntime/);
   assert.match(workerSource, /art-direction\.css/);
   assert.match(workerSource, /core\/art-direction-runtime\.js/);
   assert.match(workerSource, /core\/interface-redesign-runtime\.js/);
   assert.match(workerSource, /core\/graphics-refinement-runtime\.js/);
+  assert.match(workerSource, /core\/environment-art-runtime\.js/);
 });

@@ -41,9 +41,21 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.doesNotMatch(source, /enemy\.speed\s*=/);
 });
 
-test('boot and service worker activate the visual overhaul runtime', async () => {
+test('visual overhaul remains active under the full v3.5 presentation chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  const artSource = await readFile(new URL('../src/core/art-direction-runtime.js', import.meta.url), 'utf8');
+  const interfaceSource = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
+  const graphicsSource = await readFile(new URL('../src/core/graphics-refinement-runtime.js', import.meta.url), 'utf8');
+  const environmentSource = await readFile(new URL('../src/core/environment-art-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletVisualOverhaulRuntime/);
+  assert.match(mainSource, /OneBulletEnvironmentArtRuntime/);
+  assert.match(artSource, /extends OneBulletVisualOverhaulRuntime/);
+  assert.match(interfaceSource, /extends OneBulletArtDirectionRuntime/);
+  assert.match(graphicsSource, /extends OneBulletInterfaceRedesignRuntime/);
+  assert.match(environmentSource, /extends OneBulletGraphicsRefinementRuntime/);
   assert.match(workerSource, /\.\/src\/core\/visual-overhaul-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/art-direction-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/interface-redesign-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/graphics-refinement-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/environment-art-runtime\.js/);
 });

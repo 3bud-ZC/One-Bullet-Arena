@@ -1,0 +1,94 @@
+:root {
+  --oba-edge-cyan: rgba(101, 247, 255, 0.42);
+  --oba-edge-blue: rgba(70, 124, 255, 0.24);
+}
+
+@media (min-width: 901px) {
+  html,
+  body {
+    width: 100vw;
+    height: 100dvh;
+    min-width: 100vw;
+    min-height: 100dvh;
+    background: #01030a;
+  }
+
+  body {
+    display: block;
+  }
+
+  body::before {
+    opacity: 0.18;
+  }
+
+  .game-shell {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+    display: block;
+    overflow: hidden;
+  }
+
+  .game-shell::before {
+    inset: 0;
+    border-radius: 0;
+    opacity: 0.48;
+    filter: blur(42px);
+  }
+
+  .game-frame {
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #01040d;
+  }
+
+  .game-frame::before {
+    inset: 0;
+    border: 0;
+    border-radius: 0;
+    background:
+      linear-gradient(90deg, var(--oba-edge-cyan), transparent 8%) top left / 180px 1px no-repeat,
+      linear-gradient(-90deg, var(--oba-edge-cyan), transparent 8%) top right / 180px 1px no-repeat,
+      linear-gradient(90deg, var(--oba-edge-blue), transparent 12%) bottom left / 220px 1px no-repeat,
+      linear-gradient(-90deg, var(--oba-edge-blue), transparent 12%) bottom right / 220px 1px no-repeat;
+    box-shadow:
+      inset 0 1px rgba(255,255,255,0.035),
+      inset 0 -1px rgba(101,247,255,0.08);
+  }
+
+  .game-frame::after {
+    background:
+      linear-gradient(180deg, rgba(101,247,255,0.15), transparent 26%) left top / 1px 42% no-repeat,
+      linear-gradient(180deg, rgba(101,247,255,0.15), transparent 26%) right top / 1px 42% no-repeat,
+      linear-gradient(0deg, rgba(255,216,107,0.12), transparent 24%) left bottom / 1px 30% no-repeat,
+      linear-gradient(0deg, rgba(255,216,107,0.12), transparent 24%) right bottom / 1px 30% no-repeat;
+    opacity: 0.75;
+  }
+
+  #game-canvas {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    filter: saturate(1.04) contrast(1.02);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .game-frame,
+  #game-canvas {
+    width: 100vw;
+    height: 100dvh;
+  }
+}

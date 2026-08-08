@@ -1,114 +1,97 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-07
+Last updated: 2026-08-08
 
 ## Current milestone
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Milestone: **v3.3.0 — Cinematic Visual Overhaul**
-- Working branch: `feature/v3.3.0-visual-overhaul`
-- Pull Request: **#45 — draft, awaiting owner visual acceptance**
-- Canonical release version: `3.3.0-visual-overhaul`
-- Canonical release label: `v3.3.0-visual-overhaul`
-- Release channel: `cinematic-visual-overhaul`
-- Service Worker cache: `one-bullet-arena-v3.3.0-visual-overhaul`
-- Implementation: **100% complete**
-- Automated verification: **complete and green**
-- Manual capture review: **complete; no blocking visual regression found**
+- Live baseline on `main`: **v3.3.0 — Cinematic Visual Overhaul**
+- Current milestone: **v3.5 — Art Direction, Interface, Graphics & Environment Refinement**
+- Working branch: `feature/v3.5.0-art-direction-refinement`
+- Pull Request: **#48 — draft, awaiting owner visual acceptance**
+- Current canonical release identity: `3.3.0-visual-overhaul`
+- v3.5 release promotion: **not locked yet; keep v3.3 identity until owner acceptance**
+- Implementation status: **99% complete**
+- Automated verification: **green**
+- Manual capture review: **complete for current environment pass**
 - Gameplay geometry changed: **no**
 - Collision geometry changed: **no**
-- Combat balance or progression changed: **no**
-- Owner acceptance: **pending**
-- Merge: **blocked only on owner acceptance**
+- Combat balance/progression changed: **no**
+- Merge to `main`: **pending owner visual acceptance**
 
-## Visual overhaul delivered
+## v3.5 presentation stack
 
-- Added `src/core/visual-overhaul-runtime.js` above the accepted True 2D runtime.
-- Strengthened the industrial arena with ambient deck nodes, stage-aware energy accents, floor scan/detail passes, stronger physical borders, corner framing, and obstacle material detail.
-- Added enemy health/threat arcs and clearer impact readability without changing enemy hitboxes.
-- Added hostile projectile glow without changing projectile collision geometry.
-- Added player dash-ready and shield visual layers without changing movement or defensive values.
-- Added a readable bullet recall tether, additional bullet glow, and a secondary aiming-reticle treatment.
-- Added stronger cinematic framing for the main menu, combat HUD, upgrade selection, pause, Game Over, banners, and touch controls.
-- Strengthened the browser shell with a richer sci-fi frame and background treatment while preserving mobile-landscape behavior.
-- `prefers-reduced-motion` support remains active for non-essential motion and shell effects.
+`EnvironmentArt → GraphicsRefinement → InterfaceRedesign → ArtDirection → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
-## Architecture
+The presentation stack is render/UI only. It does not mutate combat geometry, balance, progression, save schema, wave composition, arena bounds, or obstacle collision rectangles.
 
-The active runtime chain for this milestone is:
+## Viewport, UI, and map refinement delivered
 
-`VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+- Desktop browser presentation fills **100vw × 100dvh** without requiring Fullscreen API.
+- Gameplay HUD uses three restrained tactical modules for bullet state, wave/run state, and HP/Dash/Shield state.
+- Main menu and checkpoint presentation were rebuilt as a tactical command-center composition.
+- Upgrade Selection uses large category-driven cards with distinct VITALITY / DEFENSE / MOTION / RECALL / RICOCHET / IMPACT / BALLISTICS identities.
+- Arabic RTL wrapping and CURRENT/NEXT level display were corrected.
+- Early arena stages use Locked Sectors instead of empty black surrounding space.
+- Arena borders and obstacle presentation were simplified and made more tactical.
 
-- `VisualOverhaul` is render-only.
-- `World2D` remains the accepted lower visual/world contract at `3.2.0-true-2d`.
-- Warden contract remains `3.1.0-a-warden`.
-- Checkpoint Progression contract remains `3.0.0-checkpoint`.
-- Combat Depth contract remains `2.9.0-combat`.
-- Gameplay event schema remains `4`.
-- Checkpoint schema remains `1`.
-- Existing checkpoint saves remain compatible.
-- Base arena bounds, obstacle rectangles, player speed, enemy speed, wave composition, damage values, and upgrade values remain unchanged.
+## Graphics refinement delivered
 
-## Final v3.3 verification
+- Player rebuilt as a tactical interceptor with layered hull, wing plates, reactor core, muzzle rail, engine exhaust, dash trails, and readiness arcs.
+- Recoverable bullet rebuilt as a reactor-core projectile with layered rings, stronger trackable trail, recall tether, and directional muzzle flash.
+- Enemy silhouettes are differentiated by geometry as well as color: Scout diamond drone, Brute armored chassis, Sniper hex platform, Charger directional wedge, Splitter segmented pentagon, and Warden octagonal boss chassis.
+- Hostile shots are directional energy bolts rather than generic glowing circles.
+- Obstacles retain the existing collision rectangles while receiving restrained inset/marker detailing.
 
-Verified release-content head: `ecf635a7213f28cb9dca2584164ef4d747f8f013`.
+## Environment art refinement delivered
 
-- Verify #833: **success**.
-- Browser Smoke #171: **success**.
-- Playwright: **148/148 passed**.
-- Expected: **148**.
+- Added `OneBulletEnvironmentArtRuntime` above the graphics layer.
+- Added modular industrial deck plating and low-contrast material variation inside the playable arena.
+- Added stage-specific landmarks so arena expansion has a visual identity instead of only changing bounds:
+  - Wave 1 / Stage 1: **Core Reactor Deck**;
+  - Wave 3 / Stage 2: **Wing Relay Network**;
+  - Wave 6 / Stage 3: **Corridor Grid**;
+  - Wave 9+ / Stage 4: **Full Arena Open**.
+- Added relay nodes, reactor rings, corridor gates, bridge rails, deck labels, conduit paths, and restrained animated energy-flow indicators.
+- Added low-opacity machinery modules to Locked Sectors so closed space reads as inactive industrial structure rather than decorative hatch only.
+- Added perimeter rail detail and stage indicators around active arena bounds.
+- Added additional obstacle material insets and orientation markers without changing collision data.
+- Environment detail intentionally stays below player/enemy/projectile contrast during combat.
+
+## Final verification for environment pass
+
+Verified environment code head: `25df1ff8bb3bc6b2311c457ef2f02ef8ebe6d61d`.
+Documentation-only STATUS updates followed that verified code head.
+
+- Verify #959: **success**.
+- Browser Smoke #226: **success**.
+- Playwright: **192 total / 191 expected passed**.
 - Unexpected failures: **0**.
-- Flaky tests: **0**.
-- Skipped tests: **0**.
-- The final Browser Smoke artifact was generated successfully for the verified release-content head.
-- The final menu capture visibly reports `v3.3.0-visual-overhaul`.
-- Existing combat, checkpoint, Warden, keyboard/input, touch/mobile, PWA, service-worker, and release-handshake coverage remains green.
+- Flaky: **0**.
+- Skipped: **1** — intentional mobile skip for the desktop-only viewport assertion.
+- Coverage includes desktop Chromium, Firefox, WebKit, and mobile landscape.
+- Dedicated environment captures cover Wave 1, Wave 3, Wave 6, Wave 9+, and dense mixed-enemy combat.
 
-A previous pre-release-identity verification also passed:
+## Manual capture review
 
-- Verify #831: **success**.
-- Browser Smoke #170: **success**.
-- Playwright: **148/148 passed**.
+Reviewed the generated environment captures across desktop and mobile-landscape states.
 
-## Manual visual review
+Current result:
 
-Generated Playwright captures were reviewed across the final visual-overhaul suite, including representative states for:
+- Wave 1 now reads as a compact reactor room surrounded by visibly inactive deck structure;
+- Wave 3 visually opens into left/right relay wings;
+- Wave 6 gains corridor/gate structure and stronger directional organization;
+- Wave 9+ fills the viewport as a complete industrial combat deck with four corner relay nodes;
+- stage landmarks are visible without competing with enemies, bullet trails, hostile bolts, or HUD information;
+- the full-arena combat capture remains readable under mixed enemy density and Warden presence;
+- mobile controls remain readable over the richer map;
+- no blocking clipping or browser regression was found;
+- gameplay and collision geometry remain unchanged.
 
-1. desktop main menu;
-2. desktop active combat;
-3. desktop bullet recall;
-4. desktop upgrade selection;
-5. checkpoint/menu states;
-6. Warden and combat-depth states;
-7. mobile-landscape combat and controls;
-8. Firefox/WebKit/Chromium rendering coverage.
+## Remaining work before v3.5 release lock
 
-The review found no blocking visual regression:
-
-- menu hierarchy and framing remain readable;
-- the final menu shows the canonical `v3.3.0-visual-overhaul` release label;
-- active combat entities remain distinct from the strengthened map;
-- enemy threat/health arcs add readability without obscuring targets;
-- the recall tether is clearly visible without hiding combat;
-- upgrade cards remain legible;
-- mobile controls stay outside the primary combat focus;
-- cross-browser captures remain visually consistent;
-- no blocking clipping or overlap was observed in the reviewed captures.
-
-## Release decision
-
-The implementation and automated release gate are complete. PR #45 remains intentionally unmerged so the owner can perform a final hands-on visual acceptance pass before production changes.
-
-No additional code change is required unless owner acceptance identifies a visual, performance, readability, input, or collision issue.
-
-## Owner acceptance gate
-
-1. Confirm the menu footer displays `v3.3.0-visual-overhaul`.
-2. Start a new run and inspect arena depth, floor detail, border framing, obstacle material treatment, and combat contrast.
-3. Move and dash continuously and confirm the player remains readable and responsive.
-4. Fire, ricochet, recall, and catch the bullet and verify the trail, recall tether, glow, and reticle remain clear.
-5. Fight mixed enemy groups and confirm threat/health arcs help readability rather than adding clutter.
-6. Reach or continue to Wave 7 and verify the Warden remains readable against the upgraded arena.
-7. Check HUD, upgrades, pause, Game Over, and checkpoint Continue/New Run/Menu behavior.
-8. Test mobile landscape and confirm movement, Recall, Dash, and Pause controls do not hide enemies or projectiles.
-9. Report any performance drop, excessive glow, visual clutter, dark area, unreadable entity, control regression, or collision mismatch before PR #45 is merged.
+- Owner hands-on visual review of the current complete v3.5 presentation pass.
+- Apply any requested final brightness, density, spacing, silhouette, map-darkness, or VFX corrections.
+- Promote canonical release metadata to the final v3.5 identity only after owner acceptance.
+- Run one final release-identity Verify + Browser Smoke gate.
+- Merge PR #48 and deploy GitHub Pages only after owner approval.

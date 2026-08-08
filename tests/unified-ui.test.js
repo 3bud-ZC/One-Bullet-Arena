@@ -7,9 +7,12 @@ test('unified UI runtime exposes the v3.4 interface layer', () => {
   assert.equal(UNIFIED_UI_RUNTIME_VERSION, '3.4.0-unified-ui');
 });
 
-test('unified UI owns all major non-combat overlays', async () => {
+test('unified UI owns all major non-combat overlays and clean run transitions', async () => {
   const source = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   assert.match(source, /extends OneBulletWorldExpansionRuntime/);
+  assert.match(source, /startNextWave\(\)/);
+  assert.match(source, /restoringCheckpoint/);
+  assert.match(source, /this\.worldCamera\.x = this\.player\.x/);
   assert.match(source, /drawUpgradeSelection\(\)/);
   assert.match(source, /drawPause\(\)/);
   assert.match(source, /drawGameOver\(\)/);
@@ -20,6 +23,7 @@ test('unified UI owns all major non-combat overlays', async () => {
   assert.match(source, /unifiedUpgradeCards: true/);
   assert.match(source, /unifiedPauseOverlay: true/);
   assert.match(source, /unifiedGameOverOverlay: true/);
+  assert.match(source, /cleanCameraRunTransitions: true/);
 });
 
 test('main boots the unified UI runtime and preserves fullscreen entry', async () => {

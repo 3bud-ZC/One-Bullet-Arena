@@ -54,7 +54,7 @@ test('game state contract matches the runtime state machine', () => {
   assert.throws(() => assertGameState('loading'), /Unknown game state/);
 });
 
-test('runtime layers integrate required events and boot through the expanding world layer', async () => {
+test('runtime layers integrate required events and boot through the unified UI layer', async () => {
   const eventSource = await readFile(new URL('../src/core/event-runtime.js', import.meta.url), 'utf8');
   const combatSource = await readFile(new URL('../src/core/combat-depth-runtime.js', import.meta.url), 'utf8');
   const checkpointSource = await readFile(new URL('../src/core/checkpoint-runtime.js', import.meta.url), 'utf8');
@@ -63,6 +63,7 @@ test('runtime layers integrate required events and boot through the expanding wo
   const visualOverhaulSource = await readFile(new URL('../src/core/visual-overhaul-runtime.js', import.meta.url), 'utf8');
   const dashboardPolishSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const worldExpansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
+  const unifiedUiSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   const requiredBaseEvents = [
@@ -87,6 +88,7 @@ test('runtime layers integrate required events and boot through the expanding wo
   assert.match(visualOverhaulSource, /extends OneBulletWorld2DRuntime/);
   assert.match(dashboardPolishSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(worldExpansionSource, /extends OneBulletDashboardPolishRuntime/);
-  assert.match(mainSource, /new OneBulletWorldExpansionRuntime/);
+  assert.match(unifiedUiSource, /extends OneBulletWorldExpansionRuntime/);
+  assert.match(mainSource, /new OneBulletUnifiedUiRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

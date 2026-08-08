@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { GRAPHICS_REFINEMENT_RUNTIME_VERSION } from '../src/core/graphics-refinement-runtime.js';
 
-test('graphics refinement is a presentation-only top runtime', async () => {
+test('graphics refinement remains presentation-only beneath environment art', async () => {
   assert.equal(GRAPHICS_REFINEMENT_RUNTIME_VERSION, '3.5.0-graphics-refinement');
   const source = await readFile(new URL('../src/core/graphics-refinement-runtime.js', import.meta.url), 'utf8');
   assert.match(source, /extends OneBulletInterfaceRedesignRuntime/);
@@ -20,12 +20,16 @@ test('graphics refinement is a presentation-only top runtime', async () => {
   assert.doesNotMatch(source, /arenaStage\.obstacles\s*=/);
 });
 
-test('boot, service worker, and Pages gate include graphics refinement', async () => {
+test('boot, service worker, and Pages gate include graphics and environment refinement', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  const environmentSource = await readFile(new URL('../src/core/environment-art-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const deploySource = await readFile(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
-  assert.match(mainSource, /OneBulletGraphicsRefinementRuntime/);
+  assert.match(mainSource, /OneBulletEnvironmentArtRuntime/);
+  assert.match(environmentSource, /extends OneBulletGraphicsRefinementRuntime/);
   assert.match(workerSource, /core\/graphics-refinement-runtime\.js/);
+  assert.match(workerSource, /core\/environment-art-runtime\.js/);
   assert.match(deploySource, /graphics-refinement-runtime\.js/);
-  assert.match(deploySource, /OneBulletGraphicsRefinementRuntime/);
+  assert.match(deploySource, /environment-art-runtime\.js/);
+  assert.match(deploySource, /OneBulletEnvironmentArtRuntime/);
 });

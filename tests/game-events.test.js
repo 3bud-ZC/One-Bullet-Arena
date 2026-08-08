@@ -64,6 +64,7 @@ test('runtime layers integrate required events without editing base combat', asy
   const artDirectionSource = await readFile(new URL('../src/core/art-direction-runtime.js', import.meta.url), 'utf8');
   const interfaceSource = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
   const graphicsSource = await readFile(new URL('../src/core/graphics-refinement-runtime.js', import.meta.url), 'utf8');
+  const environmentSource = await readFile(new URL('../src/core/environment-art-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   const requiredBaseEvents = [
@@ -89,6 +90,7 @@ test('runtime layers integrate required events without editing base combat', asy
   assert.match(artDirectionSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(interfaceSource, /extends OneBulletArtDirectionRuntime/);
   assert.match(graphicsSource, /extends OneBulletInterfaceRedesignRuntime/);
-  assert.match(mainSource, /new OneBulletGraphicsRefinementRuntime/);
+  assert.match(environmentSource, /extends OneBulletGraphicsRefinementRuntime/);
+  assert.match(mainSource, /new OneBulletEnvironmentArtRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

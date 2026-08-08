@@ -29,6 +29,7 @@ test('package, runtime chain, and service worker consume canonical release metad
   const artDirectionRuntimeSource = await readFile(new URL('../src/core/art-direction-runtime.js', import.meta.url), 'utf8');
   const interfaceRuntimeSource = await readFile(new URL('../src/core/interface-redesign-runtime.js', import.meta.url), 'utf8');
   const graphicsRuntimeSource = await readFile(new URL('../src/core/graphics-refinement-runtime.js', import.meta.url), 'utf8');
+  const environmentRuntimeSource = await readFile(new URL('../src/core/environment-art-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 
   assert.equal(packageJson.version, RELEASE_VERSION);
@@ -42,6 +43,7 @@ test('package, runtime chain, and service worker consume canonical release metad
   assert.match(artDirectionRuntimeSource, /OneBulletVisualOverhaulRuntime/);
   assert.match(interfaceRuntimeSource, /OneBulletArtDirectionRuntime/);
   assert.match(graphicsRuntimeSource, /OneBulletInterfaceRedesignRuntime/);
+  assert.match(environmentRuntimeSource, /OneBulletGraphicsRefinementRuntime/);
   assert.match(workerSource, /importScripts\('\.\/src\/release-config\.js'\)/);
   assert.match(workerSource, /const CACHE_NAME = RELEASE\.cacheName/);
   assert.match(workerSource, /\.\/src\/core\/event-runtime\.js/);
@@ -54,6 +56,7 @@ test('package, runtime chain, and service worker consume canonical release metad
   assert.match(workerSource, /\.\/src\/core\/art-direction-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/interface-redesign-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/graphics-refinement-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/environment-art-runtime\.js/);
   assert.match(workerSource, /\.\/art-direction\.css/);
   assert.doesNotMatch(workerSource, /one-bullet-arena-v3\.1\.0-a-warden/);
 });
@@ -67,6 +70,6 @@ test('service worker keeps an explicit release handshake and network-first fallb
   assert.match(mainSource, /updateViaCache: 'none'/);
   assert.match(mainSource, /registration\.update\(\)/);
   assert.match(mainSource, /controllerchange/);
-  assert.match(mainSource, /OneBulletGraphicsRefinementRuntime/);
+  assert.match(mainSource, /OneBulletEnvironmentArtRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

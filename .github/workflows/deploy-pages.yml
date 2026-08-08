@@ -55,6 +55,7 @@ jobs:
           test -f _site/src/core/world-2d-runtime.js
           test -f _site/src/core/visual-overhaul-runtime.js
           test -f _site/src/core/dashboard-polish-runtime.js
+          test -f _site/src/core/world-expansion-runtime.js
           test -f _site/src/game.js
           test -f _site/src/game-runtime.js
           test -f _site/src/input-controller.js
@@ -70,7 +71,10 @@ jobs:
           grep -q "core/world-2d-runtime.js" _site/sw.js
           grep -q "core/visual-overhaul-runtime.js" _site/sw.js
           grep -q "core/dashboard-polish-runtime.js" _site/sw.js
-          grep -q "OneBulletDashboardPolishRuntime" _site/src/main.js
+          grep -q "core/world-expansion-runtime.js" _site/sw.js
+          grep -q "OneBulletWorldExpansionRuntime" _site/src/main.js
+          grep -q "width: 100vw" _site/game.css
+          grep -q "height: 100dvh" _site/game.css
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

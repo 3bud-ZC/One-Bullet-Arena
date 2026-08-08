@@ -27,7 +27,6 @@ function chamferPath(ctx, x, y, w, h, cut = 12) {
   ctx.lineTo(x + c, y + h);
   ctx.lineTo(x, y + h - c);
   ctx.lineTo(x, y + c);
-  ctx.lineTo(x, y + c);
   ctx.closePath();
 }
 
@@ -59,14 +58,25 @@ function drawRtlBlock(ctx, text, rightX, topY, maxWidth, lineHeight, fontSize, c
     const candidate = line ? `${line} ${word}` : word;
     if (ctx.measureText(candidate).width <= maxWidth || !line) {
       line = candidate;
-      continue;
+    } else {
+      lines.push(line);
+      line = word;
     }
-    lines.push(line);
-    line = word;
-    if (lines.length >= maxLines - 1) break;
   }
-  if (line && lines.length < maxLines) lines.push(line);
-  lines.slice(0, maxLines).forEach((value, index) => ctx.fillText(value, rightX, topY + index * lineHeight));
+  if (line) lines.push(line);
+
+  const visible = lines.slice(0, maxLines);
+  if (lines.length > maxLines && visible.length) {
+    let last = visible[visible.length - 1];
+    while (last && ctx.measureText(`${last}…`).width > maxWidth) {
+      const pieces = last.split(' ');
+      pieces.pop();
+      last = pieces.join(' ');
+    }
+    visible[visible.length - 1] = `${last || ''}…`;
+  }
+
+  visible.forEach((value, index) => ctx.fillText(value, rightX, topY + index * lineHeight));
   ctx.restore();
 }
 
@@ -211,7 +221,7 @@ export class OneBulletInterfaceRedesignRuntime extends OneBulletArtDirectionRunt
     ctx.restore();
     label(ctx, card.glyph, x + 55, y + 84, 22, card.accent, 900);
     label(ctx, card.title, x + w - 24, y + 52, 22, UI_COLORS.text, 900, 'right');
-    drawRtlBlock(ctx, card.text, x + w - 24, y + 88, w - 118, 21, 12, UI_COLORS.muted, 650, 2);
+    drawRtlBlock(ctx, card.text, x + w - 24, y + 88, w - 118, 21, 11, UI_COLORS.muted, 650, 2);
   }
 
   drawStatCell(x, y, w, title, value, accent) {
@@ -312,7 +322,8 @@ export class OneBulletInterfaceRedesignRuntime extends OneBulletArtDirectionRunt
 
     drawPanel(ctx, { x: x + 18, y: cardY + 258, w: width - 36, h: 68 }, spec.accent, 'rgba(2, 7, 18, 0.72)');
     label(ctx, 'LEVEL CHANGE', x + 34, cardY + 279, 8, spec.accent, 900, 'left');
-    label(ctx, `${current}  →  ${next}`, x + width - 34, cardY + 299, 18, UI_COLORS.text, 900, 'right');
+    label(ctx, `CURRENT ${current}`, x + width - 34, cardY + 286, 9, UI_COLORS.muted, 900, 'right');
+    label(ctx, `NEXT ${next}`, x + width - 34, cardY + 307, 15, UI_COLORS.text, 900, 'right');
     label(ctx, `MAX ${upgrade.maxStacks}`, x + 34, cardY + 310, 8, UI_COLORS.muted, 800, 'left');
 
     label(ctx, `LEVEL ${current}/${upgrade.maxStacks}`, x + 20, cardY + height - 22, 9, current > 0 ? spec.accent : UI_COLORS.muted, 900, 'left');

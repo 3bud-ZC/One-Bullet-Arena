@@ -163,10 +163,11 @@ test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz 
   }
 });
 
-test('bullet trail and dash-effect sampling are refresh-rate independent', async ({ page }, testInfo) => {
+test('bullet trail and dash-effect sampling are independent from render cadence', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Effect cadence comparison runs once in Chromium.');
   await loadGame(page);
-  const samples = await page.evaluate(() => {
+  const samples = await page.evaluate(async () => {
+    const { FixedStepClock } = await import('/src/performance/frame-pacer.js');
     const game = window.__ONE_BULLET_ARENA__;
     game.setRenderingQuality('HIGH');
     const originalRandom = Math.random;
@@ -183,24 +184,27 @@ test('bullet trail and dash-effect sampling are refresh-rate independent', async
       game.pointer.y = 360;
       game.resetBulletToPlayer();
       game.fireBullet();
-      const dt = 1 / hz;
-      const duration = 0.18;
-      const frames = Math.round(duration * hz);
-      for (let index = 0; index < frames; index += 1) game.updateBullet(dt);
-      const trailPoints = game.bullet.trail.length;
 
-      game.particles = [];
-      game.nextDashParticleAt = 0;
-      game.elapsed = 0;
-      const dashDuration = 0.3;
-      const dashFrames = Math.round(dashDuration * hz);
-      for (let index = 0; index < dashFrames; index += 1) {
-        game.elapsed += dt;
-        game.createParticle(100, 100, '#62f3ff', 75);
+      const clock = new FixedStepClock({ simulationHz: 120, maxCatchUpSteps: 8, maxFrameDelta: 0.1 });
+      const duration = 0.3;
+      const frameMs = 1000 / hz;
+      const frameCount = Math.ceil(duration * hz);
+      clock.tick(0, () => {});
+      for (let frame = 1; frame <= frameCount; frame += 1) {
+        const timestamp = Math.min(duration * 1000, frame * frameMs);
+        clock.tick(timestamp, (dt) => {
+          game.updateBullet(dt);
+          game.elapsed += dt;
+          game.createParticle(100, 100, '#62f3ff', 75);
+        });
       }
-      const dashParticles = game.particles.length;
+      const result = {
+        hz,
+        trailPoints: game.bullet.trail.length,
+        dashParticles: game.particles.length,
+      };
       game.goToMenu();
-      return { hz, trailPoints, dashParticles };
+      return result;
     };
 
     const result = [60, 120, 240].map(sampleAt);
@@ -210,7 +214,7 @@ test('bullet trail and dash-effect sampling are refresh-rate independent', async
 
   const trailCounts = samples.map((entry) => entry.trailPoints);
   const dashCounts = samples.map((entry) => entry.dashParticles);
-  expect(Math.max(...trailCounts) - Math.min(...trailCounts)).toBeLessThanOrEqual(2);
+  expect(Math.max(...trailCounts) - Math.min(...trailCounts)).toBeLessThanOrEqual(1);
   expect(Math.max(...dashCounts) - Math.min(...dashCounts)).toBeLessThanOrEqual(1);
 });
 

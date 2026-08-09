@@ -1,19 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import {
-  GAME_EVENTS,
-  GAME_EVENT_SCHEMA_VERSION,
-  GAME_EVENT_TYPES,
-  assertGameEventType,
-  isGameEventType,
-} from '../src/core/game-events.js';
-import {
-  GAME_STATES,
-  GAME_STATE_VALUES,
-  assertGameState,
-  isGameState,
-} from '../src/core/game-states.js';
+import { GAME_EVENTS, GAME_EVENT_SCHEMA_VERSION, GAME_EVENT_TYPES, assertGameEventType, isGameEventType } from '../src/core/game-events.js';
+import { GAME_STATES, GAME_STATE_VALUES, assertGameState, isGameState } from '../src/core/game-states.js';
 
 test('game event catalog is unique, frozen, and stable', () => {
   assert.equal(GAME_EVENT_SCHEMA_VERSION, 4);
@@ -54,7 +43,7 @@ test('game state contract matches the runtime state machine', () => {
   assert.throws(() => assertGameState('loading'), /Unknown game state/);
 });
 
-test('runtime layers integrate required events and boot through the UI repair layer', async () => {
+test('runtime layers integrate required events and boot through the global UI owner', async () => {
   const eventSource = await readFile(new URL('../src/core/event-runtime.js', import.meta.url), 'utf8');
   const combatSource = await readFile(new URL('../src/core/combat-depth-runtime.js', import.meta.url), 'utf8');
   const checkpointSource = await readFile(new URL('../src/core/checkpoint-runtime.js', import.meta.url), 'utf8');
@@ -64,20 +53,11 @@ test('runtime layers integrate required events and boot through the UI repair la
   const dashboardPolishSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const worldExpansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
   const unifiedUiSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
-  const uiRepairSource = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
+  const globalUiSource = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
-  const requiredBaseEvents = [
-    'RUN_STARTED', 'RUN_FINISHED', 'STATE_CHANGED', 'WAVE_STARTED', 'WAVE_CLEARED',
-    'ENEMY_SPAWNED', 'ENEMY_DAMAGED', 'ENEMY_KILLED', 'BULLET_FIRED',
-    'BULLET_RECALL_STARTED', 'BULLET_CAUGHT', 'BULLET_RICOCHETED', 'PLAYER_DASHED',
-    'PLAYER_DAMAGED', 'PLAYER_SHIELD_ABSORBED', 'PLAYER_REVIVED', 'UPGRADE_OFFERED',
-    'UPGRADE_SELECTED',
-  ];
-  const requiredSkillEvents = [
-    'PERFECT_CATCH', 'PRECISION_SHOT_FIRED', 'BANK_CHAINED', 'MOMENTUM_CHANGED',
-    'OVERDRIVE_STARTED', 'OVERDRIVE_ENDED',
-  ];
+  const requiredBaseEvents = ['RUN_STARTED', 'RUN_FINISHED', 'STATE_CHANGED', 'WAVE_STARTED', 'WAVE_CLEARED', 'ENEMY_SPAWNED', 'ENEMY_DAMAGED', 'ENEMY_KILLED', 'BULLET_FIRED', 'BULLET_RECALL_STARTED', 'BULLET_CAUGHT', 'BULLET_RICOCHETED', 'PLAYER_DASHED', 'PLAYER_DAMAGED', 'PLAYER_SHIELD_ABSORBED', 'PLAYER_REVIVED', 'UPGRADE_OFFERED', 'UPGRADE_SELECTED'];
+  const requiredSkillEvents = ['PERFECT_CATCH', 'PRECISION_SHOT_FIRED', 'BANK_CHAINED', 'MOMENTUM_CHANGED', 'OVERDRIVE_STARTED', 'OVERDRIVE_ENDED'];
   const requiredCheckpointEvents = ['CHECKPOINT_SAVED', 'CHECKPOINT_LOADED', 'CHECKPOINT_CLEARED'];
   const requiredWardenEvents = ['WARDEN_GUARD_BLOCKED', 'WARDEN_GUARD_BROKEN', 'WARDEN_GUARD_RESTORED'];
 
@@ -90,7 +70,8 @@ test('runtime layers integrate required events and boot through the UI repair la
   assert.match(dashboardPolishSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(worldExpansionSource, /extends OneBulletDashboardPolishRuntime/);
   assert.match(unifiedUiSource, /extends OneBulletWorldExpansionRuntime/);
-  assert.match(uiRepairSource, /extends OneBulletProductionArtRuntime/);
-  assert.match(mainSource, /new OneBulletUiRepairRuntime/);
+  assert.match(globalUiSource, /class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime/);
+  assert.match(mainSource, /new OneBulletGlobalUiRuntime/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
+  assert.match(mainSource, /__ONE_BULLET_I18N__/);
 });

@@ -10,6 +10,7 @@ import {
   hudSafeZones, mobileSafeZones, pushCircleOutOfSafeZones, resolveCircleAgainstRect,
   resolveCombatCircle,
 } from '../src/arena.js';
+import { i18n } from '../src/i18n.js';
 import { selectSpawnPoint } from '../src/spawn-system.js';
 import { upgradeEffectText } from '../src/ui-renderer.js';
 import { POLISH_VERSION, bulletPresentationState, upgradeVisualKind } from '../src/polish-runtime.js';
@@ -86,12 +87,21 @@ test('all upgrade stacks have a real effect boundary', () => {
   assert.equal(stacks['quick-dash'], 2);
 });
 
-test('upgrade cards explain the current and next value', () => {
+test('upgrade cards explain current and next values in English and Arabic', () => {
   const heavy = UPGRADES.find((upgrade) => upgrade.id === 'heavy-shot');
   const shield = UPGRADES.find((upgrade) => upgrade.id === 'wave-shield');
+
+  i18n.setLocale('en', { persist: false });
+  assert.match(upgradeEffectText(heavy, 0), /Current/);
+  assert.match(upgradeEffectText(heavy, 0), /After/);
+  assert.match(upgradeEffectText(shield, 0), /shield/i);
+
+  i18n.setLocale('ar', { persist: false });
   assert.match(upgradeEffectText(heavy, 0), /الحالي/);
   assert.match(upgradeEffectText(heavy, 0), /بعد الاختيار/);
   assert.match(upgradeEffectText(shield, 0), /درع/);
+
+  i18n.setLocale('en', { persist: false });
 });
 
 test('upgrade choices are unique and avoid the previous cards', () => {

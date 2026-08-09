@@ -94,7 +94,7 @@ jobs:
           grep -Fq "\"sha\":\"$GITHUB_SHA\"" _site/release.json
 
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 

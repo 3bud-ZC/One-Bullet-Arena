@@ -38,7 +38,7 @@ async function seedCheckpoint(page) {
   });
 }
 
-test('renders the fresh balanced command deck fullscreen without runtime errors', async ({ page }, testInfo) => {
+test('renders the fresh production art menu fullscreen without runtime errors', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
@@ -57,33 +57,33 @@ test('renders the fresh balanced command deck fullscreen without runtime errors'
   });
 
   expect(result.snapshot.checkpointAvailable).toBe(false);
+  expect(result.snapshot.productionArtRuntimeVersion).toBe('3.5.0-production-art');
+  expect(result.snapshot.productionArtRevision).toBe('production-command-suite-v1');
+  expect(result.snapshot.productionArtActive).toBe(true);
+  expect(result.snapshot.productionDashboard).toBe(true);
   expect(result.snapshot.checkpointDashboardRevision).toBe('command-deck-v12');
   expect(result.snapshot.dashboardLayoutRevision).toBe('balanced-command-deck-v12');
-  expect(result.snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
-  expect(result.snapshot.rtlTypographyAware).toBe(true);
-  expect(result.snapshot.smoothHoverInterpolation).toBe(true);
   expect(Math.abs(result.frame.width - result.viewport.width)).toBeLessThan(1);
   expect(Math.abs(result.frame.height - result.viewport.height)).toBeLessThan(1);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'fresh-fullscreen-command-deck');
+  await attachCanvas(page, testInfo, 'fresh-production-menu');
 });
 
-test('captures checkpoint command deck, game-over choices, and restored wave through expansion runtime', async ({ page }, testInfo) => {
+test('captures production checkpoint menu, game-over choices, and restored wave', async ({ page }, testInfo) => {
   await loadGame(page);
   await seedCheckpoint(page);
 
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
-  expect(snapshot.checkpointDashboardRevision).toBe('command-deck-v12');
-  expect(snapshot.dashboardLayoutRevision).toBe('balanced-command-deck-v12');
-  expect(snapshot.dashboardPolishActive).toBe(true);
+  expect(snapshot.productionArtActive).toBe(true);
+  expect(snapshot.productionOverlaySuite).toBe(true);
   expect(snapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
   expect(snapshot.expandingWorldActive).toBe(true);
-  expect(snapshot.unifiedCombatHud).toBe(true);
+  expect(snapshot.productionCombatHud).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(true);
   expect(snapshot.collisionGeometryChanged).toBe(true);
-  await attachCanvas(page, testInfo, 'checkpoint-command-deck');
+  await attachCanvas(page, testInfo, 'checkpoint-production-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -100,7 +100,7 @@ test('captures checkpoint command deck, game-over choices, and restored wave thr
     game.runTime = 221;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'checkpoint-game-over');
+  await attachCanvas(page, testInfo, 'production-game-over');
 
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -112,10 +112,11 @@ test('captures checkpoint command deck, game-over choices, and restored wave thr
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(6);
   expect(snapshot.restoredFromCheckpoint).toBe(true);
-  await attachCanvas(page, testInfo, 'checkpoint-restored-wave');
+  expect(snapshot.productionArenaPass).toBe(true);
+  await attachCanvas(page, testInfo, 'production-restored-wave');
 });
 
-test('late game opens the large world, changes encounter pattern, and moves the camera', async ({ page }, testInfo) => {
+test('late game opens the large world under production art and moves the camera', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await loadGame(page);
@@ -140,6 +141,8 @@ test('late game opens the large world, changes encounter pattern, and moves the 
   expect(snapshot.cameraFollowActive).toBe(true);
   expect(snapshot.cameraZoom).toBeLessThan(0.9);
   expect(snapshot.encounterMode).not.toBe('foundation');
+  expect(snapshot.productionArtActive).toBe(true);
+  expect(snapshot.productionCombatHud).toBe(true);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'wave-35-expanded-world');
+  await attachCanvas(page, testInfo, 'wave-35-production-world');
 });

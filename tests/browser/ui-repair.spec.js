@@ -14,6 +14,15 @@ async function capture(page, testInfo, name) {
   await testInfo.attach(`${testInfo.project.name}-${name}`, { body: image, contentType: 'image/png' });
 }
 
+async function setLocaleAndDraw(page, locale) {
+  return page.evaluate((value) => {
+    window.__ONE_BULLET_I18N__.setLocale(value);
+    const game = window.__ONE_BULLET_ARENA__;
+    game.draw();
+    return game.getSnapshot();
+  }, locale);
+}
+
 async function makeCheckpoint(page, wave = 18) {
   return page.evaluate((targetWave) => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -49,12 +58,7 @@ test('global UI renders fresh English and Arabic menus with immediate locale swi
   expect(await page.locator('html').getAttribute('dir')).toBe('ltr');
   await capture(page, testInfo, 'fresh-menu-en');
 
-  snapshot = await page.evaluate(() => {
-    window.__ONE_BULLET_I18N__.setLocale('ar');
-    const game = window.__ONE_BULLET_ARENA__;
-    game.draw();
-    return game.getSnapshot();
-  });
+  snapshot = await setLocaleAndDraw(page, 'ar');
   expect(snapshot.locale).toBe('ar');
   expect(await page.locator('html').getAttribute('dir')).toBe('rtl');
   expect(await page.evaluate(() => localStorage.getItem('one-bullet-language'))).toBe('ar');
@@ -72,17 +76,12 @@ test('global UI captures bilingual checkpoint dashboard and all major game state
   expect(snapshot.checkpointAvailable).toBe(true);
   await capture(page, testInfo, 'checkpoint-dashboard-en');
 
-  snapshot = await page.evaluate(() => {
-    window.__ONE_BULLET_I18N__.setLocale('ar');
-    const game = window.__ONE_BULLET_ARENA__;
-    game.draw();
-    return game.getSnapshot();
-  });
+  snapshot = await setLocaleAndDraw(page, 'ar');
   expect(snapshot.locale).toBe('ar');
   await capture(page, testInfo, 'checkpoint-dashboard-ar');
 
+  await setLocaleAndDraw(page, 'en');
   snapshot = await page.evaluate(() => {
-    window.__ONE_BULLET_I18N__.setLocale('en');
     const game = window.__ONE_BULLET_ARENA__;
     game.continueFromCheckpoint();
     game.banner = null;
@@ -91,8 +90,13 @@ test('global UI captures bilingual checkpoint dashboard and all major game state
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('playing');
-  await capture(page, testInfo, 'combat-hud');
+  await capture(page, testInfo, 'combat-hud-en');
 
+  snapshot = await setLocaleAndDraw(page, 'ar');
+  expect(snapshot.locale).toBe('ar');
+  await capture(page, testInfo, 'combat-hud-ar');
+
+  await setLocaleAndDraw(page, 'en');
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.wave = 35;
@@ -112,8 +116,13 @@ test('global UI captures bilingual checkpoint dashboard and all major game state
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('paused');
-  await capture(page, testInfo, 'pause');
+  await capture(page, testInfo, 'pause-en');
 
+  snapshot = await setLocaleAndDraw(page, 'ar');
+  expect(snapshot.locale).toBe('ar');
+  await capture(page, testInfo, 'pause-ar');
+
+  await setLocaleAndDraw(page, 'en');
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.state = 'playing';
@@ -126,8 +135,13 @@ test('global UI captures bilingual checkpoint dashboard and all major game state
   });
   expect(snapshot.state).toBe('upgrade');
   expect(snapshot.upgradeChoices).toHaveLength(3);
-  await capture(page, testInfo, 'upgrade');
+  await capture(page, testInfo, 'upgrade-en');
 
+  snapshot = await setLocaleAndDraw(page, 'ar');
+  expect(snapshot.locale).toBe('ar');
+  await capture(page, testInfo, 'upgrade-ar');
+
+  await setLocaleAndDraw(page, 'en');
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.state = 'gameover';
@@ -137,16 +151,20 @@ test('global UI captures bilingual checkpoint dashboard and all major game state
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('gameover');
-  await capture(page, testInfo, 'game-over');
+  await capture(page, testInfo, 'game-over-en');
+
+  snapshot = await setLocaleAndDraw(page, 'ar');
+  expect(snapshot.locale).toBe('ar');
+  await capture(page, testInfo, 'game-over-ar');
 
   expect(pageErrors).toEqual([]);
 });
 
-test('mobile landscape keeps touch controls and HUD readable', async ({ page }, testInfo) => {
+test('mobile landscape keeps Arabic touch controls and HUD readable', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-landscape', 'Mobile visual QA only');
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
-  await loadGame(page, 'en');
+  await loadGame(page, 'ar');
   const snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
@@ -159,6 +177,7 @@ test('mobile landscape keeps touch controls and HUD readable', async ({ page }, 
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('playing');
-  await capture(page, testInfo, 'mobile-landscape');
+  expect(snapshot.locale).toBe('ar');
+  await capture(page, testInfo, 'mobile-landscape-ar');
   expect(pageErrors).toEqual([]);
 });

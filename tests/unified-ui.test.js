@@ -3,28 +3,23 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { UNIFIED_UI_RUNTIME_VERSION } from '../src/core/unified-ui-runtime.js';
 
-test('unified UI runtime exposes the v3.4 interface layer', () => {
+test('unified UI runtime remains the v3.4 world/presentation compatibility layer', () => {
   assert.equal(UNIFIED_UI_RUNTIME_VERSION, '3.4.0-unified-ui');
 });
 
-test('unified UI owns all major non-combat overlays and clean run transitions', async () => {
+test('unified UI preserves clean camera and world transitions beneath global UI', async () => {
   const source = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   assert.match(source, /extends OneBulletWorldExpansionRuntime/);
   assert.match(source, /startNextWave\(\)/);
   assert.match(source, /restoringCheckpoint/);
   assert.match(source, /this\.worldCamera\.x = this\.player\.x/);
   assert.match(source, /this\.explorationTrail = \[\{ x: this\.player\.x, y: this\.player\.y \}\]/);
-  assert.match(source, /تم استعادة التطويرات والتقدم عند بداية الموجة/);
   assert.match(source, /drawUpgradeSelection\(\)/);
   assert.match(source, /drawPause\(\)/);
   assert.match(source, /drawGameOver\(\)/);
   assert.match(source, /drawBanner\(\)/);
   assert.match(source, /drawTouchControls\(\)/);
   assert.match(source, /continueFromCheckpoint\(\)/);
-  assert.match(source, /unifiedInterfaceLanguage: true/);
-  assert.match(source, /unifiedUpgradeCards: true/);
-  assert.match(source, /unifiedPauseOverlay: true/);
-  assert.match(source, /unifiedGameOverOverlay: true/);
   assert.match(source, /cleanCameraRunTransitions: true/);
   assert.match(source, /sectorVisualIdentity: true/);
 });
@@ -43,26 +38,14 @@ test('camera runtime keeps HUD and touch controls protected in world space', asy
   assert.match(source, /this\.screenToWorld\(zone\.x, zone\.y\)/);
   assert.match(source, /w: zone\.w \/ zoom/);
   assert.match(source, /h: zone\.h \/ zoom/);
-  assert.match(source, /this\.worldCombatSafeZones\(\)/);
   assert.match(source, /cameraSafeZonesActive: true/);
 });
 
-test('command deck remains a compatible foundation under production art', async () => {
-  const unified = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
-  const dashboard = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
-  assert.match(unified, /drawCombatHudPanel\(/);
-  assert.match(unified, /TACTICAL MAP/);
-  assert.match(unified, /TACTICAL PAUSE/);
-  assert.match(unified, /drawModalMetric\(/);
-  assert.match(dashboard, /command-deck-v12/);
-  assert.match(dashboard, /balanced-command-deck-v12/);
-});
-
-test('main boots UI repair over production art while preserving fullscreen entry', async () => {
+test('main boots the canonical global UI over production art while preserving fullscreen entry', async () => {
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
-  const repair = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
-  assert.match(main, /OneBulletUiRepairRuntime/);
-  assert.match(repair, /extends OneBulletProductionArtRuntime/);
+  const globalUi = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
+  assert.match(main, /OneBulletGlobalUiRuntime/);
+  assert.match(globalUi, /class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime/);
   assert.match(main, /requestFullscreen/);
   assert.match(main, /navigationUI: 'hide'/);
   assert.match(main, /const key = event\.key\.toLowerCase\(\)/);

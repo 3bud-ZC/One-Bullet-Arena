@@ -23,7 +23,10 @@ test('package, runtime chain, localization, and service worker consume canonical
   assert.equal(packageJson.version, RELEASE_VERSION);
   assert.match(uiSource, /extends OneBulletProductionArtRuntime/);
   assert.match(uiSource, /OneBulletGlobalUiRuntime/);
-  assert.match(uiSource, /GLOBAL_UI_RUNTIME_VERSION = '3\.6\.1-ui-refinement'/);
+  assert.ok(
+    uiSource.includes(`GLOBAL_UI_RUNTIME_VERSION = '${RELEASE_VERSION}'`),
+    'global UI runtime identity must follow the canonical release version',
+  );
   assert.match(i18nSource, /one-bullet-language/);
   assert.match(i18nSource, /English/);
   assert.match(i18nSource, /العربية/);

@@ -20,23 +20,26 @@ async function seedCheckpoint(page, wave = 18) {
   }, wave);
 }
 
-test('v3.7 canonical presentation is DOM + HiDPI Canvas and bilingual', async ({ page }, testInfo) => {
+test('v3.8 canonical presentation preserves DOM + HiDPI architecture and adds smooth runtime ownership', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Canonical UI contract runs once in Chromium.');
   await page.setViewportSize({ width: 1920, height: 1080 });
   await loadGame(page, 'en');
   await seedCheckpoint(page, 64);
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.7.0-hires-ui');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.7.0-hires-ui');
-  expect(snapshot.globalUiRevision).toBe('dom-hidpi-presentation-v1');
+  expect(snapshot.releaseVersion).toBe('3.8.0-smooth-runtime');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.8.0-smooth-runtime');
+  expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.renderingArchitecture).toBe('canvas-world+dom-ui');
   expect(snapshot.domUiActive).toBe(true);
   expect(snapshot.hiDpiCanvasActive).toBe(true);
+  expect(snapshot.fixedSimulationHz).toBe(120);
+  expect(snapshot.interpolatedRendering).toBe(true);
   expect(snapshot.logicalCanvasWidth).toBe(1280);
   expect(snapshot.logicalCanvasHeight).toBe(720);
   await expect(page.locator('.dashboard-screen')).toBeVisible();
   await expect(page.locator('.progression-svg')).toBeVisible();
+  await expect(page.locator('[data-quality-control]')).toBeVisible();
 
   await page.locator('[data-action="locale-ar"]').click();
   snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
@@ -44,7 +47,7 @@ test('v3.7 canonical presentation is DOM + HiDPI Canvas and bilingual', async ({
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 });
 
-test('Pause, Upgrade Selection, and Game Over are DOM surfaces rather than Canvas text screens', async ({ page }, testInfo) => {
+test('Pause, Upgrade Selection, and Game Over remain DOM surfaces rather than Canvas text screens', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'State UI contract runs once in Chromium.');
   await loadGame(page, 'en');
   await page.evaluate(() => {
@@ -71,7 +74,7 @@ test('Pause, Upgrade Selection, and Game Over are DOM surfaces rather than Canva
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.state = 'gameover';
+    game.setState('gameover');
     game.draw();
   });
   await expect(page.locator('[data-screen="gameover"]')).toBeVisible();

@@ -1,11 +1,12 @@
-import { OneBulletUiRepairRuntime } from './core/ui-repair-runtime.js';
+import { OneBulletGlobalUiRuntime } from './core/ui-repair-runtime.js';
+import { i18n } from './i18n.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
 
 const canvas = document.querySelector('#game-canvas');
 const liveRegion = document.querySelector('#game-status');
-if (!(canvas instanceof HTMLCanvasElement)) throw new Error('تعذر العثور على لوحة اللعبة.');
+if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Game canvas is unavailable.');
 
 const qaMode = new URLSearchParams(location.search).get('qa') === '1';
 canvas.tabIndex = 0;
@@ -14,12 +15,13 @@ canvas.addEventListener('pointerdown', () => {
   if (!qaMode && !document.fullscreenElement) requestGameFullscreen();
 });
 
-const game = new OneBulletUiRepairRuntime(canvas, liveRegion);
+const game = new OneBulletGlobalUiRuntime(canvas, liveRegion);
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;
   window.__ONE_BULLET_RELEASE__ = RELEASE_INFO;
   window.__ONE_BULLET_EVENTS__ = game.eventBus;
   window.__ONE_BULLET_CHECKPOINT__ = game.checkpointStore;
+  window.__ONE_BULLET_I18N__ = i18n;
 }
 
 document.addEventListener('keydown', async (event) => {
@@ -72,10 +74,7 @@ async function registerServiceWorker() {
     });
   }
 
-  const registration = await navigator.serviceWorker.register('./sw.js', {
-    updateViaCache: 'none',
-  });
-
+  const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
   await registration.update();
 }
 

@@ -85,6 +85,27 @@ test('AUTO quality uses sustained measured pressure with hysteresis', () => {
   assert.equal(manager.tier, 'BALANCED');
 });
 
+test('stable desktop v-sync can promote AUTO quality without pretending v-sync wait is render cost', () => {
+  const manager = new AdaptiveQualityManager({ storage: memoryStorage(), mode: 'AUTO', coarsePointer: false, viewportWidth: 1920 });
+  const stable60 = { estimatedRefreshHz: 60, averageFrameMs: 16.67, p95FrameMs: 16.75 };
+  let decision;
+  for (let index = 0; index < 16; index += 1) decision = manager.observe(stable60, 0.5);
+  assert.equal(decision.changed, true);
+  assert.equal(manager.tier, 'ULTRA');
+  assert.equal(manager.snapshot().autoCeiling, 'ULTRA');
+});
+
+test('AUTO quality keeps a thermal-aware ceiling on coarse-pointer mobile while manual tiers stay available', () => {
+  const manager = new AdaptiveQualityManager({ storage: memoryStorage(), mode: 'AUTO', coarsePointer: true, viewportWidth: 844 });
+  assert.equal(manager.tier, 'BALANCED');
+  assert.equal(manager.snapshot().autoCeiling, 'BALANCED');
+  const stable = { estimatedRefreshHz: 120, averageFrameMs: 8.33, p95FrameMs: 8.4 };
+  for (let index = 0; index < 30; index += 1) manager.observe(stable, 0.5);
+  assert.equal(manager.tier, 'BALANCED');
+  manager.setMode('ULTRA', { persist: false });
+  assert.equal(manager.tier, 'ULTRA');
+});
+
 test('manual quality tiers only alter visual cost profiles', () => {
   const manager = new AdaptiveQualityManager({ storage: memoryStorage(), mode: 'AUTO' });
   for (const tier of ['ULTRA', 'HIGH', 'BALANCED', 'PERFORMANCE']) {

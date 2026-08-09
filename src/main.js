@@ -1,4 +1,4 @@
-import { OneBulletProductionArtRuntime } from './core/production-art-runtime.js';
+import { OneBulletUiRepairRuntime } from './core/ui-repair-runtime.js';
 import { RELEASE_INFO } from './release.js';
 
 migrateLegacyStorage();
@@ -14,7 +14,7 @@ canvas.addEventListener('pointerdown', () => {
   if (!qaMode && !document.fullscreenElement) requestGameFullscreen();
 });
 
-const game = new OneBulletProductionArtRuntime(canvas, liveRegion);
+const game = new OneBulletUiRepairRuntime(canvas, liveRegion);
 if (qaMode) {
   window.__ONE_BULLET_ARENA__ = game;
   window.__ONE_BULLET_RELEASE__ = RELEASE_INFO;

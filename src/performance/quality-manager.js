@@ -52,11 +52,18 @@ export function initialAutoTier({ coarsePointer = false, viewportWidth = 1280 } 
   return coarsePointer || Number(viewportWidth) < 900 ? 'BALANCED' : 'HIGH';
 }
 
+export function autoQualityCeiling({ coarsePointer = false, viewportWidth = 1280 } = {}) {
+  // Small/coarse-pointer devices default to a battery/thermal-aware ceiling in AUTO.
+  // Manual modes can still explicitly request HIGH or ULTRA.
+  return coarsePointer || Number(viewportWidth) < 900 ? 'BALANCED' : 'ULTRA';
+}
+
 export class AdaptiveQualityManager {
   constructor(options = {}) {
     this.storage = options.storage ?? globalThis.localStorage;
     this.mode = normalizeQualityMode(options.mode ?? loadQualityMode(this.storage));
     this.autoTier = initialAutoTier(options);
+    this.autoCeiling = autoQualityCeiling(options);
     this.pressureSeconds = 0;
     this.headroomSeconds = 0;
     this.cooldownSeconds = 0;
@@ -83,7 +90,9 @@ export class AdaptiveQualityManager {
 
   setAutoTier(tier) {
     const normalized = QUALITY_TIERS.includes(tier) ? tier : this.autoTier;
-    this.autoTier = normalized;
+    const ceilingIndex = QUALITY_TIERS.indexOf(this.autoCeiling);
+    const requestedIndex = QUALITY_TIERS.indexOf(normalized);
+    this.autoTier = QUALITY_TIERS[Math.max(ceilingIndex, requestedIndex)] || this.autoTier;
     return this.profile;
   }
 
@@ -93,8 +102,9 @@ export class AdaptiveQualityManager {
     if (this.mode !== 'AUTO') return { changed: false, tier: this.tier, reason: 'manual' };
 
     const refreshHz = Math.max(30, Math.min(240, Number(metrics?.estimatedRefreshHz) || 60));
-    // Do not sacrifice clarity to chase 240 Hz. AUTO protects a stable 120 Hz
-    // presentation ceiling while rendering remains uncapped at native rAF cadence.
+    // Rendering remains uncapped at native rAF cadence. AUTO uses a 120 Hz
+    // performance target so high-refresh displays retain quality rather than
+    // sacrificing clarity merely to chase the shortest possible v-sync interval.
     const performanceTargetHz = Math.min(120, refreshHz);
     const budgetMs = 1000 / performanceTargetHz;
     const p95 = Math.max(0, Number(metrics?.p95FrameMs) || 0);
@@ -102,7 +112,11 @@ export class AdaptiveQualityManager {
     if (!p95 || !average) return { changed: false, tier: this.tier, reason: 'warming' };
 
     const pressured = p95 > budgetMs * 1.35 || average > budgetMs * 1.12;
-    const comfortable = p95 < budgetMs * 0.82 && average < budgetMs * 0.72;
+    // rAF frame intervals include time spent waiting for v-sync. A stable 60 Hz
+    // stream therefore sits near 16.67 ms even when rendering is inexpensive.
+    // Treat stable near-budget pacing as safe headroom to try one richer tier;
+    // any missed cadence then drives the normal pressure downgrade path.
+    const comfortable = p95 <= budgetMs * 1.08 && average <= budgetMs * 1.03;
 
     this.pressureSeconds = pressured ? this.pressureSeconds + dt : Math.max(0, this.pressureSeconds - dt * 1.5);
     this.headroomSeconds = comfortable ? this.headroomSeconds + dt : Math.max(0, this.headroomSeconds - dt);
@@ -119,7 +133,8 @@ export class AdaptiveQualityManager {
       return { changed: true, tier: this.tier, reason: 'pressure' };
     }
 
-    if (this.headroomSeconds >= 8 && index > 0) {
+    const ceilingIndex = QUALITY_TIERS.indexOf(this.autoCeiling);
+    if (this.headroomSeconds >= 8 && index > ceilingIndex) {
       this.autoTier = QUALITY_TIERS[index - 1];
       this.pressureSeconds = 0;
       this.headroomSeconds = 0;
@@ -135,6 +150,7 @@ export class AdaptiveQualityManager {
     return {
       mode: this.mode,
       tier: this.tier,
+      autoCeiling: this.autoCeiling,
       profile: { ...this.profile },
       pressureSeconds: this.pressureSeconds,
       headroomSeconds: this.headroomSeconds,

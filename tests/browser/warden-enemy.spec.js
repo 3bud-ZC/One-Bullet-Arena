@@ -58,7 +58,7 @@ test('a frontal bullet is blocked, reflected, and converted into a bank', async 
     return { blocked, healthBefore, healthAfter: warden.health, bulletVx: game.bullet.vx, snapshot: game.getSnapshot(), history: game.getGameEventHistory(64) };
   });
   expect(result.blocked).toBe(false);
-  expect(result.healthAfter).toBe(healthBefore);
+  expect(result.healthAfter).toBe(result.healthBefore);
   expect(result.bulletVx).toBeLessThan(0);
   expect(result.snapshot.wardenGuardStates[0].guardStrength).toBe(1);
   expect(result.snapshot.wardenGuardStates[0].guardBlocks).toBe(1);

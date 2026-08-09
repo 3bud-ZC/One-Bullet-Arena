@@ -31,3 +31,14 @@ test('translation interpolation keeps control values and wave numbers determinis
   assert.equal(english.t('hud.enemiesLeft', { count: 8 }), '8 enemies');
   assert.equal(arabic.t('hud.enemiesLeft', { count: 8 }), '8 أعداء');
 });
+
+test('combat feedback, skill callouts, and Warden status copy are localized', () => {
+  const english = new I18nController('en');
+  const arabic = new I18nController('ar');
+  assert.equal(english.t('feedback.perfectCatch'), 'PERFECT CATCH');
+  assert.equal(arabic.t('feedback.perfectCatch'), 'استعادة مثالية');
+  assert.equal(arabic.t('feedback.bankShot', { value: 3 }), 'إصابة مرتدة ×3');
+  assert.equal(arabic.t('feedback.overdriveEnded'), 'انتهت الطاقة القصوى');
+  assert.equal(arabic.t('feedback.wardenBlock'), 'صد الحارس الطلقة');
+  assert.equal(arabic.t('feedback.flankOrBreak'), 'التف حوله أو اكسر الدرع');
+});

@@ -11,12 +11,7 @@ async function createWaveFiveCheckpoint(page) {
     const game = window.__ONE_BULLET_ARENA__;
     game.clearCheckpoint();
     game.startRun();
-    game.upgradeStacks = {
-      vitality: 2,
-      'heavy-shot': 2,
-      'magnetic-recall': 1,
-      'quick-dash': 1,
-    };
+    game.upgradeStacks = { vitality: 2, 'heavy-shot': 2, 'magnetic-recall': 1, 'quick-dash': 1 };
     game.stats = { shots: 22, hits: 18, kills: 31, upgrades: 6, damageTaken: 2 };
     game.score = 7650;
     game.runTime = 146.5;
@@ -30,12 +25,7 @@ async function createWaveFiveCheckpoint(page) {
     game.momentum = 78;
     game.precisionCharge = 1;
     game.overdriveTimer = 2.25;
-    Object.assign(game.combatDepthStats, {
-      perfectCatches: 4,
-      precisionKills: 3,
-      bankKills: 5,
-      overdrives: 2,
-    });
+    Object.assign(game.combatDepthStats, { perfectCatches: 4, precisionKills: 3, bankKills: 5, overdrives: 2 });
     game.wave = 4;
     game.startNextWave();
     return game.getSnapshot();
@@ -45,9 +35,8 @@ async function createWaveFiveCheckpoint(page) {
 test('checkpoint runtime boots without changing the normal new-run path', async ({ page }) => {
   await loadGame(page);
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.5.1-ui-repair');
-  expect(menu.productionArtActive).toBe(true);
-  expect(menu.uiRepairActive).toBe(true);
+  expect(menu.releaseVersion).toBe('3.6.0-global-ui');
+  expect(menu.globalUiActive).toBe(true);
   expect(menu.checkpointRuntimeVersion).toBe('3.0.0-checkpoint');
   expect(menu.checkpointSchemaVersion).toBe(1);
   expect(menu.checkpointProgressionActive).toBe(true);
@@ -92,7 +81,6 @@ test('checkpoint survives reload and restores the saved build at wave start', as
   await createWaveFiveCheckpoint(page);
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));
-
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menu.state).toBe('menu');
   expect(menu.checkpointAvailable).toBe(true);
@@ -101,17 +89,8 @@ test('checkpoint survives reload and restores the saved build at wave start', as
   await page.keyboard.press('KeyC');
   const restored = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    return {
-      snapshot: game.getSnapshot(),
-      stacks: { ...game.upgradeStacks },
-      stats: { ...game.stats },
-      momentum: game.momentum,
-      precisionCharge: game.precisionCharge,
-      overdriveTimer: game.overdriveTimer,
-      history: game.getGameEventHistory(64),
-    };
+    return { snapshot: game.getSnapshot(), stacks: { ...game.upgradeStacks }, stats: { ...game.stats }, momentum: game.momentum, precisionCharge: game.precisionCharge, overdriveTimer: game.overdriveTimer, history: game.getGameEventHistory(64) };
   });
-
   expect(restored.snapshot.state).toBe('playing');
   expect(restored.snapshot.wave).toBe(5);
   expect(restored.snapshot.score).toBe(7650);
@@ -132,7 +111,6 @@ test('checkpoint survives reload and restores the saved build at wave start', as
 test('game over offers continue and saved progress can be cleared', async ({ page }) => {
   await loadGame(page);
   await createWaveFiveCheckpoint(page);
-
   const gameOver = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.state = 'gameover';
@@ -141,8 +119,7 @@ test('game over offers continue and saved progress can be cleared', async ({ pag
   });
   expect(gameOver.checkpointAvailable).toBe(true);
   expect(gameOver.checkpointWave).toBe(5);
-  expect(gameOver.productionOverlaySuite).toBe(true);
-  expect(gameOver.uiRepairActive).toBe(true);
+  expect(gameOver.globalUiActive).toBe(true);
 
   await page.keyboard.press('Enter');
   const continued = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
@@ -154,11 +131,7 @@ test('game over offers continue and saved progress can be cleared', async ({ pag
     const game = window.__ONE_BULLET_ARENA__;
     game.goToMenu();
     game.clearCheckpoint();
-    return {
-      snapshot: game.getSnapshot(),
-      history: game.getGameEventHistory(32),
-      stored: localStorage.getItem('one-bullet-arena-checkpoint-v1'),
-    };
+    return { snapshot: game.getSnapshot(), history: game.getGameEventHistory(32), stored: localStorage.getItem('one-bullet-arena-checkpoint-v1') };
   });
   expect(cleared.snapshot.checkpointAvailable).toBe(false);
   expect(cleared.snapshot.checkpointWave).toBe(0);

@@ -47,25 +47,20 @@ test('camera runtime keeps HUD and touch controls protected in world space', asy
   assert.match(source, /cameraSafeZonesActive: true/);
 });
 
-test('command deck visual hierarchy stays unified across HUD and overlays', async () => {
+test('command deck remains a compatible foundation under production art', async () => {
   const unified = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   const dashboard = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   assert.match(unified, /drawCombatHudPanel\(/);
   assert.match(unified, /TACTICAL MAP/);
   assert.match(unified, /TACTICAL PAUSE/);
   assert.match(unified, /drawModalMetric\(/);
-  assert.match(unified, /متابعة من الموجة/);
   assert.match(dashboard, /command-deck-v12/);
   assert.match(dashboard, /balanced-command-deck-v12/);
-  assert.match(dashboard, /drawRecordRow\(/);
-  assert.match(dashboard, /drawFooterHints\(/);
-  assert.match(dashboard, /badge: waveBadge/);
-  assert.match(dashboard, /متابعة من الموجة/);
 });
 
-test('main boots the unified UI runtime and preserves fullscreen entry', async () => {
+test('main boots production art while preserving fullscreen entry', async () => {
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
-  assert.match(main, /OneBulletUnifiedUiRuntime/);
+  assert.match(main, /OneBulletProductionArtRuntime/);
   assert.match(main, /requestFullscreen/);
   assert.match(main, /navigationUI: 'hide'/);
   assert.match(main, /const key = event\.key\.toLowerCase\(\)/);

@@ -1,3 +1,4 @@
+import { combatSafeZones, resolveCombatCircle } from '../arena.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
 import {
   TOUCH_LAYOUT,
@@ -73,6 +74,43 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       this.banner.subtitle = 'تم استعادة التطويرات والتقدم عند بداية الموجة';
     }
     return result;
+  }
+
+  worldCombatSafeZones() {
+    const zones = combatSafeZones(this.touchMode);
+    if (!this.worldCamera) return zones;
+
+    const zoom = Math.max(0.01, Number(this.worldCamera.zoom) || 1);
+    return zones.map((zone) => {
+      const topLeft = this.screenToWorld(zone.x, zone.y);
+      return {
+        ...zone,
+        x: topLeft.x,
+        y: topLeft.y,
+        w: zone.w / zoom,
+        h: zone.h / zoom,
+      };
+    });
+  }
+
+  constrainCombatCircle(circle) {
+    resolveCombatCircle(
+      circle,
+      this.arenaStage.bounds,
+      this.arenaStage.obstacles,
+      this.worldCombatSafeZones(),
+    );
+  }
+
+  sanitizeSpawnPoint(point, radius = 34) {
+    const candidate = { x: point.x, y: point.y, radius };
+    resolveCombatCircle(
+      candidate,
+      this.arenaStage.bounds,
+      this.arenaStage.obstacles,
+      this.worldCombatSafeZones(),
+    );
+    return { x: candidate.x, y: candidate.y };
   }
 
   drawModalBackdrop(alpha = 0.8) {
@@ -316,6 +354,7 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       unifiedTouchControls: true,
       cleanCameraRunTransitions: true,
       sectorVisualIdentity: true,
+      cameraSafeZonesActive: true,
     };
   }
 }

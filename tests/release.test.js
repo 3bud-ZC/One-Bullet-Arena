@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { RELEASE_CACHE_NAME, RELEASE_INFO, RELEASE_LABEL, RELEASE_VERSION } from '../src/release.js';
 
-test('release metadata exposes one canonical global UI identity', () => {
-  assert.equal(RELEASE_VERSION, '3.6.0-global-ui');
-  assert.equal(RELEASE_LABEL, 'v3.6.0-global-ui');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.6.0-global-ui');
+test('release metadata exposes one canonical UI refinement identity', () => {
+  assert.equal(RELEASE_VERSION, '3.6.1-ui-refinement');
+  assert.equal(RELEASE_LABEL, 'v3.6.1-ui-refinement');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.6.1-ui-refinement');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
   assert.equal(RELEASE_INFO.channel, 'global-ui');
   assert.ok(Object.isFrozen(RELEASE_INFO));
@@ -23,11 +23,12 @@ test('package, runtime chain, localization, and service worker consume canonical
   assert.equal(packageJson.version, RELEASE_VERSION);
   assert.match(uiSource, /extends OneBulletProductionArtRuntime/);
   assert.match(uiSource, /OneBulletGlobalUiRuntime/);
-  assert.match(uiSource, /GLOBAL_UI_RUNTIME_VERSION = '3\.6\.0-global-ui'/);
+  assert.match(uiSource, /GLOBAL_UI_RUNTIME_VERSION = '3\.6\.1-ui-refinement'/);
   assert.match(i18nSource, /one-bullet-language/);
   assert.match(i18nSource, /English/);
   assert.match(i18nSource, /العربية/);
   assert.match(uiSystemSource, /UI_TOKENS/);
+  assert.match(uiSystemSource, /drawUiIcon/);
   assert.match(workerSource, /importScripts\('\.\/src\/release-config\.js'\)/);
   assert.match(workerSource, /const CACHE_NAME = RELEASE\.cacheName/);
   assert.match(workerSource, /\.\/src\/i18n\.js/);

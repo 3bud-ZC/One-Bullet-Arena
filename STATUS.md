@@ -2,161 +2,183 @@
 
 Last updated: 2026-08-09
 
-## Current development release
+## Current release candidate
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v3.5.1 — UI Repair**
-- Production branch: `main`
-- Canonical release version: `3.5.1-ui-repair`
-- Canonical release label: `v3.5.1-ui-repair`
-- Release channel: `ui-repair`
-- Service Worker cache: `one-bullet-arena-v3.5.1-ui-repair`
-- Presentation foundation: **v3.5.0 — Production Art**
-- Gameplay foundation: **v3.4.0 — Expanding World**
-- Automated verification: **pending latest GitHub Actions result**
-- Manual visual acceptance: **pending**
-- Production publishing: **GitHub Pages deploys only after `npm run verify:all` succeeds**
+- Release: **v3.6.2 — Dashboard Command**
+- Canonical version: `3.6.2-dashboard-command`
+- Canonical label: `v3.6.2-dashboard-command`
+- Release channel: `global-ui`
+- Service Worker cache: `one-bullet-arena-v3.6.2-dashboard-command`
+- Canonical presentation owner: `OneBulletGlobalUiRuntime`
+- UI revision: `dashboard-reference-v2`
+- QA branch: `dashboard-reference-polish`
+- Gameplay coordinate system: **1280×720 logical canvas preserved**
+- Checkpoint schema: **1 — unchanged**
 
-## v3.5.1 scope — Focused UI Repair
+## Dashboard Command scope
 
-v3.5.1 is a focused interface correction on top of the Production Art and Expanding World systems. It intentionally does not modify arena geometry, world expansion, camera behavior, checkpoints, encounter composition, enemy behavior, damage, movement, or progression.
+v3.6.2 refines the existing Global UI instead of stacking another presentation runtime. The redesign is implemented inside the canonical `src/core/ui-repair-runtime.js` owner and preserves the accepted gameplay, camera, world-expansion, checkpoint, combat-depth, Warden, encounter, and scoring systems.
 
-### UI Repair runtime
+### Dashboard
 
-`src/core/ui-repair-runtime.js` is now the final boot runtime and extends `OneBulletProductionArtRuntime`.
+The dashboard now uses a premium tactical command composition inspired by the one-bullet / ricochet identity:
 
-It owns only these high-value UI surfaces:
+- compact game identity header with procedural mark, title, tagline, and version;
+- unified Language / Audio / Fullscreen / Settings controls;
+- dominant Current Run surface with real sector, wave, score, upgrades, and checkpoint state;
+- lightweight procedural tactical radar with concentric rings, hex target geometry, scanner, and deterministic presentation markers;
+- compact Score / Upgrades / Checkpoint stat strip;
+- controlled gold Continue / Start CTA;
+- lower-emphasis New Run and destructive Delete Checkpoint actions;
+- two-step localized checkpoint-delete confirmation rather than immediate deletion;
+- Run Snapshot with real Wave, Score, Upgrades, Best Wave, High Score, Sector, and checkpoint readiness;
+- data-driven eight-stage World Progression sourced from existing stage thresholds;
+- subtle local-save indicator when a checkpoint actually exists;
+- normal production dashboard contains no FPS/debug readout.
 
-- Main Menu / checkpoint dashboard;
-- combat HUD;
-- tactical minimap;
-- Pause overlay;
-- Game Over overlay;
-- Upgrade Selection.
+### Game Over / Run End
 
-It does **not** override arena rendering or the simulation update loop.
+Game Over now uses the same tactical visual system as the dashboard:
 
-UI Repair contract:
+- strong run-end focal point;
+- real reached wave and final score;
+- real high score, upgrades, sector, and checkpoint status;
+- Continue from Checkpoint is primary only when continuation actually exists;
+- New Run and Main Menu remain secondary;
+- arena remains visible behind controlled dimming.
 
-- runtime: `3.5.1-ui-repair`;
-- revision: `production-ui-repair-v1`;
-- density: `balanced-production`;
-- outer desktop margin target: 58px;
-- main/rail gap target: 20px;
-- dashboard grid: 780px main mission surface + 364px Run Intelligence rail;
-- compact three-module combat HUD;
-- reduced Pause and Game Over modal footprints;
-- equal-baseline Upgrade cards.
+### Visual system
 
-### Dashboard corrections
+`src/ui-system.js` remains the shared presentation system and now carries the dashboard command refinements:
 
-The repaired dashboard replaces the oversized and loosely aligned composition with:
+- near-black/navy foundation;
+- controlled cyan structural accents;
+- semantic amber primary-action/progression state;
+- green checkpoint/positive state;
+- restrained red danger state;
+- improved muted-text contrast;
+- angular tactical surfaces;
+- reusable button hover/focus/pressed treatment;
+- procedural settings/check glyphs;
+- subtle grid, radial lighting, tactical arcs, route line, and vignette background depth.
 
-- compact left-aligned product identity;
-- explicit checkpoint/new-run state at the top right;
-- one coherent mission surface;
-- a contained Current Wave hero block rather than a large empty panel;
-- three equal telemetry tiles for Upgrades, Run Score, and Save state;
-- one dominant Continue/Start action;
-- New Run and Delete Save as balanced secondary actions;
-- wider Run Intelligence rows with stable label/value separation;
-- integrated World Progression showing the current sector and next expansion wave;
-- restrained keyboard hints instead of a large footer panel.
+No external icon/font/UI dependency was added.
 
-### Combat HUD corrections
+## Localization
 
-The repaired combat HUD reduces obstruction while keeping essential information visible:
+`src/i18n.js` remains the single localization source.
 
-- bullet/recall module: 268×54;
-- wave/encounter module: 352×54;
-- health/shield/dash module: 268×54;
-- compact tactical minimap in late sectors;
-- stable screen-space placement while the world camera moves.
+Supported locales:
 
-### Overlay corrections
+- English (`en`, LTR)
+- العربية (`ar`, RTL)
 
-- Pause: reduced to a 520×360 tactical modal with three metrics and two secondary actions.
-- Game Over: reduced to a 640×500 modal with four run metrics and explicit checkpoint state.
-- Upgrade Selection: three equal 344×420 cards with consistent title, description, effect, level, and selection baselines.
+Behavior verified in the redesigned surfaces:
 
-## Retained production/gameplay foundations
+- persisted locale key remains `one-bullet-language`;
+- language changes update the active interface without reload;
+- document `lang` and `dir` continue to follow the selected locale;
+- AR / EN selector is explicit and mirrors correctly in RTL;
+- functional Sector/Wave metadata is localized;
+- dashboard stat strips and Game Over metrics mirror logically in Arabic;
+- icons/text order follows direction;
+- numeric values remain readable and are not semantically reversed;
+- checkpoint deletion confirmation is localized in both languages.
 
-v3.5.0 Production Art remains below UI Repair and still owns the arena presentation layer. v3.4 Expanding World remains the gameplay foundation, including:
+## Responsive behavior
 
-- fullscreen `100vw × 100dvh` browser shell;
-- eight world-expansion stages at Waves 1, 3, 6, 9, 13, 18, 25, and 35;
-- player-follow camera and stage-dependent zoom;
-- screen-to-world pointer aiming;
-- player-relative spawning in large sectors;
-- exploration tracking;
-- five late-game encounter patterns: rush, crossfire, swarm, siege, hunters;
-- active enemy cap of 18;
-- camera-aware HUD/touch collision safe zones.
+Desktop keeps the main Current Run + Run Snapshot composition and full-width progression track.
 
-## Active runtime chain
+Touch/mobile uses a dedicated stacked dashboard instead of shrinking the desktop two-column layout:
 
-The boot chain is now:
+1. Current Run / sector / wave + compact radar;
+2. real run stat strip;
+3. Continue / Start and compact secondary actions;
+4. compact Run Snapshot;
+5. World Progression.
 
-`UIRepair → ProductionArt → UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+This keeps the primary action reachable and prevents the snapshot/progression from becoming unreadably small on mobile landscape.
 
-Current contracts:
+## Gameplay and saved-run compatibility
 
-- UI Repair: `3.5.1-ui-repair` / `production-ui-repair-v1`.
-- Production Art: `3.5.0-production-art` / `production-command-suite-v1`.
-- Unified UI: `3.4.0-unified-ui`.
-- World Expansion: `3.4.0-expanding-world`.
-- Dashboard foundation: `3.3.7-dashboard-command-deck` / `command-deck-v12`.
-- Visual Overhaul: `3.3.0-visual-overhaul`.
-- World2D: `3.2.0-true-2d`.
-- Warden: `3.1.0-a-warden`.
-- Checkpoint Progression: `3.0.0-checkpoint`.
-- Combat Depth: `2.9.0-combat`.
-- Gameplay event schema: `4`.
-- Checkpoint schema: `1`.
+This release intentionally does **not** change:
 
-Existing checkpoint data remains compatible.
+- movement balance;
+- bullet physics or ricochet behavior;
+- enemy stats or spawn balance;
+- encounter director;
+- damage formulas;
+- upgrades or progression rules;
+- world expansion thresholds;
+- camera logic;
+- Warden mechanics;
+- score/high-score/best-wave semantics;
+- checkpoint storage schema.
 
-## v3.5.1 verification coverage
+Existing local checkpoint data remains compatible. Continue Run, New Run, checkpoint restore, and the existing checkpoint clearing implementation remain the source of truth; the redesign only adds a two-step confirmation before invoking checkpoint clear.
 
-The release gate now covers:
+## Automated verification
 
-- syntax checking of `ui-repair-runtime.js`;
-- final runtime boot through `OneBulletUiRepairRuntime`;
-- Service Worker caching of both Production Art and UI Repair runtimes;
-- canonical `3.5.1-ui-repair` release/cache identity;
-- Fresh Menu without a checkpoint;
-- checkpoint dashboard and restore flow;
-- repaired Game Over flow;
-- repaired Upgrade Selection;
-- repaired compact combat HUD;
-- Wave 35 expanded-world camera under the repaired UI;
-- retained Production Art, fullscreen, checkpoint, Warden, camera-safe-zone, encounter, and world-expansion behavior.
+Product HEAD used for visual acceptance before documentation update: `2bd934340849a5fb4dd0da287bee7b92210b8aa0`.
 
-## Production workflow
+### Verify #1199 — SUCCESS
 
-`.github/workflows/deploy-pages.yml` runs on every push to `main` and performs:
+GitHub Actions ran the repository Verify workflow successfully.
 
-1. dependency installation;
-2. Playwright browser installation;
-3. `npm run verify:all`;
-4. static-site assembly;
-5. runtime/release/fullscreen deployment-contract checks including `ui-repair-runtime.js`;
-6. GitHub Pages deployment.
+Observed result:
 
-Only the newest `main` revision should be treated as the deployment candidate.
+- syntax/static verification: passed;
+- Node test suite: **85 tests, 85 passed, 0 failed**;
+- release identity: `3.6.2-dashboard-command`.
 
-## Acceptance gate
+### Browser Smoke #430 — SUCCESS
 
-Do **not** mark v3.5.1 accepted until all of the following are true:
+GitHub Actions ran the full Playwright Browser Smoke workflow successfully on the same product HEAD.
 
-- latest Verify workflow is green;
-- latest Browser Smoke workflow is green;
-- latest Deploy GitHub Pages workflow is green;
-- deployed footer reports `v3.5.1-ui-repair` rather than a stale v3.4/v3.5 cache;
-- Fresh Menu renders without runtime errors;
-- checkpoint continuation restores the saved run;
-- Dashboard is manually accepted on desktop fullscreen;
-- combat HUD remains readable without covering the arena;
-- Pause, Game Over, Upgrade Selection, Dashboard, and combat HUD look like one product;
-- Waves 13/18/25/35 remain readable while the world expands and camera moves;
-- desktop fullscreen and mobile landscape remain playable.
+The browser artifact includes dashboard and game-state screenshots across Chromium/Firefox/WebKit coverage and the repository's existing runtime, checkpoint, touch-safe-zone, combat, Warden, fullscreen, localization, and visual contracts.
+
+Documentation commits are required to pass the same Verify and Browser Smoke gates again before merge.
+
+## Visual QA
+
+Final Browser Smoke artifact reviewed from run #430.
+
+Manually inspected and accepted:
+
+- English dashboard — 1920×1080;
+- Arabic dashboard — 1920×1080;
+- English dashboard — 1366×768;
+- Arabic dashboard — 1280×720;
+- Arabic mobile landscape dashboard — approximately 844×390;
+- English Pause;
+- Arabic Pause;
+- English Upgrade Selection;
+- Arabic Upgrade Selection;
+- English Game Over / Run End.
+
+Additional dashboard captures generated by the automated visual matrix:
+
+- 1440×900;
+- 1600×900;
+- 2560×1440.
+
+The manually inspected states showed no clipping, accidental overlap, normal-dashboard debug UI, giant dead center area, or browser-scroll issue in the captured state. Arabic dashboard composition is mirrored rather than treated as translated LTR text. Mobile landscape uses the dedicated stacked composition.
+
+## Acceptance status
+
+Current status: **verified release candidate, pending final documentation gate and merge/deployment to `main`.**
+
+Acceptance already demonstrated on the product HEAD:
+
+- Current Run is the dominant dashboard focus;
+- Continue / Start is visually dominant without spanning the entire viewport;
+- Run Snapshot is compact and aligned;
+- World Progression communicates completed/current/future sectors;
+- utility controls form one coherent visual family;
+- Arabic and English dashboard layouts are both represented in visual QA;
+- Game Over belongs to the same product language;
+- mobile landscape no longer uses the desktop side-by-side composition;
+- existing gameplay and saved-run semantics remain isolated from the presentation redesign.
+
+The final production acceptance requirement is a green Verify + Browser Smoke on the documentation HEAD, followed by a successful GitHub Pages deployment of `3.6.2-dashboard-command` from `main`.

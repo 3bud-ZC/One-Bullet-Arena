@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { RELEASE_CACHE_NAME, RELEASE_INFO, RELEASE_LABEL, RELEASE_VERSION } from '../src/release.js';
 
 test('release metadata exposes one canonical UI refinement identity', () => {
-  assert.equal(RELEASE_VERSION, '3.6.1-ui-refinement');
-  assert.equal(RELEASE_LABEL, 'v3.6.1-ui-refinement');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.6.1-ui-refinement');
+  assert.equal(RELEASE_VERSION, '3.6.2-dashboard-command');
+  assert.equal(RELEASE_LABEL, 'v3.6.2-dashboard-command');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.6.2-dashboard-command');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
   assert.equal(RELEASE_INFO.channel, 'global-ui');
   assert.ok(Object.isFrozen(RELEASE_INFO));
@@ -23,7 +23,10 @@ test('package, runtime chain, localization, and service worker consume canonical
   assert.equal(packageJson.version, RELEASE_VERSION);
   assert.match(uiSource, /extends OneBulletProductionArtRuntime/);
   assert.match(uiSource, /OneBulletGlobalUiRuntime/);
-  assert.match(uiSource, /GLOBAL_UI_RUNTIME_VERSION = '3\.6\.1-ui-refinement'/);
+  assert.ok(
+    uiSource.includes(`GLOBAL_UI_RUNTIME_VERSION = '${RELEASE_VERSION}'`),
+    'global UI runtime identity must follow the canonical release version',
+  );
   assert.match(i18nSource, /one-bullet-language/);
   assert.match(i18nSource, /English/);
   assert.match(i18nSource, /العربية/);

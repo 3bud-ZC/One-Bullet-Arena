@@ -3,24 +3,24 @@ import { UI_FONT } from './ui-renderer.js';
 
 export const UI_TOKENS = Object.freeze({
   color: Object.freeze({
-    bg: '#02070c',
-    bgRaised: '#071019',
-    graphite: '#0b141d',
-    steel: '#12202b',
-    cyan: '#69d7f4',
-    cyanBright: '#b7efff',
+    bg: '#01070c',
+    bgRaised: '#06121b',
+    graphite: '#091620',
+    steel: '#102532',
+    cyan: '#53cdf5',
+    cyanBright: '#a9ecff',
     cyanDim: 'rgba(105, 215, 244, 0.16)',
     cyanLine: 'rgba(105, 215, 244, 0.28)',
-    amber: '#e7b84d',
+    amber: '#f0bd4d',
     amberBright: '#ffe09a',
     amberDim: 'rgba(231, 184, 77, 0.16)',
-    green: '#58d6a2',
+    green: '#55e0b0',
     greenDim: 'rgba(88, 214, 162, 0.14)',
-    red: '#dd6675',
+    red: '#ee6678',
     redDim: 'rgba(221, 102, 117, 0.13)',
     text: '#f1f5f7',
-    textSoft: '#b6c4cc',
-    textMuted: '#8197a2',
+    textSoft: '#c2d0d8',
+    textMuted: '#718995',
     line: 'rgba(130, 173, 193, 0.16)',
     lineStrong: 'rgba(130, 194, 220, 0.28)',
     black: '#000000',
@@ -133,12 +133,23 @@ export function drawSurface(ctx, rect, options = {}) {
     ctx.lineWidth = options.lineWidth ?? 1;
     ctx.stroke();
   }
+  if (rect.w > 120 && rect.h > 40) {
+    const topFade = ctx.createLinearGradient(rect.x + 12, 0, rect.x + Math.min(rect.w * 0.44, 260), 0);
+    topFade.addColorStop(0, 'rgba(169,236,255,0.13)');
+    topFade.addColorStop(1, 'rgba(169,236,255,0)');
+    ctx.strokeStyle = topFade;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rect.x + 18, rect.y + 5);
+    ctx.lineTo(rect.x + Math.min(rect.w * 0.40, 230), rect.y + 5);
+    ctx.stroke();
+  }
   if (options.accent) {
     ctx.strokeStyle = options.accent;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(rect.x + 18, rect.y);
-    ctx.lineTo(rect.x + Math.min(rect.w * 0.28, 122), rect.y);
+    ctx.lineTo(rect.x + Math.min(rect.w * 0.24, 112), rect.y);
     ctx.stroke();
   }
   ctx.restore();
@@ -153,45 +164,54 @@ export function drawButton(ctx, rect, state = {}) {
   const primary = Boolean(state.primary);
   const danger = Boolean(state.danger);
   const accent = danger ? color.red : primary ? color.amber : color.cyan;
-  const lift = disabled ? 0 : pressed ? 0 : hover * 1.25;
+  const lift = disabled ? 0 : pressed ? 1 : hover * 1.5;
   const r = { ...rect, y: rect.y - lift };
   const fill = danger
-    ? `rgba(37, 11, 17, ${0.68 + hover * 0.10})`
+    ? `rgba(42, 10, 18, ${0.72 + hover * 0.10})`
     : primary
-      ? `rgba(42, 31, 10, ${0.86 + hover * 0.08})`
-      : `rgba(7, 20, 29, ${0.78 + hover * 0.08})`;
+      ? `rgba(54, 37, 8, ${0.90 + hover * 0.06})`
+      : `rgba(5, 18, 27, ${0.84 + hover * 0.07})`;
 
   ctx.save();
-  if (primary && !disabled && hover > 0.02) {
-    ctx.shadowColor = color.amber;
-    ctx.shadowBlur = 6 * hover;
+  if (!disabled && hover > 0.04) {
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = primary ? 8 * hover : 4 * hover;
   }
   drawSurface(ctx, r, {
     fill,
-    border: disabled ? color.line : `${accent}${focused ? 'BB' : primary ? '88' : hover > 0.02 ? '77' : '44'}`,
+    border: disabled ? color.line : `${accent}${focused ? 'CC' : primary ? 'AA' : hover > 0.02 ? '88' : '55'}`,
     accent: disabled ? color.textMuted : accent,
-    cut: primary ? 12 : 9,
+    cut: primary ? 13 : 9,
   });
   ctx.shadowBlur = 0;
+  if (primary && !disabled) {
+    ctx.strokeStyle = `${accent}66`;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(r.x + 11, r.y + r.h / 2); ctx.lineTo(r.x + 24, r.y + r.h / 2);
+    ctx.moveTo(r.x + r.w - 24, r.y + r.h / 2); ctx.lineTo(r.x + r.w - 11, r.y + r.h / 2);
+    ctx.stroke();
+  }
   if (focused) {
-    ctx.strokeStyle = `${accent}88`;
+    ctx.strokeStyle = `${accent}99`;
     ctx.setLineDash([4, 5]);
-    angularPath(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, primary ? 9 : 7);
+    angularPath(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, primary ? 10 : 7);
     ctx.stroke();
     ctx.setLineDash([]);
   }
   if (primary && !disabled) {
     const sweep = r.x + 18 + (r.w - 36) * (state.sweep ?? 0);
-    const gradient = ctx.createLinearGradient(sweep - 72, 0, sweep + 72, 0);
-    gradient.addColorStop(0, 'rgba(255,224,154,0)');
-    gradient.addColorStop(0.5, `rgba(255,224,154,${0.035 + hover * 0.045})`);
-    gradient.addColorStop(1, 'rgba(255,224,154,0)');
+    const gradient = ctx.createLinearGradient(sweep - 92, 0, sweep + 92, 0);
+    gradient.addColorStop(0, 'rgba(255,225,154,0)');
+    gradient.addColorStop(0.5, `rgba(255,225,154,${0.045 + hover * 0.055})`);
+    gradient.addColorStop(1, 'rgba(255,225,154,0)');
     ctx.fillStyle = gradient;
-    angularPath(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 11);
+    angularPath(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 12);
     ctx.fill();
   }
   ctx.restore();
 }
+
 export function drawGauge(ctx, x, y, width, value, accent, options = {}) {
   const safe = Math.max(0, Math.min(1, Number(value) || 0));
   const height = options.height ?? 4;
@@ -288,6 +308,16 @@ export function drawUiIcon(ctx, kind, x, y, options = {}) {
       ctx.beginPath(); ctx.moveTo(-7, -7); ctx.lineTo(-10, -1); ctx.lineTo(-3, -2); ctx.closePath(); ctx.fill(); break;
     case 'menu':
       line(-9, -6, 9, -6); line(-9, 0, 9, 0); line(-9, 6, 9, 6); break;
+    case 'settings':
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 8; i += 1) { const a = i * Math.PI / 4; line(Math.cos(a) * 7, Math.sin(a) * 7, Math.cos(a) * 11, Math.sin(a) * 11); } break;
+    case 'check':
+      line(-8, 0, -2, 6, 9, -7); break;
+    case 'settings':
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 8; i += 1) { const a = i * Math.PI / 4; line(Math.cos(a) * 7, Math.sin(a) * 7, Math.cos(a) * 11, Math.sin(a) * 11); } break;
+    case 'check':
+      line(-8, 0, -2, 6, 9, -7); break;
     case 'health':
       ctx.beginPath(); ctx.moveTo(0, 9); ctx.bezierCurveTo(-2, 5, -10, 0, -10, -5);
       ctx.bezierCurveTo(-10, -10, -3, -11, 0, -6); ctx.bezierCurveTo(3, -11, 10, -10, 10, -5);
@@ -340,52 +370,44 @@ export function drawTrajectoryBackground(ctx, width, height, time = 0, reducedMo
   ctx.fillStyle = color.bg;
   ctx.fillRect(0, 0, width, height);
 
-  const radial = ctx.createRadialGradient(width * 0.52, height * 0.44, 80, width * 0.52, height * 0.44, 680);
-  radial.addColorStop(0, 'rgba(18, 63, 82, 0.20)');
-  radial.addColorStop(0.55, 'rgba(8, 28, 39, 0.08)');
-  radial.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = radial;
-  ctx.fillRect(0, 0, width, height);
+  const radialA = ctx.createRadialGradient(width * 0.34, height * 0.38, 40, width * 0.34, height * 0.38, 520);
+  radialA.addColorStop(0, 'rgba(15, 61, 83, 0.22)');
+  radialA.addColorStop(0.55, 'rgba(6, 29, 42, 0.08)');
+  radialA.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = radialA; ctx.fillRect(0, 0, width, height);
+
+  const radialB = ctx.createRadialGradient(width * 0.78, height * 0.42, 50, width * 0.78, height * 0.42, 440);
+  radialB.addColorStop(0, 'rgba(6, 43, 59, 0.16)');
+  radialB.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = radialB; ctx.fillRect(0, 0, width, height);
 
   ctx.save();
-  ctx.strokeStyle = 'rgba(105,215,244,0.045)';
+  ctx.strokeStyle = 'rgba(83,205,245,0.040)';
   ctx.lineWidth = 1;
-  for (let x = 40; x < width; x += 80) {
+  for (let x = 32; x < width; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
+  for (let y = 32; y < height; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
+
+  ctx.strokeStyle = 'rgba(83,205,245,0.055)';
+  for (let i = 0; i < 5; i += 1) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let y = 40; y < height; y += 80) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
+    ctx.arc(width * 0.52, height * 0.46, 110 + i * 54, -2.8, 0.65);
     ctx.stroke();
   }
 
-  const drift = reducedMotion ? 0 : ((time * 18) % 240);
-  ctx.strokeStyle = 'rgba(231,184,77,0.14)';
-  ctx.lineWidth = 1.2;
+  const drift = reducedMotion ? 0 : ((time * 14) % 220);
+  ctx.strokeStyle = 'rgba(240,189,77,0.10)';
+  ctx.lineWidth = 1.1;
   ctx.beginPath();
-  ctx.moveTo(-40 + drift, height * 0.74);
-  ctx.lineTo(width * 0.31 + drift * 0.18, height * 0.51);
-  ctx.lineTo(width * 0.56 + drift * 0.08, height * 0.66);
-  ctx.lineTo(width + 40, height * 0.38);
-  ctx.stroke();
-  drawTargetGlyph(ctx, width * 0.56 + drift * 0.08, height * 0.66, 8, 'rgba(231,184,77,0.20)');
-
-  ctx.strokeStyle = 'rgba(105,215,244,0.07)';
-  ctx.beginPath();
-  ctx.arc(width * 0.16, height * 0.54, 260, -1.0, 0.7);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(width * 0.88, height * 0.52, 320, 2.35, 4.05);
+  ctx.moveTo(-120 + drift, height * 0.72);
+  ctx.lineTo(width * 0.28 + drift * 0.13, height * 0.52);
+  ctx.lineTo(width * 0.49 + drift * 0.05, height * 0.63);
+  ctx.lineTo(width + 80, height * 0.36);
   ctx.stroke();
   ctx.restore();
 
-  const vignette = ctx.createRadialGradient(width / 2, height / 2, 260, width / 2, height / 2, 780);
+  const vignette = ctx.createRadialGradient(width / 2, height / 2, 250, width / 2, height / 2, 790);
   vignette.addColorStop(0, 'rgba(0,0,0,0)');
-  vignette.addColorStop(1, 'rgba(0,0,0,0.60)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.66)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 }

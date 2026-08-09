@@ -1,6 +1,6 @@
 {
   "name": "one-bullet-arena",
-  "version": "3.6.1-ui-refinement",
+  "version": "3.6.2-dashboard-command",
   "private": true,
   "type": "module",
   "description": "A polished one-bullet tactical arcade game with an expanding world and bilingual production UI.",

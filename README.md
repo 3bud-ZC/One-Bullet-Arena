@@ -61,25 +61,26 @@ The active enemy population continues scaling into the late game up to a bounded
 - Sub-stepped bullet simulation prevents high-speed tunneling.
 - Perfect catches, precision shots, bank-shot chains, momentum, and temporary Overdrive reward skilled execution.
 
-## v3.6 Global UI
+## v3.6.2 Dashboard Command
 
-`3.6.0-global-ui` replaces the old dashboard-style presentation with one canonical production interface owned by `OneBulletGlobalUiRuntime`.
+`3.6.2-dashboard-command` refines the canonical `OneBulletGlobalUiRuntime` into a premium tactical command surface inspired by the game's one-bullet / ricochet identity.
 
-The final presentation includes:
+The dashboard now includes:
 
-- an action-game command surface rather than a two-panel admin dashboard;
-- a dominant current-run / checkpoint wave anchor;
-- a single high-priority Continue / Start action;
-- compact unboxed run telemetry;
-- an eight-stage world progression timeline;
-- a procedural bullet-trajectory / arena-topology background;
-- a compact combat HUD focused on bullet state, wave pressure, health, shield, and dash;
-- tactical minimap presentation for expanded sectors;
-- redesigned Upgrade Selection, Pause, Game Over, wave/sector banners, touch controls, and orientation handling;
-- shared visual tokens for near-black/graphite surfaces, controlled cyan, semantic amber, checkpoint green, danger red, and restrained glow;
-- reduced-motion support for UI motion.
+- a compact ONE BULLET ARENA identity header with the `PRECISION. DODGE. SURVIVE.` tagline;
+- one unified utility family for language, audio, fullscreen, and settings;
+- a dominant **Current Run** surface driven by the real checkpoint, wave, score, upgrades, and sector state;
+- a lightweight procedural tactical radar that fills the former dead center without adding a fake gameplay mechanic;
+- a compact real-data stat strip for Score, Upgrades, and Checkpoint state;
+- a controlled gold Continue / Start CTA with smaller New Run and destructive checkpoint actions;
+- a structured **Run Snapshot** for Wave, Score, Upgrades, Best Wave, High Score, and Sector;
+- a data-driven eight-stage World Progression path sourced from the existing stage thresholds;
+- a two-step localized checkpoint-delete confirmation while keeping the existing checkpoint storage semantics;
+- a matching Run End / Game Over presentation using the same tactical visual system;
+- a dedicated stacked touch/mobile dashboard instead of shrinking the desktop two-column composition;
+- no production FPS/debug overlay.
 
-The deterministic **1280×720 logical gameplay canvas remains unchanged** and scales to the viewport.
+The deterministic **1280×720 logical gameplay canvas remains unchanged** and scales to the browser viewport.
 
 ## English + Arabic localization
 
@@ -97,11 +98,13 @@ Behavior:
 - otherwise Arabic browser locales start in Arabic;
 - all other browser locales start in English;
 - switching language updates the active interface immediately without a page reload;
-- the document `lang` and `dir` attributes update with the selected language;
+- document `lang` and `dir` update with the selected language;
+- the AR / EN selector mirrors correctly in RTL and clearly marks the active locale;
+- dashboard stat strips, progression, Game Over metrics, icons, and functional metadata mirror in Arabic while numeric game values remain readable;
 - functional UI copy does not intentionally mix both languages at the same time;
-- game-control keys and technical identifiers remain readable Latin text where appropriate.
+- game-control keys remain Latin where appropriate.
 
-Language can be switched from the Main Menu and Pause quick settings, or with `L` while those surfaces are active.
+Language can be switched from the Main Menu and Pause surfaces, or with `L` while those surfaces are active.
 
 ## Run upgrades
 
@@ -127,12 +130,12 @@ The project keeps accepted gameplay systems isolated while one final layer owns 
 
 - `src/main.js` — boots `OneBulletGlobalUiRuntime`, exposes QA hooks, handles fullscreen and service-worker updates.
 - `src/i18n.js` — locale selection, persistence, translation, number formatting, and document direction.
-- `src/ui-system.js` — reusable colors, typography, surfaces, buttons, gauges, glyphs, wrapping, and procedural UI background.
-- `src/core/ui-repair-runtime.js` — **canonical final presentation owner**, rewritten for v3.6 as `OneBulletGlobalUiRuntime`; owns Menu, HUD, minimap, touch UI, Pause, Game Over, Upgrade Selection, and banners.
+- `src/ui-system.js` — reusable visual tokens, typography, angular surfaces, button states, gauges, procedural glyphs, wrapping, and tactical background rendering.
+- `src/core/ui-repair-runtime.js` — **canonical final presentation owner**; owns Dashboard, HUD, minimap, touch UI, Pause, Game Over, Upgrade Selection, banners, and the responsive mobile dashboard.
 - `src/core/production-art-runtime.js` — retained lower-level arena presentation foundation.
-- `src/core/unified-ui-runtime.js` — retained camera-safe-zone and transition compatibility layer; its old UI is overridden by the canonical v3.6 owner.
+- `src/core/unified-ui-runtime.js` — retained camera-safe-zone and transition compatibility layer; its old UI is overridden by the canonical Global UI owner.
 - `src/core/world-expansion-runtime.js` — expanding world, camera, exploration, player-relative spawning, and encounter integration.
-- `src/core/dashboard-polish-runtime.js` — legacy lower presentation layer retained only for runtime compatibility; it no longer owns the active menu.
+- `src/core/dashboard-polish-runtime.js` — legacy lower presentation layer retained only for runtime compatibility; it no longer owns the active dashboard.
 - `src/core/visual-overhaul-runtime.js` — environmental/combat rendering foundation.
 - `src/core/world-2d-runtime.js` — accepted top-down 2D world rendering.
 - `src/core/warden-runtime.js` — Warden guard mechanics.
@@ -142,7 +145,7 @@ The project keeps accepted gameplay systems isolated while one final layer owns 
 - `src/game-data.js` — enemy, encounter, wave-scaling, and upgrade data.
 - `src/arena.js` — collision geometry and world expansion milestones.
 
-No new UI patch runtime was stacked on top of the old repair layer: the previous final runtime file was rewritten to become the canonical Global UI owner.
+No new presentation runtime was stacked on top of the existing Global UI; the canonical owner itself was refined.
 
 ## Local development and verification
 
@@ -155,20 +158,20 @@ npm run test:browser
 npm run verify:all
 ```
 
-The browser suite captures English and Arabic menus/checkpoint states, combat HUD, Pause, Upgrade Selection, Game Over, expanded-world/minimap, and mobile landscape. Responsive QA also covers 1280×720, 1920×1080, and 1366×768 desktop/laptop viewports plus approximately 844×390 mobile landscape.
+The browser suite captures English and Arabic dashboard/checkpoint states, combat HUD, Pause, Upgrade Selection, Game Over, expanded-world/minimap, orientation handling, and mobile landscape. Dashboard visual QA generates coverage for **1366×768, 1440×900, 1600×900, 1920×1080, 2560×1440, 1280×720**, plus approximately **844×390 mobile landscape**.
 
 ## Saved progression compatibility
 
-The v3.6 visual/localization release intentionally preserves:
+The v3.6.2 dashboard release intentionally preserves:
 
+- existing checkpoint schema and saved local checkpoint data;
+- Continue Run / checkpoint restore behavior;
+- scoring, best-wave, and high-score state;
+- upgrades and run progression;
 - one-bullet physics and ricochet behavior;
 - enemy behavior and encounter balance;
 - world expansion and camera behavior;
-- scoring;
-- upgrades;
-- controls;
-- Warden mechanics;
-- existing checkpoint schema and local checkpoint data.
+- controls and Warden mechanics.
 
 ## Status
 

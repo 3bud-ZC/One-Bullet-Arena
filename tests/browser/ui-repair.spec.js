@@ -50,9 +50,9 @@ test('refined bilingual dashboard is balanced at 1920x1080 and keeps locale stat
   await loadGame(page, 'en');
 
   let snapshot = await makeCheckpoint(page, 64);
-  expect(snapshot.releaseVersion).toBe('3.6.1-ui-refinement');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.6.1-ui-refinement');
-  expect(snapshot.globalUiRevision).toBe('production-refinement-v1');
+  expect(snapshot.releaseVersion).toBe('3.6.2-dashboard-command');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.6.2-dashboard-command');
+  expect(snapshot.globalUiRevision).toBe('dashboard-reference-v2');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.visualRefinementActive).toBe(true);
   expect(snapshot.locale).toBe('en');
@@ -65,9 +65,11 @@ test('refined bilingual dashboard is balanced at 1920x1080 and keeps locale stat
   expect(await page.evaluate(() => localStorage.getItem('one-bullet-language'))).toBe('ar');
   await capture(page, testInfo, '02-dashboard-ar-1920');
 
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await setLocaleAndDraw(page, 'en');
-  await capture(page, testInfo, 'dashboard-en-laptop-1366');
+  for (const [width, height, name] of [[1366, 768, '1366'], [1440, 900, '1440'], [1600, 900, '1600'], [2560, 1440, '2560']]) {
+    await page.setViewportSize({ width, height });
+    await setLocaleAndDraw(page, 'en');
+    await capture(page, testInfo, `dashboard-en-${name}`);
+  }
   await page.setViewportSize({ width: 1280, height: 720 });
   await setLocaleAndDraw(page, 'ar');
   await capture(page, testInfo, 'dashboard-ar-1280');

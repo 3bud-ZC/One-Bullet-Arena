@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   MOVEMENT_HOTFIX_VERSION,
   analogMovementVector,
+  separateOverlappingEnemies,
 } from '../src/movement-hotfix-runtime.js';
 
 test('movement hotfix exposes its release identifier', () => {
@@ -63,4 +64,19 @@ test('combined keyboard and touch input never exceeds full speed', () => {
   });
   assert.ok(Math.hypot(combined.x, combined.y) <= 1.0001);
   assert.ok(combined.x > 0 && combined.y < 0);
+});
+
+test('enemy separation resolves exact coordinate overlap deterministically', () => {
+  const firstRun = [
+    { id: 17, x: 300, y: 240, radius: 24 },
+    { id: 18, x: 300, y: 240, radius: 24 },
+  ];
+  const secondRun = firstRun.map((enemy) => ({ ...enemy }));
+  const constrain = () => {};
+
+  assert.equal(separateOverlappingEnemies(firstRun, constrain), 1);
+  assert.equal(separateOverlappingEnemies(secondRun, constrain), 1);
+  const spacing = Math.hypot(firstRun[1].x - firstRun[0].x, firstRun[1].y - firstRun[0].y);
+  assert.ok(spacing >= 51.999);
+  assert.deepEqual(firstRun, secondRun);
 });

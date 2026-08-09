@@ -49,9 +49,11 @@ test('touch movement starts neutral and scales with drag distance', async ({ pag
     game.canvas.setPointerCapture = () => {};
 
     const rect = game.canvas.getBoundingClientRect();
+    const logicalWidth = game.canvasViewport?.logicalWidth || 1280;
+    const logicalHeight = game.canvasViewport?.logicalHeight || 720;
     const toClient = (x, y) => ({
-      clientX: rect.left + (x / game.canvas.width) * rect.width,
-      clientY: rect.top + (y / game.canvas.height) * rect.height,
+      clientX: rect.left + (x / logicalWidth) * rect.width,
+      clientY: rect.top + (y / logicalHeight) * rect.height,
     });
     const dispatch = (type, x, y) => {
       const point = toClient(x, y);

@@ -34,9 +34,11 @@ test('legacy presentation layers remain below one canonical global UI owner', as
   assert.match(unifiedSource, /extends OneBulletWorldExpansionRuntime/);
   assert.match(productionSource, /extends OneBulletUnifiedUiRuntime/);
   assert.match(globalSource, /class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime/);
-  assert.match(globalSource, /dashboard-reference-v2/);
+  assert.match(globalSource, /dom-hidpi-presentation-v1/);
+  assert.match(globalSource, /CanvasViewport/);
+  assert.match(globalSource, /DomUiController/);
   assert.match(mainSource, /OneBulletGlobalUiRuntime/);
-  assert.match(workerSource, /\.\/src\/i18n\.js/);
-  assert.match(workerSource, /\.\/src\/ui-system\.js/);
+  assert.match(workerSource, /\.\/src\/ui\/dom-ui\.js/);
+  assert.match(workerSource, /\.\/src\/render\/canvas-viewport\.js/);
   assert.match(workerSource, /\.\/src\/core\/ui-repair-runtime\.js/);
 });

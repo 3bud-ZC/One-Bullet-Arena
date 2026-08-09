@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.6.2-dashboard-command';
+  const version = '3.7.0-hires-ui';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'global-ui',
+    channel: 'hires-ui',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

@@ -2,201 +2,112 @@
 
 Last updated: 2026-08-09
 
-## Current production release
+## Current release candidate
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.6.2 — Dashboard Command**
-- Canonical version: `3.6.2-dashboard-command`
-- Canonical label: `v3.6.2-dashboard-command`
-- Release channel: `global-ui`
-- Service Worker cache: `one-bullet-arena-v3.6.2-dashboard-command`
+- Release: **v3.7.0 — High-Resolution Presentation**
+- Canonical version: `3.7.0-hires-ui`
+- Canonical label: `v3.7.0-hires-ui`
+- Release channel: `hires-ui`
+- Service Worker cache: `one-bullet-arena-v3.7.0-hires-ui`
 - Canonical presentation owner: `OneBulletGlobalUiRuntime`
-- UI revision: `dashboard-reference-v2`
+- UI revision: `dom-hidpi-presentation-v1`
 - Production branch: `main`
-- Production merge: `f74f860afc6caa54fada5cca8c459bd25e601197`
-- Gameplay coordinate system: **1280×720 logical canvas preserved**
+- Feature branch: `feat/3.7.0-hires-ui`
+- Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
-- Production status: **accepted and deployed**
+- Candidate status: **implementation complete; verification gate pending**
 
-## Dashboard Command scope
+## High-DPI rendering architecture
 
-v3.6.2 refines the existing Global UI instead of stacking another presentation runtime. The redesign is implemented inside the canonical `src/core/ui-repair-runtime.js` owner and preserves the accepted gameplay, camera, world-expansion, checkpoint, combat-depth, Warden, encounter, and scoring systems.
+v3.7 separates three concerns that were previously coupled:
 
-### Dashboard
+1. **Simulation:** remains 1280×720 logical coordinates.
+2. **Canvas display:** a centered 16:9 CSS rectangle calculated from the available viewport.
+3. **Canvas backing store:** CSS display size multiplied by an effective DPR.
 
-The dashboard now uses a premium tactical command composition inspired by the one-bullet / ricochet identity:
+`src/render/canvas-viewport.js` is the single owner of display/backing-store sizing. The effective DPR is bounded by both a maximum DPR and a backing-pixel budget so high-resolution rendering does not allocate unbounded surfaces on 4K/HiDPI displays.
 
-- compact game identity header with procedural mark, title, tagline, and version;
-- unified Language / Audio / Fullscreen / Settings controls;
-- dominant Current Run surface with real sector, wave, score, upgrades, and checkpoint state;
-- lightweight procedural tactical radar with concentric rings, hex target geometry, scanner, and deterministic presentation markers;
-- compact Score / Upgrades / Checkpoint stat strip;
-- controlled gold Continue / Start CTA;
-- lower-emphasis New Run and destructive Delete Checkpoint actions;
-- two-step localized checkpoint-delete confirmation rather than immediate deletion;
-- Run Snapshot with real Wave, Score, Upgrades, Best Wave, High Score, Sector, and checkpoint readiness;
-- data-driven eight-stage World Progression sourced from existing stage thresholds;
-- subtle local-save indicator when a checkpoint actually exists;
-- normal production dashboard contains no FPS/debug readout.
+The renderer applies one logical-to-physical transform with `ctx.setTransform()`. Gameplay positions, collision geometry, physics, ricochet calculations, camera coordinates, spawn logic, and saved data are not multiplied by DPR.
 
-### Game Over / Run End
+The Canvas uses a 16:9 contain model. Non-16:9 viewports letterbox instead of independently stretching width and height, so circles remain circular and line geometry is not distorted.
 
-Game Over now uses the same tactical visual system as the dashboard:
+Resize handling covers browser resize, fullscreen change, orientation change, visual viewport change, and devicePixelRatio changes detected while rendering. Canvas image smoothing is enabled and line caps/joins are normalized for the non-pixel-art visual style.
 
-- strong run-end focal point;
-- real reached wave and final score;
-- real high score, upgrades, sector, and checkpoint status;
-- Continue from Checkpoint is primary only when continuation actually exists;
-- New Run and Main Menu remain secondary;
-- arena remains visible behind controlled dimming.
+## DOM UI migration
 
-### Visual system
+The existing `OneBulletGlobalUiRuntime` remains the final presentation owner. No additional final/super UI runtime was added.
 
-`src/ui-system.js` remains the shared presentation system and carries the Dashboard Command refinements:
+Migrated from low-resolution Canvas drawing to semantic browser UI:
 
-- near-black/navy foundation;
-- controlled cyan structural accents;
-- semantic amber primary-action/progression state;
-- green checkpoint/positive state;
-- restrained red danger state;
-- improved muted-text contrast;
-- angular tactical surfaces;
-- reusable button hover/focus/pressed treatment;
-- procedural settings/check glyphs;
-- subtle grid, radial lighting, tactical arcs, route line, and vignette background depth.
+- Main Dashboard / Current Run;
+- utility toolbar and language/audio/fullscreen/settings controls;
+- run statistics, Run Snapshot, and World Progression;
+- desktop Combat HUD and desktop late-game minimap;
+- Pause;
+- Upgrade Selection;
+- Game Over.
 
-No external icon/font/UI dependency was added.
+The Canvas continues to own arena/environment geometry, player/enemy/projectile rendering, bullet trail and particles, telegraphs/targeting/impacts/world effects, camera/world rendering, and touch movement/aim controls. Touch controls intentionally remain on Canvas because they are coupled to gameplay safe zones and input semantics; they now render through the HiDPI backing store rather than a stretched 1280×720 bitmap.
 
-## Localization
+## DOM/UI system
 
-`src/i18n.js` remains the single localization source.
+New modules:
 
-Supported locales:
+- `src/ui/dom-ui.js` — state-bound semantic UI controller;
+- `src/ui/icons.js` — reusable inline SVG icon system;
+- `styles/tokens.css` — shared surfaces, color, spacing, radius, typography, motion, and shadow tokens;
+- `styles/ui.css` — Dashboard/HUD/overlay/component styling;
+- `styles/responsive.css` — laptop, low-height desktop, mobile landscape, and reduced-motion rules.
 
-- English (`en`, LTR)
-- العربية (`ar`, RTL)
+The presentation layer uses real `<button>` controls, focus-visible keyboard states, ARIA labels, CSS Grid/Flexbox, CSS logical properties for LTR/RTL, transform-based HUD gauge updates via CSS custom properties, tabular numeric telemetry, restrained backdrop blur with fallback surfaces, and soft elevation rather than full tactical wireframes.
 
-Verified behavior:
+## SVG icon system
 
-- persisted locale key remains `one-bullet-language`;
-- language changes update the active interface without reload;
-- document `lang` and `dir` continue to follow the selected locale;
-- AR / EN selector is explicit and mirrors correctly in RTL;
-- functional Sector/Wave metadata is localized;
-- dashboard stat strips and Game Over metrics mirror logically in Arabic;
-- icons/text order follows direction;
-- numeric values remain readable and are not semantically reversed;
-- checkpoint deletion confirmation is localized in both languages.
+UI controls use one vector icon family with a shared `viewBox`, `currentColor`, consistent stroke width, and rounded caps/joins. World Progression and the desktop minimap use SVG geometry, keeping lines, nodes, viewport rectangles, paths, and player markers vector-sharp at arbitrary display scale.
+
+## Typography
+
+Migrated screens use browser text rendering instead of Canvas text. This improves anti-aliasing, Arabic shaping, kerning, baselines, text wrapping, accessibility, and browser zoom/display-scale quality.
+
+Typography is tokenized from readable label sizes through display/hero metrics. No external runtime font URL was added. The UI prioritizes modern system UI fonts and professional Arabic fallbacks so offline/PWA behavior remains deterministic. A packaged WOFF2 family is not included in this release candidate.
+
+## Localization / RTL
+
+`src/i18n.js` remains the single localization source. Supported locales are English (`en`, LTR) and العربية (`ar`, RTL). The saved preference key remains `one-bullet-language`; active UI updates without reload; document `lang` and `dir` follow locale; logical CSS properties avoid duplicate coordinate layouts; World Progression mirrors in RTL; numeric telemetry uses tabular numerals.
+
+## Pointer / touch mapping
+
+Input remains based on the actual Canvas CSS rectangle:
+
+`screen coordinate → contained Canvas rectangle → 1280×720 logical coordinate → existing world-camera transform`
+
+The HiDPI backing-store size is not used as gameplay input space. The DOM UI root is `pointer-events: none`; only real interactive controls opt into pointer events, so gameplay center input remains targetable by the Canvas while menus/buttons capture their own interaction.
 
 ## Responsive behavior
 
-Desktop keeps the main Current Run + Run Snapshot composition and full-width progression track.
+Desktop uses a spacious Dashboard with a dominant Current Run surface, compact Run Snapshot, vector World Progression, and compact utility toolbar. Laptop and low-height desktop states reduce decorative scale while keeping readable typography. Mobile landscape around 844×390 uses a dedicated compact composition instead of shrinking the desktop layout; the HUD remains a top rail so lower touch zones stay available.
 
-Touch/mobile uses a dedicated stacked dashboard instead of shrinking the desktop two-column layout:
+## Service Worker / deployment
 
-1. Current Run / sector / wave + compact radar;
-2. real run stat strip;
-3. Continue / Start and compact secondary actions;
-4. compact Run Snapshot;
-5. World Progression.
+The application-shell cache includes the DOM UI JavaScript, Canvas viewport module, SVG icon module, and all UI CSS. The cache identity is incremented to `one-bullet-arena-v3.7.0-hires-ui`, and the Pages workflow copies the new `styles/` directory and validates channel `hires-ui`.
 
-This keeps the primary action reachable and prevents the snapshot/progression from becoming unreadably small on mobile landscape.
+## Gameplay compatibility
 
-## Gameplay and saved-run compatibility
+This release intentionally does **not** change movement balance, collision rules, bullet physics/ricochet, enemy stats/spawn balance, encounter director, damage formulas, upgrades/progression rules, world expansion thresholds, camera behavior, Warden mechanics, scoring semantics, or checkpoint schema.
 
-This release intentionally does **not** change:
+## Verification gates
 
-- movement balance;
-- bullet physics or ricochet behavior;
-- enemy stats or spawn balance;
-- encounter director;
-- damage formulas;
-- upgrades or progression rules;
-- world expansion thresholds;
-- camera logic;
-- Warden mechanics;
-- score/high-score/best-wave semantics;
-- checkpoint storage schema.
+Implementation adds contracts for logical dimensions, contained 16:9 geometry, DPR/backing-store behavior and pixel budget, pointer mapping, DOM UI ownership/semantics, SVG icons, localization/RTL, responsive Dashboard/HUD, gameplay input pass-through, resize/fullscreen-change handling, mobile mapping, screenshot matrix, and explicit deviceScaleFactor=2 HiDPI rendering.
 
-Existing local checkpoint data remains compatible. Continue Run, New Run, checkpoint restore, and the existing checkpoint clearing implementation remain the source of truth; the redesign only adds a two-step confirmation before invoking checkpoint clear.
+Exact CI results and run identifiers will be recorded here after the candidate passes the repository verification gates.
 
-## Automated verification
+## Required visual QA matrix
 
-### Product visual-acceptance HEAD — `2bd934340849a5fb4dd0da287bee7b92210b8aa0`
+Automated screenshot evidence is configured for English Dashboard at 1280×720, 1366×768, 1440×900, 1600×900, 1920×1080, and 2560×1440; non-16:9 1792×832 and 1680×1050; Arabic Dashboard at 1920×1080; explicit HiDPI 1440×900 at device scale factor 2; Combat HUD; Pause; Upgrade Selection; Game Over; and Arabic mobile landscape around 844×390.
 
-**Verify #1199 — SUCCESS**
+## Real remaining limitations
 
-- syntax/static verification: passed;
-- Node test suite: **85 tests, 85 passed, 0 failed**;
-- release identity: `3.6.2-dashboard-command`.
-
-**Browser Smoke #430 — SUCCESS**
-
-- full Playwright Browser Smoke workflow passed;
-- browser artifact generated dashboard/game-state evidence across the repository browser matrix.
-
-### Final documentation HEAD — `1788b1bbf6ebc962dc2b7edc1f628c8d288ff0dc`
-
-- **Verify #1203 — SUCCESS**
-- **Browser Smoke #432 — SUCCESS**
-
-The merge was performed only after both final documentation gates were green.
-
-## Production deployment
-
-GitHub Pages deployment for production merge `f74f860afc6caa54fada5cca8c459bd25e601197` completed successfully.
-
-Deployment proof:
-
-- workflow run: `31329753211`;
-- version: `3.6.2-dashboard-command`;
-- build result: **success**;
-- deploy result: **success**;
-- live release verification: **true**;
-- channel: `global-ui`.
-
-The deployment workflow validates both `release.json` and the live `src/release-config.js` with cache-busting requests after Pages deployment.
-
-## Visual QA
-
-Final Browser Smoke artifact reviewed from run #430.
-
-Manually inspected and accepted:
-
-- English dashboard — 1920×1080;
-- Arabic dashboard — 1920×1080;
-- English dashboard — 1366×768;
-- Arabic dashboard — 1280×720;
-- Arabic mobile landscape dashboard — approximately 844×390;
-- English Pause;
-- Arabic Pause;
-- English Upgrade Selection;
-- Arabic Upgrade Selection;
-- English Game Over / Run End.
-
-Additional dashboard captures generated by the automated visual matrix:
-
-- 1440×900;
-- 1600×900;
-- 2560×1440.
-
-The manually inspected states showed no clipping, accidental overlap, normal-dashboard debug UI, giant dead center area, or browser-scroll issue in the captured state. Arabic dashboard composition is mirrored rather than treated as translated LTR text. Mobile landscape uses the dedicated stacked composition.
-
-## Acceptance status
-
-**v3.6.2 Dashboard Command is production accepted.**
-
-Accepted qualities:
-
-- Current Run is the dominant dashboard focus;
-- Continue / Start is visually dominant without spanning the entire viewport;
-- Run Snapshot is compact and aligned;
-- World Progression communicates completed/current/future sectors;
-- utility controls form one coherent visual family;
-- Arabic and English dashboard layouts are represented in visual QA;
-- Game Over belongs to the same product language;
-- mobile landscape uses a dedicated stacked composition;
-- existing gameplay and saved-run semantics remain isolated from the presentation redesign;
-- production Pages release was verified live after deployment.
-
-Real remaining limitation: the 2560×1440 state was generated and passed automated browser coverage but was not part of the manually opened screenshot subset; the manually reviewed desktop states were 1920×1080, 1366×768, and 1280×720 Arabic.
+- Touch gameplay controls remain Canvas-rendered by design because they are coupled to gameplay safe zones/input; they benefit from the HiDPI renderer but are not semantic DOM controls yet.
+- No bundled WOFF2 font family is included; presentation uses system/local fallback stacks to preserve the offline contract without an unverified font license or external runtime dependency.
+- Visual screenshot artifacts still require the browser CI gate and manual inspection before the release can be marked production accepted.

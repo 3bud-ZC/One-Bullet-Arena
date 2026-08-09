@@ -10,15 +10,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="One Bullet Arena" />
     <title>One Bullet Arena</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=3.6.0-global-ui" />
-    <link rel="icon" href="./icons/app-icon.svg?v=3.6.0-global-ui" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.6.0-global-ui" />
-    <link rel="stylesheet" href="./game.css?v=3.6.0-global-ui" />
+    <link rel="manifest" href="./manifest.webmanifest?v=3.7.0-hires-ui" />
+    <link rel="icon" href="./icons/app-icon.svg?v=3.7.0-hires-ui" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.7.0-hires-ui" />
+    <link rel="stylesheet" href="./game.css?v=3.7.0-hires-ui" />
+    <link rel="stylesheet" href="./styles/ui.css?v=3.7.0-hires-ui" />
+    <link rel="stylesheet" href="./styles/responsive.css?v=3.7.0-hires-ui" />
+    <link rel="stylesheet" href="./styles/polish.css?v=3.7.0-hires-ui" />
   </head>
   <body>
     <main class="game-shell">
       <section class="game-frame" aria-label="One Bullet Arena">
-        <canvas id="game-canvas" aria-label="One Bullet Arena" aria-describedby="game-instructions"></canvas>
+        <div class="game-render-layer" aria-hidden="false">
+          <canvas id="game-canvas" aria-label="One Bullet Arena" aria-describedby="game-instructions"></canvas>
+        </div>
+        <div id="game-ui-layer" class="game-ui-layer" aria-label="One Bullet Arena interface"></div>
       </section>
       <aside class="orientation-hint" role="status" aria-live="polite">
         <strong>Rotate your device</strong>
@@ -29,6 +35,6 @@
       </p>
       <p id="game-status" class="visually-hidden" aria-live="polite"></p>
     </main>
-    <script type="module" src="./src/main.js?v=3.6.0-global-ui"></script>
+    <script type="module" src="./src/main.js?v=3.7.0-hires-ui"></script>
   </body>
 </html>

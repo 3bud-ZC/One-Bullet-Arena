@@ -36,6 +36,17 @@ test('late-game sectors own distinct restrained palettes', async () => {
   assert.match(source, /EXPANDED_PALETTES\[Math\.min\(EXPANDED_PALETTES\.length - 1, stage - 4\)\]/);
 });
 
+test('camera runtime keeps HUD and touch controls protected in world space', async () => {
+  const source = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
+  assert.match(source, /combatSafeZones/);
+  assert.match(source, /worldCombatSafeZones\(\)/);
+  assert.match(source, /this\.screenToWorld\(zone\.x, zone\.y\)/);
+  assert.match(source, /w: zone\.w \/ zoom/);
+  assert.match(source, /h: zone\.h \/ zoom/);
+  assert.match(source, /this\.worldCombatSafeZones\(\)/);
+  assert.match(source, /cameraSafeZonesActive: true/);
+});
+
 test('main boots the unified UI runtime and preserves fullscreen entry', async () => {
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   assert.match(main, /OneBulletUnifiedUiRuntime/);

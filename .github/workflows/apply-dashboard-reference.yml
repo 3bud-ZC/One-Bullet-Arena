@@ -1,5 +1,6 @@
 name: Apply Dashboard Reference
 
+# One-shot transformer for the dashboard-reference-polish branch.
 on:
   push:
     branches:

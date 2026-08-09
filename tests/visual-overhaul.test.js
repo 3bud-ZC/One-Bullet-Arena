@@ -34,7 +34,7 @@ test('legacy presentation layers remain below one canonical global UI owner', as
   assert.match(unifiedSource, /extends OneBulletWorldExpansionRuntime/);
   assert.match(productionSource, /extends OneBulletUnifiedUiRuntime/);
   assert.match(globalSource, /class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime/);
-  assert.match(globalSource, /global-command-interface-v1/);
+  assert.match(globalSource, /production-refinement-v1/);
   assert.match(mainSource, /OneBulletGlobalUiRuntime/);
   assert.match(workerSource, /\.\/src\/i18n\.js/);
   assert.match(workerSource, /\.\/src\/ui-system\.js/);

@@ -1,0 +1,94 @@
+/* Final visual-quality corrections validated against the v3.7 screenshot matrix. */
+
+.game-ui-layer[data-state="menu"] .ambient-ui::before {
+  background:
+    radial-gradient(circle at 50% 43%, rgba(31, 109, 141, 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(1, 6, 10, 0.28), rgba(1, 6, 10, 0.42));
+}
+
+/*
+ * The progression path remains SVG, but its nodes are CSS circles so a very
+ * wide responsive SVG can never turn circles into ellipses through non-uniform
+ * scaling. Grid placement is kept physically LTR, then labels receive their
+ * own locale direction. This avoids double-mirroring in RTL.
+ */
+.progression-svg .progression-node {
+  display: none;
+}
+
+.progression-labels {
+  direction: ltr;
+}
+
+.progression-label {
+  position: relative;
+  direction: ltr;
+  overflow: visible;
+}
+
+html[dir="rtl"] .progression-label {
+  direction: rtl;
+}
+
+.progression-label::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: -26px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  translate: -50% 0;
+  border: 1.5px solid #516a76;
+  border-radius: 50%;
+  background: #10212a;
+  box-shadow: 0 0 0 3px rgba(2, 9, 14, 0.78);
+}
+
+.progression-label.is-complete::before {
+  border-color: var(--cyan-strong);
+  background: var(--cyan);
+}
+
+.progression-label.is-current::before {
+  width: 14px;
+  height: 14px;
+  top: -28px;
+  border: 2px solid var(--amber-strong);
+  background: var(--amber);
+  box-shadow: 0 0 0 4px rgba(231, 184, 77, 0.08);
+}
+
+/* Canvas geometry should retain the logical HiDPI transform even when legacy
+ * feedback layers use local transforms. This class also makes visual intent
+ * explicit for QA without changing gameplay coordinates. */
+#game-canvas {
+  image-rendering: auto;
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .world-progression {
+    min-height: 54px;
+  }
+
+  .progression-label strong,
+  .progression-label span {
+    display: none;
+  }
+
+  .progression-label::before {
+    top: -17px;
+    width: 7px;
+    height: 7px;
+    border-width: 1px;
+    box-shadow: 0 0 0 2px rgba(2, 9, 14, 0.72);
+  }
+
+  .progression-label.is-current::before {
+    top: -19px;
+    width: 11px;
+    height: 11px;
+    border-width: 1.5px;
+    box-shadow: 0 0 0 3px rgba(231, 184, 77, 0.08);
+  }
+}

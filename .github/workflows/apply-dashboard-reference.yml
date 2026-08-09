@@ -1,6 +1,7 @@
 name: Apply Dashboard Reference
 
 # One-shot transformer for the dashboard-reference-polish branch.
+# This file is temporary and removed before final merge.
 on:
   push:
     branches:
@@ -29,8 +30,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/core/ui-repair-runtime.js src/ui-system.js src/i18n.js src/release-config.js package.json package-lock.json tests .github/workflows
-          git reset .github/workflows/apply-dashboard-reference.yml
+          git add src/core/ui-repair-runtime.js src/ui-system.js src/i18n.js src/release-config.js package.json tests .github/workflows
+          git reset .github/workflows/apply-dashboard-reference.yml || true
           git diff --cached --quiet && exit 0
           git commit -m "feat: rebuild dashboard from premium tactical reference [dashboard-applied]"
           git push

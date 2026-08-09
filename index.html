@@ -1,38 +1,34 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#030611" />
-    <meta name="description" content="حلبة الطلقة الواحدة — اهزم كل موجة واختر قدرة جديدة في ساحة تتوسع تلقائيًا." />
+    <meta name="theme-color" content="#02070c" />
+    <meta name="description" content="One Bullet Arena — one bullet, tactical ricochets, recovery, and an expanding survival arena." />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="One Bullet" />
-    <title>حلبة الطلقة الواحدة</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=3.5.1-ui-repair" />
-    <link rel="icon" href="./icons/app-icon.svg?v=3.5.1-ui-repair" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.5.1-ui-repair" />
-    <link rel="stylesheet" href="./game.css?v=3.5.1-ui-repair" />
+    <meta name="apple-mobile-web-app-title" content="One Bullet Arena" />
+    <title>One Bullet Arena</title>
+    <link rel="manifest" href="./manifest.webmanifest?v=3.6.0-global-ui" />
+    <link rel="icon" href="./icons/app-icon.svg?v=3.6.0-global-ui" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.6.0-global-ui" />
+    <link rel="stylesheet" href="./game.css?v=3.6.0-global-ui" />
   </head>
   <body>
     <main class="game-shell">
-      <section class="game-frame" aria-label="لعبة حلبة الطلقة الواحدة">
-        <canvas
-          id="game-canvas"
-          aria-label="لوحة لعبة حلبة الطلقة الواحدة"
-          aria-describedby="game-instructions"
-        ></canvas>
+      <section class="game-frame" aria-label="One Bullet Arena">
+        <canvas id="game-canvas" aria-label="One Bullet Arena" aria-describedby="game-instructions"></canvas>
       </section>
       <aside class="orientation-hint" role="status" aria-live="polite">
-        <strong>لف الهاتف للوضع الأفقي</strong>
-        <span>اللعبة مصممة للتحكم باليدين في الوضع الأفقي.</span>
+        <strong>Rotate your device</strong>
+        <span>One Bullet Arena is designed for landscape play with both hands.</span>
       </aside>
       <p id="game-instructions" class="visually-hidden">
-        لعبة بطلقة واحدة. تحرك، أطلق الطلقة، استدعها، ثم اختر تطويرًا بعد كل موجة.
+        One bullet tactical arena game. Move, fire, ricochet, recall the bullet, and choose an upgrade after each wave.
       </p>
       <p id="game-status" class="visually-hidden" aria-live="polite"></p>
     </main>
-    <script type="module" src="./src/main.js?v=3.5.1-ui-repair"></script>
+    <script type="module" src="./src/main.js?v=3.6.0-global-ui"></script>
   </body>
 </html>

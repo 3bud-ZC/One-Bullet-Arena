@@ -37,14 +37,15 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.match(source, /visualOverhaulActive: true/);
 });
 
-test('cinematic dashboard, expanding world, and unified UI form one runtime chain', async () => {
+test('command deck dashboard, expanding world, and unified UI form one runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const expansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
   const unifiedSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
-  assert.match(dashboardSource, /cinematic-command-menu-v11/);
+  assert.match(dashboardSource, /command-deck-v12/);
+  assert.match(dashboardSource, /balanced-command-deck-v12/);
   assert.match(expansionSource, /extends OneBulletDashboardPolishRuntime/);
   assert.match(unifiedSource, /extends OneBulletWorldExpansionRuntime/);
   assert.match(unifiedSource, /unifiedInterfaceLanguage: true/);

@@ -38,7 +38,7 @@ async function seedCheckpoint(page) {
   });
 }
 
-test('renders the fresh cinematic command menu fullscreen without runtime errors', async ({ page }, testInfo) => {
+test('renders the fresh balanced command deck fullscreen without runtime errors', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
@@ -57,31 +57,33 @@ test('renders the fresh cinematic command menu fullscreen without runtime errors
   });
 
   expect(result.snapshot.checkpointAvailable).toBe(false);
-  expect(result.snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
+  expect(result.snapshot.checkpointDashboardRevision).toBe('command-deck-v12');
+  expect(result.snapshot.dashboardLayoutRevision).toBe('balanced-command-deck-v12');
   expect(result.snapshot.dashboardVisualStyle).toBe('premium-cinematic-command');
   expect(result.snapshot.rtlTypographyAware).toBe(true);
   expect(result.snapshot.smoothHoverInterpolation).toBe(true);
   expect(Math.abs(result.frame.width - result.viewport.width)).toBeLessThan(1);
   expect(Math.abs(result.frame.height - result.viewport.height)).toBeLessThan(1);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'fresh-fullscreen-menu');
+  await attachCanvas(page, testInfo, 'fresh-fullscreen-command-deck');
 });
 
-test('captures checkpoint menu, game-over choices, and restored wave through expansion runtime', async ({ page }, testInfo) => {
+test('captures checkpoint command deck, game-over choices, and restored wave through expansion runtime', async ({ page }, testInfo) => {
   await loadGame(page);
   await seedCheckpoint(page);
 
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
-  expect(snapshot.checkpointDashboardRevision).toBe('cinematic-command-menu-v11');
+  expect(snapshot.checkpointDashboardRevision).toBe('command-deck-v12');
+  expect(snapshot.dashboardLayoutRevision).toBe('balanced-command-deck-v12');
   expect(snapshot.dashboardPolishActive).toBe(true);
   expect(snapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
   expect(snapshot.expandingWorldActive).toBe(true);
   expect(snapshot.unifiedCombatHud).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(true);
   expect(snapshot.collisionGeometryChanged).toBe(true);
-  await attachCanvas(page, testInfo, 'checkpoint-expansion-menu');
+  await attachCanvas(page, testInfo, 'checkpoint-command-deck');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;

@@ -7,7 +7,7 @@ const CACHE_NAME = RELEASE.cacheName;
 const CACHE_PREFIX = 'one-bullet-arena-v';
 const APP_SHELL = [
   './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
-  './src/release-config.js', './src/release.js', './src/main.js', './src/game.js',
+  './src/release-config.js', './src/release.js', './src/i18n.js', './src/ui-system.js', './src/main.js', './src/game.js',
   './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js',
   './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
   './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',
@@ -48,15 +48,12 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request, './index.html'));
     return;
   }
-
   event.respondWith(networkFirst(request));
 });
 

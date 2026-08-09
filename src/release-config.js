@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.5.1-ui-repair';
+  const version = '3.6.0-global-ui';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'ui-repair',
+    channel: 'global-ui',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

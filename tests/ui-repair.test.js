@@ -24,6 +24,8 @@ test('global UI runtime canonically owns all player-facing surfaces without game
   assert.match(source, /drawGameOver\(\)/);
   assert.match(source, /drawUpgradeSelection\(\)/);
   assert.match(source, /drawBanner\(\)/);
+  assert.match(source, /const result = super\.setState\(state\)/);
+  assert.match(source, /const result = super\.startNextWave\(\)/);
   assert.doesNotMatch(source, /update\(dt\)/);
   assert.doesNotMatch(source, /drawArena\(\)/);
 });
@@ -37,8 +39,9 @@ test('global UI is localized and uses a reusable visual system', async () => {
   assert.match(source, /presentationOwner: 'OneBulletGlobalUiRuntime'/);
   assert.match(source, /uiDensity: 'game-command-surface'/);
   assert.match(source, /bilingualUi: true/);
+  assert.match(source, /legacyUiOverridesBypassed: true/);
   assert.match(i18nSource, /LANGUAGE_STORAGE_KEY = 'one-bullet-language'/);
-  assert.match(i18nSource, /browser language|navigator\?\.language/);
+  assert.match(i18nSource, /navigator\?\.language/);
   assert.match(systemSource, /drawTrajectoryBackground/);
   assert.match(systemSource, /drawBulletGlyph/);
   assert.match(systemSource, /drawLocalizedText/);

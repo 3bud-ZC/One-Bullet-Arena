@@ -82,8 +82,18 @@ test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz 
   const runs = await page.evaluate(async () => {
     const { FixedStepClock } = await import('/src/performance/frame-pacer.js');
     const game = window.__ONE_BULLET_ARENA__;
+    const originalRandom = Math.random;
+
+    const resetRandom = () => {
+      let state = 0x5f3759df;
+      Math.random = () => {
+        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+        return state / 0x100000000;
+      };
+    };
 
     const runSchedule = (hz) => {
+      resetRandom();
       game.startRun();
       game.banner = null;
       game.tutorialStep = 3;
@@ -129,7 +139,9 @@ test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz 
       return result;
     };
 
-    return [60, 120, 144, 165, 240].map(runSchedule);
+    const result = [60, 120, 144, 165, 240].map(runSchedule);
+    Math.random = originalRandom;
+    return result;
   });
 
   const reference = runs.find((run) => run.hz === 120);
@@ -149,6 +161,57 @@ test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz 
       expect(run.firstEnemies[index].health).toBe(reference.firstEnemies[index].health);
     }
   }
+});
+
+test('bullet trail and dash-effect sampling are refresh-rate independent', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Effect cadence comparison runs once in Chromium.');
+  await loadGame(page);
+  const samples = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.setRenderingQuality('HIGH');
+    const originalRandom = Math.random;
+    Math.random = () => 0.5;
+
+    const sampleAt = (hz) => {
+      game.startRun();
+      game.banner = null;
+      game.tutorialStep = 3;
+      game.enemies = [];
+      game.enemyShots = [];
+      game.particles = [];
+      game.pointer.x = 1080;
+      game.pointer.y = 360;
+      game.resetBulletToPlayer();
+      game.fireBullet();
+      const dt = 1 / hz;
+      const duration = 0.18;
+      const frames = Math.round(duration * hz);
+      for (let index = 0; index < frames; index += 1) game.updateBullet(dt);
+      const trailPoints = game.bullet.trail.length;
+
+      game.particles = [];
+      game.nextDashParticleAt = 0;
+      game.elapsed = 0;
+      const dashDuration = 0.3;
+      const dashFrames = Math.round(dashDuration * hz);
+      for (let index = 0; index < dashFrames; index += 1) {
+        game.elapsed += dt;
+        game.createParticle(100, 100, '#62f3ff', 75);
+      }
+      const dashParticles = game.particles.length;
+      game.goToMenu();
+      return { hz, trailPoints, dashParticles };
+    };
+
+    const result = [60, 120, 240].map(sampleAt);
+    Math.random = originalRandom;
+    return result;
+  });
+
+  const trailCounts = samples.map((entry) => entry.trailPoints);
+  const dashCounts = samples.map((entry) => entry.dashParticles);
+  expect(Math.max(...trailCounts) - Math.min(...trailCounts)).toBeLessThanOrEqual(2);
+  expect(Math.max(...dashCounts) - Math.min(...dashCounts)).toBeLessThanOrEqual(1);
 });
 
 test('render quality preference persists and never changes gameplay population', async ({ page }) => {

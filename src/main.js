@@ -22,6 +22,7 @@ if (qaMode) {
   window.__ONE_BULLET_EVENTS__ = game.eventBus;
   window.__ONE_BULLET_CHECKPOINT__ = game.checkpointStore;
   window.__ONE_BULLET_I18N__ = i18n;
+  window.__ONE_BULLET_PERF__ = () => game.getPerformanceSnapshot?.();
 }
 
 document.addEventListener('keydown', async (event) => {

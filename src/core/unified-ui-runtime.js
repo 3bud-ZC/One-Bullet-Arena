@@ -114,6 +114,168 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
     return { x: candidate.x, y: candidate.y };
   }
 
+  drawHudBar(x, y, w, h, value, color) {
+    const ctx = this.ctx;
+    const ratio = Math.max(0, Math.min(1, Number(value) || 0));
+    ctx.fillStyle = 'rgba(116, 169, 194, 0.14)';
+    ctx.fillRect(x, y, w, h);
+    if (ratio > 0) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w * ratio, h);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.fillRect(x, y, w * ratio, 1);
+    }
+  }
+
+  drawCombatHudPanel(rect, accent = THEME.cyan) {
+    this.drawSurface(rect, {
+      fill: 'rgba(3, 15, 27, 0.88)',
+      border: 'rgba(74, 161, 199, 0.4)',
+      cut: 11,
+      inner: 'rgba(85, 181, 217, 0.055)',
+    });
+    this.ctx.fillStyle = accent;
+    this.ctx.globalAlpha = 0.68;
+    this.ctx.fillRect(rect.x + 14, rect.y + 6, 66, 2);
+    this.ctx.globalAlpha = 1;
+  }
+
+  drawHud() {
+    const ctx = this.ctx;
+    const h = 76;
+    const left = { x: 18, y: 13, w: 340, h };
+    const center = { x: 450, y: 13, w: 380, h };
+    const right = { x: 922, y: 13, w: 340, h };
+
+    const bulletColor = this.bullet.held ? THEME.gold : THEME.cyan;
+    this.drawCombatHudPanel(left, bulletColor);
+    this.drawCombatHudPanel(center, THEME.cyan);
+    this.drawCombatHudPanel(right, this.player.health <= Math.max(1, this.player.maxHealth * 0.34) ? THEME.red : THEME.green);
+
+    const bulletIcon = { x: left.x + 16, y: left.y + 17, w: 38, h: 38 };
+    this.drawSurface(bulletIcon, {
+      fill: 'rgba(3, 13, 23, 0.9)',
+      border: this.bullet.held ? 'rgba(229, 189, 69, 0.58)' : 'rgba(99, 204, 233, 0.5)',
+      cut: 9,
+    });
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bulletIcon.x + 19, bulletIcon.y + 19, this.bullet.held ? 5 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = bulletColor;
+    ctx.fill();
+    ctx.restore();
+
+    const bulletTitle = this.bullet.held ? 'الطلقة جاهزة' : this.bullet.recalling ? 'الطلقة عائدة' : 'الطلقة في الميدان';
+    drawText(ctx, bulletTitle, left.x + left.w - 17, left.y + 29, 11.5, bulletColor, 900, 'right');
+    drawText(
+      ctx,
+      this.bullet.held ? 'READY TO FIRE' : this.bullet.recalling ? 'RETURNING' : 'Q  RECALL',
+      left.x + left.w - 17,
+      left.y + 48,
+      7.2,
+      THEME.muted,
+      900,
+      'right',
+      'ltr',
+    );
+    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallRatio = this.bullet.held ? 1 : 1 - this.bullet.recallCooldown / recallMax;
+    this.drawHudBar(left.x + 67, left.y + 61, left.w - 84, 4, recallRatio, bulletColor);
+
+    drawText(ctx, `WAVE ${String(this.wave).padStart(2, '0')}`, center.x + center.w / 2, center.y + 28, 17, THEME.text, 900, 'center', 'ltr');
+    drawText(ctx, this.currentEncounter?.name || 'ضغط متوازن', center.x + center.w / 2, center.y + 49, 9.5, THEME.goldText, 850);
+    drawText(
+      ctx,
+      `${this.enemies.length} ENEMIES   ·   ${this.score.toLocaleString('en-US')} SCORE   ·   S${this.arenaStage.id + 1}`,
+      center.x + center.w / 2,
+      center.y + 67,
+      7,
+      THEME.muted,
+      850,
+      'center',
+      'ltr',
+    );
+
+    const healthRatio = this.player.maxHealth > 0 ? this.player.health / this.player.maxHealth : 0;
+    const healthColor = healthRatio <= 0.34 ? THEME.red : '#ef7d87';
+    drawText(ctx, `HP ${this.player.health}/${this.player.maxHealth}`, right.x + 18, right.y + 29, 11.5, THEME.text, 900, 'left', 'ltr');
+    drawText(
+      ctx,
+      this.player.shield > 0 ? 'SHIELD ACTIVE' : `${this.stats.upgrades} UPGRADES`,
+      right.x + right.w - 18,
+      right.y + 29,
+      7.4,
+      this.player.shield > 0 ? THEME.cyanBright : THEME.muted,
+      900,
+      'right',
+      'ltr',
+    );
+    drawText(ctx, 'HEALTH', right.x + 18, right.y + 47, 6.5, THEME.muted, 900, 'left', 'ltr');
+    this.drawHudBar(right.x + 68, right.y + 43, right.w - 86, 6, healthRatio, healthColor);
+    const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
+    drawText(ctx, 'DASH', right.x + 18, right.y + 66, 6.5, THEME.muted, 900, 'left', 'ltr');
+    this.drawHudBar(right.x + 68, right.y + 62, right.w - 86, 4, 1 - this.player.dashCooldown / dashMax, THEME.cyan);
+
+    if (!this.touchMode && this.arenaStage.id >= 4) this.drawMiniMap();
+    if (this.state === 'playing' && this.wave === 1 && this.tutorialStep < 3) this.drawTutorial();
+  }
+
+  drawMiniMap() {
+    const ctx = this.ctx;
+    const rect = { x: WIDTH - 206, y: 104, w: 188, h: 116 };
+    this.drawSurface(rect, {
+      fill: 'rgba(3, 15, 27, 0.86)',
+      border: 'rgba(74, 161, 199, 0.34)',
+      cut: 10,
+      inner: 'rgba(82, 173, 208, 0.05)',
+    });
+
+    ctx.fillStyle = 'rgba(99, 204, 233, 0.62)';
+    ctx.fillRect(rect.x + 13, rect.y + 6, 58, 2);
+    drawText(ctx, `SECTOR ${this.arenaStage.id + 1}`, rect.x + 13, rect.y + 18, 6.8, THEME.cyanSoft, 900, 'left', 'ltr');
+    drawText(ctx, 'TACTICAL MAP', rect.x + rect.w - 13, rect.y + 18, 6.2, THEME.muted, 850, 'right', 'ltr');
+
+    const bounds = this.arenaStage.bounds;
+    const inner = { x: rect.x + 12, y: rect.y + 29, w: rect.w - 24, h: rect.h - 41 };
+    const scale = Math.min(inner.w / bounds.w, inner.h / bounds.h);
+    const mapW = bounds.w * scale;
+    const mapH = bounds.h * scale;
+    const mapX = inner.x + (inner.w - mapW) / 2;
+    const mapY = inner.y + (inner.h - mapH) / 2;
+    const project = (point) => ({
+      x: mapX + (point.x - bounds.x) * scale,
+      y: mapY + (point.y - bounds.y) * scale,
+    });
+
+    ctx.fillStyle = 'rgba(45, 86, 112, 0.11)';
+    ctx.fillRect(mapX, mapY, mapW, mapH);
+    ctx.strokeStyle = 'rgba(93, 177, 210, 0.38)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(mapX, mapY, mapW, mapH);
+
+    ctx.fillStyle = 'rgba(87, 213, 154, 0.28)';
+    for (const point of this.explorationTrail) {
+      const p = project(point);
+      if (p.x < mapX || p.x > mapX + mapW || p.y < mapY || p.y > mapY + mapH) continue;
+      ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+    }
+
+    const viewport = this.viewportWorldBounds();
+    const view = project(viewport);
+    ctx.strokeStyle = 'rgba(229, 189, 69, 0.66)';
+    ctx.strokeRect(view.x, view.y, viewport.w * scale, viewport.h * scale);
+
+    const player = project(this.player);
+    ctx.save();
+    ctx.shadowColor = THEME.cyan;
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = THEME.cyanBright;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   drawModalBackdrop(alpha = 0.76) {
     const ctx = this.ctx;
     const overlay = ctx.createLinearGradient(0, 0, 0, HEIGHT);

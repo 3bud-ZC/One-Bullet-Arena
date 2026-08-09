@@ -9,11 +9,15 @@ import {
   wardenHitZone,
 } from '../src/core/warden-runtime.js';
 
-test('warden unlocks at wave seven and enters deterministic compositions', () => {
+test('warden unlocks at wave seven and follows the encounter director', () => {
   assert.equal(enemyPoolForWave(6).includes('warden'), false);
   assert.equal(enemyPoolForWave(7).includes('warden'), true);
   assert.equal(buildWaveComposition(7).filter((type) => type === 'warden').length, 1);
-  assert.ok(buildWaveComposition(11).includes('warden'));
+
+  // Late-game encounters intentionally vary composition. Crossfire at Wave 11
+  // omits Wardens, while Siege at Wave 13 brings them back as heavy pressure.
+  assert.equal(buildWaveComposition(11).includes('warden'), false);
+  assert.equal(buildWaveComposition(13).includes('warden'), true);
 });
 
 test('warden front arc distinguishes direct shots from flanks', () => {

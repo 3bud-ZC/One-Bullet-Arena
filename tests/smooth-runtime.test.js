@@ -45,6 +45,20 @@ test('fixed clock bounds catch-up work after a long frame', () => {
   assert.ok(result.alpha >= 0 && result.alpha < 1);
 });
 
+test('timing reset prevents pause/background gaps from becoming catch-up simulation', () => {
+  const clock = new FixedStepClock({ simulationHz: 120, maxCatchUpSteps: 8, maxFrameDelta: 0.1 });
+  clock.tick(1000, () => {});
+  let calls = 0;
+  clock.tick(1017, () => { calls += 1; });
+  assert.ok(calls >= 1);
+  clock.reset(20_000);
+  calls = 0;
+  const resumed = clock.tick(20_008, () => { calls += 1; });
+  assert.equal(calls, 0);
+  assert.equal(resumed.dropped, 0);
+  assert.ok(resumed.alpha > 0 && resumed.alpha < 1);
+});
+
 test('interpolation is clamped to the previous/current simulation boundary', () => {
   assert.equal(lerp(10, 20, -3), 10);
   assert.equal(lerp(10, 20, 0), 10);
@@ -60,6 +74,14 @@ test('frame pacer estimates native requestAnimationFrame cadence without a 60 FP
   assert.ok(snapshot.estimatedRefreshHz > 235 && snapshot.estimatedRefreshHz <= 240.1);
   assert.ok(snapshot.renderFps > 235);
   assert.ok(snapshot.medianFrameMs < 4.3);
+});
+
+test('frame pacing diagnostics keep a bounded ring buffer under long high-refresh runs', () => {
+  const pacer = new FramePacer({ windowSize: 120 });
+  for (let frame = 0; frame <= 2000; frame += 1) pacer.sample(frame * (1000 / 240), 0);
+  assert.equal(pacer.samples.length, 120);
+  assert.ok(pacer.sampleCursor >= 0 && pacer.sampleCursor < 120);
+  assert.equal(pacer.snapshot().sampleCount, 120);
 });
 
 test('render quality preference persists independently from gameplay state', () => {

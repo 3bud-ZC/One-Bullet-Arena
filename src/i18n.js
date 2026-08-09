@@ -1,0 +1,377 @@
+export const LANGUAGE_STORAGE_KEY = 'one-bullet-language';
+
+export const LOCALES = Object.freeze({
+  en: Object.freeze({ code: 'en', label: 'English', nativeLabel: 'English', dir: 'ltr', locale: 'en-US' }),
+  ar: Object.freeze({ code: 'ar', label: 'Arabic', nativeLabel: 'العربية', dir: 'rtl', locale: 'ar-EG' }),
+});
+
+const EN = Object.freeze({
+  'brand.name': 'ONE BULLET ARENA',
+  'brand.title': 'One Bullet Arena',
+  'brand.mantra': 'ONE BULLET. ONE SHOT. RICOCHET. RECOVER. SURVIVE.',
+  'brand.shortMantra': 'FIRE • RICOCHET • RECOVER • SURVIVE',
+  'menu.continue': 'Continue Run',
+  'menu.start': 'Start Run',
+  'menu.newRun': 'New Run',
+  'menu.deleteSave': 'Delete Checkpoint',
+  'menu.checkpointReady': 'Checkpoint ready',
+  'menu.noCheckpoint': 'No checkpoint',
+  'menu.savedLocally': 'Saved locally',
+  'menu.currentRun': 'CURRENT RUN',
+  'menu.freshRun': 'FRESH RUN',
+  'menu.runSnapshot': 'Run snapshot',
+  'menu.worldProgress': 'World progression',
+  'menu.nextExpansion': 'Next expansion',
+  'menu.finalSector': 'Final belt online',
+  'menu.actionHint': 'Enter the arena and recover your only bullet.',
+  'menu.continueHint': 'Resume with your upgrades and checkpoint progress intact.',
+  'menu.settings': 'Settings',
+  'menu.language': 'Language',
+  'menu.audio': 'Audio',
+  'menu.fullscreen': 'Fullscreen',
+  'menu.muted': 'Muted',
+  'menu.soundOn': 'Sound on',
+  'stat.wave': 'Wave',
+  'stat.score': 'Score',
+  'stat.highScore': 'High Score',
+  'stat.bestWave': 'Best Wave',
+  'stat.upgrades': 'Upgrades',
+  'stat.checkpoint': 'Checkpoint',
+  'stat.sector': 'Sector',
+  'stat.enemies': 'Enemies',
+  'stat.health': 'Health',
+  'stat.shield': 'Shield',
+  'stat.dash': 'Dash',
+  'stat.bullet': 'Bullet',
+  'stat.recall': 'Recall',
+  'stat.ready': 'Ready',
+  'stat.empty': 'Empty',
+  'stat.active': 'Active',
+  'stat.returning': 'Returning',
+  'stat.inField': 'In field',
+  'hud.recallKey': 'Q RECALL',
+  'hud.dashReady': 'DASH READY',
+  'hud.wave': 'WAVE',
+  'hud.enemiesLeft': '{count} enemies',
+  'hud.shieldActive': 'SHIELD ACTIVE',
+  'hud.bulletHeld': 'BULLET READY',
+  'hud.bulletReturning': 'BULLET RETURNING',
+  'hud.bulletField': 'BULLET IN FIELD',
+  'pause.kicker': 'TACTICAL PAUSE',
+  'pause.title': 'Run Paused',
+  'pause.resume': 'Resume',
+  'pause.newRun': 'New Run',
+  'pause.mainMenu': 'Main Menu',
+  'pause.snapshot': 'Run status',
+  'pause.settings': 'Quick settings',
+  'gameOver.kicker': 'RUN TERMINATED',
+  'gameOver.title': 'GAME OVER',
+  'gameOver.waveReached': 'Wave reached',
+  'gameOver.finalScore': 'Final score',
+  'gameOver.bestScore': 'Best score',
+  'gameOver.continue': 'Continue from checkpoint',
+  'gameOver.retry': 'Start new run',
+  'gameOver.mainMenu': 'Main menu',
+  'gameOver.newRecord': 'NEW HIGH SCORE',
+  'upgrade.kicker': 'ARSENAL UPLINK',
+  'upgrade.title': 'Choose one upgrade',
+  'upgrade.subtitle': 'Shape the next wave. Your bullet is your build.',
+  'upgrade.level': 'Level {current} → {next}',
+  'upgrade.max': 'MAX',
+  'upgrade.select': 'Select',
+  'upgrade.current': 'Current',
+  'upgrade.after': 'After',
+  'wave.cleared': 'WAVE {wave} CLEARED',
+  'wave.incoming': 'WAVE {wave}',
+  'wave.sectorUnlocked': 'SECTOR UNLOCKED',
+  'minimap.title': 'TACTICAL MAP',
+  'minimap.you': 'YOU',
+  'minimap.explored': 'Explored',
+  'orientation.title': 'Rotate your device',
+  'orientation.body': 'One Bullet Arena is designed for landscape play with both hands.',
+  'controls.move': 'Move',
+  'controls.fire': 'Fire',
+  'controls.recall': 'Recall',
+  'controls.dash': 'Dash',
+  'controls.pause': 'Pause',
+  'controls.fullscreen': 'Fullscreen',
+  'controls.language': 'Language',
+  'controls.audio': 'Audio',
+  'touch.dash': 'DASH',
+  'touch.recall': 'RECALL',
+  'touch.pause': 'PAUSE',
+  'status.checkpointSaved': 'Checkpoint saved at wave {wave}.',
+  'status.languageChanged': 'Language changed to English.',
+  'status.audioMuted': 'Audio muted.',
+  'status.audioEnabled': 'Audio enabled.',
+  'stage.0': 'Central Room',
+  'stage.1': 'Side Wings',
+  'stage.2': 'Outer Corridors',
+  'stage.3': 'Full Arena',
+  'stage.4': 'Outer Sector',
+  'stage.5': 'Industrial Ring',
+  'stage.6': 'Open Matrix',
+  'stage.7': 'Final Belt',
+  'encounter.foundation': 'Balanced Pressure',
+  'encounter.rush': 'Rush',
+  'encounter.crossfire': 'Crossfire',
+  'encounter.swarm': 'Moving Swarm',
+  'encounter.siege': 'Heavy Siege',
+  'encounter.hunters': 'Elite Hunters',
+  'upgrade.heavy-shot.name': 'Heavy Shot',
+  'upgrade.heavy-shot.tag': 'DAMAGE',
+  'upgrade.heavy-shot.description': 'Increase bullet damage by 35%.',
+  'upgrade.bullet-velocity.name': 'Bullet Velocity',
+  'upgrade.bullet-velocity.tag': 'BULLET',
+  'upgrade.bullet-velocity.description': 'Increase launch speed by 7%.',
+  'upgrade.extended-ricochet.name': 'Extended Ricochet',
+  'upgrade.extended-ricochet.tag': 'RICOCHET',
+  'upgrade.extended-ricochet.description': 'Add two ricochets before the bullet starts losing speed.',
+  'upgrade.hot-ricochet.name': 'Hot Ricochet',
+  'upgrade.hot-ricochet.tag': 'DAMAGE',
+  'upgrade.hot-ricochet.description': 'Each ricochet increases damage for the current shot.',
+  'upgrade.shock-impact.name': 'Shock Impact',
+  'upgrade.shock-impact.tag': 'AREA',
+  'upgrade.shock-impact.description': 'Hits damage enemies near the impact point.',
+  'upgrade.magnetic-recall.name': 'Magnetic Recall',
+  'upgrade.magnetic-recall.tag': 'RECOVERY',
+  'upgrade.magnetic-recall.description': 'Recall the bullet faster and reduce recall downtime.',
+  'upgrade.recall-strike.name': 'Recall Strike',
+  'upgrade.recall-strike.tag': 'RECOVERY',
+  'upgrade.recall-strike.description': 'The returning bullet deals additional damage.',
+  'upgrade.quick-dash.name': 'Quick Dash',
+  'upgrade.quick-dash.tag': 'MOBILITY',
+  'upgrade.quick-dash.description': 'Reduce dash cooldown.',
+  'upgrade.swift-steps.name': 'Swift Steps',
+  'upgrade.swift-steps.tag': 'MOBILITY',
+  'upgrade.swift-steps.description': 'Increase player movement speed by 7%.',
+  'upgrade.vitality.name': 'Vitality',
+  'upgrade.vitality.tag': 'HEALTH',
+  'upgrade.vitality.description': 'Increase maximum health and restore one heart.',
+  'upgrade.wave-shield.name': 'Wave Shield',
+  'upgrade.wave-shield.tag': 'DEFENSE',
+  'upgrade.wave-shield.description': 'Start each wave with a shield that absorbs one hit.',
+  'upgrade.second-chance.name': 'Second Chance',
+  'upgrade.second-chance.tag': 'SURVIVAL',
+  'upgrade.second-chance.description': 'Survive one lethal hit per run with one health remaining.',
+});
+
+const AR = Object.freeze({
+  'brand.name': 'ONE BULLET ARENA',
+  'brand.title': 'حلبة الطلقة الواحدة',
+  'brand.mantra': 'طلقة واحدة. إصابة واحدة. ارتداد. استعادة. نجاة.',
+  'brand.shortMantra': 'أطلق • ارتد • استعد • انجُ',
+  'menu.continue': 'استكمال الجولة',
+  'menu.start': 'ابدأ الجولة',
+  'menu.newRun': 'جولة جديدة',
+  'menu.deleteSave': 'حذف نقطة الحفظ',
+  'menu.checkpointReady': 'نقطة الحفظ جاهزة',
+  'menu.noCheckpoint': 'لا توجد نقطة حفظ',
+  'menu.savedLocally': 'محفوظ محليًا',
+  'menu.currentRun': 'الجولة الحالية',
+  'menu.freshRun': 'جولة جديدة',
+  'menu.runSnapshot': 'ملخص الجولة',
+  'menu.worldProgress': 'تقدم العالم',
+  'menu.nextExpansion': 'التوسعة التالية',
+  'menu.finalSector': 'الحزام الأخير مفتوح',
+  'menu.actionHint': 'ادخل الساحة واستعد طلقتك الوحيدة.',
+  'menu.continueHint': 'ارجع بترقياتك وتقدم نقطة الحفظ كما هما.',
+  'menu.settings': 'الإعدادات',
+  'menu.language': 'اللغة',
+  'menu.audio': 'الصوت',
+  'menu.fullscreen': 'ملء الشاشة',
+  'menu.muted': 'مكتوم',
+  'menu.soundOn': 'الصوت يعمل',
+  'stat.wave': 'الموجة',
+  'stat.score': 'النقاط',
+  'stat.highScore': 'أعلى نتيجة',
+  'stat.bestWave': 'أفضل موجة',
+  'stat.upgrades': 'الترقيات',
+  'stat.checkpoint': 'نقطة الحفظ',
+  'stat.sector': 'القطاع',
+  'stat.enemies': 'الأعداء',
+  'stat.health': 'الصحة',
+  'stat.shield': 'الدرع',
+  'stat.dash': 'الاندفاع',
+  'stat.bullet': 'الطلقة',
+  'stat.recall': 'الاستدعاء',
+  'stat.ready': 'جاهز',
+  'stat.empty': 'فارغ',
+  'stat.active': 'نشط',
+  'stat.returning': 'تعود',
+  'stat.inField': 'في الميدان',
+  'hud.recallKey': 'Q استدعاء',
+  'hud.dashReady': 'الاندفاع جاهز',
+  'hud.wave': 'الموجة',
+  'hud.enemiesLeft': '{count} أعداء',
+  'hud.shieldActive': 'الدرع نشط',
+  'hud.bulletHeld': 'الطلقة جاهزة',
+  'hud.bulletReturning': 'الطلقة عائدة',
+  'hud.bulletField': 'الطلقة في الميدان',
+  'pause.kicker': 'توقف تكتيكي',
+  'pause.title': 'الجولة متوقفة',
+  'pause.resume': 'استكمال الجولة',
+  'pause.newRun': 'جولة جديدة',
+  'pause.mainMenu': 'القائمة الرئيسية',
+  'pause.snapshot': 'حالة الجولة',
+  'pause.settings': 'إعدادات سريعة',
+  'gameOver.kicker': 'انتهت الجولة',
+  'gameOver.title': 'انتهت اللعبة',
+  'gameOver.waveReached': 'الموجة التي وصلت إليها',
+  'gameOver.finalScore': 'نتيجة الجولة',
+  'gameOver.bestScore': 'أفضل نتيجة',
+  'gameOver.continue': 'الاستكمال من نقطة الحفظ',
+  'gameOver.retry': 'ابدأ جولة جديدة',
+  'gameOver.mainMenu': 'القائمة الرئيسية',
+  'gameOver.newRecord': 'رقم قياسي جديد',
+  'upgrade.kicker': 'ربط الترقيات',
+  'upgrade.title': 'اختر ترقية واحدة',
+  'upgrade.subtitle': 'شكّل الموجة التالية. طلقتك هي أسلوب لعبك.',
+  'upgrade.level': 'المستوى {current} ← {next}',
+  'upgrade.max': 'الحد الأقصى',
+  'upgrade.select': 'اختيار',
+  'upgrade.current': 'الحالي',
+  'upgrade.after': 'بعد الاختيار',
+  'wave.cleared': 'تم إنهاء الموجة {wave}',
+  'wave.incoming': 'الموجة {wave}',
+  'wave.sectorUnlocked': 'تم فتح قطاع جديد',
+  'minimap.title': 'الخريطة التكتيكية',
+  'minimap.you': 'أنت',
+  'minimap.explored': 'المستكشف',
+  'orientation.title': 'لف الهاتف للوضع الأفقي',
+  'orientation.body': 'حلبة الطلقة الواحدة مصممة للعب باليدين في الوضع الأفقي.',
+  'controls.move': 'الحركة',
+  'controls.fire': 'الإطلاق',
+  'controls.recall': 'الاستدعاء',
+  'controls.dash': 'الاندفاع',
+  'controls.pause': 'إيقاف',
+  'controls.fullscreen': 'ملء الشاشة',
+  'controls.language': 'اللغة',
+  'controls.audio': 'الصوت',
+  'touch.dash': 'اندفاع',
+  'touch.recall': 'استدعاء',
+  'touch.pause': 'إيقاف',
+  'status.checkpointSaved': 'تم حفظ نقطة عند الموجة {wave}.',
+  'status.languageChanged': 'تم تغيير اللغة إلى العربية.',
+  'status.audioMuted': 'تم كتم الصوت.',
+  'status.audioEnabled': 'تم تشغيل الصوت.',
+  'stage.0': 'الغرفة المركزية',
+  'stage.1': 'الأجنحة الجانبية',
+  'stage.2': 'الممرات الخارجية',
+  'stage.3': 'الساحة الكاملة',
+  'stage.4': 'القطاع الخارجي',
+  'stage.5': 'الحلقة الصناعية',
+  'stage.6': 'المصفوفة المفتوحة',
+  'stage.7': 'الحزام الأخير',
+  'encounter.foundation': 'ضغط متوازن',
+  'encounter.rush': 'اندفاع خاطف',
+  'encounter.crossfire': 'نيران متقاطعة',
+  'encounter.swarm': 'سرب متحرك',
+  'encounter.siege': 'حصار ثقيل',
+  'encounter.hunters': 'مطاردة النخبة',
+  'upgrade.heavy-shot.name': 'طلقة ثقيلة',
+  'upgrade.heavy-shot.tag': 'ضرر',
+  'upgrade.heavy-shot.description': 'يزيد ضرر الطلقة بنسبة 35%.',
+  'upgrade.bullet-velocity.name': 'سرعة الطلقة',
+  'upgrade.bullet-velocity.tag': 'طلقة',
+  'upgrade.bullet-velocity.description': 'يزيد سرعة الطلقة عند الإطلاق بنسبة 7%.',
+  'upgrade.extended-ricochet.name': 'ارتداد ممتد',
+  'upgrade.extended-ricochet.tag': 'ارتداد',
+  'upgrade.extended-ricochet.description': 'يضيف ارتدادين قبل أن تبدأ الطلقة في فقدان سرعتها.',
+  'upgrade.hot-ricochet.name': 'ارتداد ساخن',
+  'upgrade.hot-ricochet.tag': 'ضرر',
+  'upgrade.hot-ricochet.description': 'كل ارتداد يزيد ضرر الطلقة الحالية.',
+  'upgrade.shock-impact.name': 'صدمة كهربائية',
+  'upgrade.shock-impact.tag': 'منطقة',
+  'upgrade.shock-impact.description': 'إصابة العدو تضر الأعداء القريبين منه.',
+  'upgrade.magnetic-recall.name': 'استدعاء مغناطيسي',
+  'upgrade.magnetic-recall.tag': 'استعادة',
+  'upgrade.magnetic-recall.description': 'يسرّع رجوع الطلقة ويقلل وقت انتظار الاستدعاء.',
+  'upgrade.recall-strike.name': 'ضربة العودة',
+  'upgrade.recall-strike.tag': 'استعادة',
+  'upgrade.recall-strike.description': 'الطلقة أثناء رجوعها تسبب ضررًا إضافيًا.',
+  'upgrade.quick-dash.name': 'اندفاع أسرع',
+  'upgrade.quick-dash.tag': 'حركة',
+  'upgrade.quick-dash.description': 'يقلل وقت انتظار الاندفاع.',
+  'upgrade.swift-steps.name': 'خطوات خاطفة',
+  'upgrade.swift-steps.tag': 'حركة',
+  'upgrade.swift-steps.description': 'يزيد سرعة حركة اللاعب بنسبة 7%.',
+  'upgrade.vitality.name': 'قلب إضافي',
+  'upgrade.vitality.tag': 'صحة',
+  'upgrade.vitality.description': 'يزيد الحد الأقصى للصحة ويعالج قلبًا واحدًا.',
+  'upgrade.wave-shield.name': 'درع الموجة',
+  'upgrade.wave-shield.tag': 'دفاع',
+  'upgrade.wave-shield.description': 'ابدأ كل موجة بدرع يمتص ضربة واحدة.',
+  'upgrade.second-chance.name': 'فرصة أخيرة',
+  'upgrade.second-chance.tag': 'نجاة',
+  'upgrade.second-chance.description': 'تنجو مرة واحدة من ضربة قاتلة بقلب واحد.',
+});
+
+const TABLES = Object.freeze({ en: EN, ar: AR });
+
+function safeStorageGet(key) {
+  try { return globalThis.localStorage?.getItem(key) ?? null; } catch { return null; }
+}
+
+function safeStorageSet(key, value) {
+  try { globalThis.localStorage?.setItem(key, value); } catch { /* persistence is optional */ }
+}
+
+function detectInitialLocale() {
+  const saved = safeStorageGet(LANGUAGE_STORAGE_KEY);
+  if (saved && LOCALES[saved]) return saved;
+  const language = globalThis.navigator?.language || globalThis.navigator?.languages?.[0] || 'en';
+  return String(language).toLowerCase().startsWith('ar') ? 'ar' : 'en';
+}
+
+function interpolate(template, params = {}) {
+  return String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => params[key] ?? `{${key}}`);
+}
+
+export class I18nController {
+  constructor(initialLocale = detectInitialLocale()) {
+    this.listeners = new Set();
+    this.locale = LOCALES[initialLocale] ? initialLocale : 'en';
+    this.applyDocumentLocale();
+  }
+
+  get metadata() { return LOCALES[this.locale]; }
+  get dir() { return this.metadata.dir; }
+  get isRtl() { return this.dir === 'rtl'; }
+
+  t(key, params = {}) {
+    const table = TABLES[this.locale] || EN;
+    return interpolate(table[key] ?? EN[key] ?? key, params);
+  }
+
+  number(value, options = {}) {
+    return new Intl.NumberFormat(this.metadata.locale, { maximumFractionDigits: 0, ...options }).format(Number(value) || 0);
+  }
+
+  setLocale(locale, { persist = true } = {}) {
+    if (!LOCALES[locale] || locale === this.locale) return this.locale;
+    this.locale = locale;
+    if (persist) safeStorageSet(LANGUAGE_STORAGE_KEY, locale);
+    this.applyDocumentLocale();
+    for (const listener of this.listeners) listener(locale, this.metadata);
+    return this.locale;
+  }
+
+  toggle() { return this.setLocale(this.locale === 'ar' ? 'en' : 'ar'); }
+
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  applyDocumentLocale() {
+    const doc = globalThis.document;
+    if (!doc?.documentElement) return;
+    doc.documentElement.lang = this.locale;
+    doc.documentElement.dir = this.dir;
+    doc.documentElement.dataset.locale = this.locale;
+  }
+}
+
+export const i18n = new I18nController();
+export const t = (key, params) => i18n.t(key, params);

@@ -6,6 +6,7 @@ export const MOVEMENT_HOTFIX_VERSION = '2.5.1-controls';
 
 const TOUCH_DEAD_ZONE = 10;
 const TOUCH_MAX_RADIUS = 72;
+const OVERLAP_EPSILON = 0.0001;
 
 export function analogMovementVector(keys = new Set(), touchMove = null) {
   const keyboardX = Number(keys.has('d') || keys.has('arrowright'))
@@ -35,6 +36,51 @@ export function analogMovementVector(keys = new Set(), touchMove = null) {
   return { x: combinedX, y: combinedY };
 }
 
+function deterministicPairDirection(first, second, firstIndex, secondIndex) {
+  const firstId = Math.trunc(Number(first?.id) || firstIndex + 1);
+  const secondId = Math.trunc(Number(second?.id) || secondIndex + 1);
+  const hash = ((firstId * 73856093) ^ (secondId * 19349663)) >>> 0;
+  const angle = (hash % 360) * Math.PI / 180;
+  return { x: Math.cos(angle), y: Math.sin(angle) };
+}
+
+export function separateOverlappingEnemies(enemies = [], constrain = () => {}) {
+  let resolvedPairs = 0;
+  for (let i = 0; i < enemies.length; i += 1) {
+    for (let j = i + 1; j < enemies.length; j += 1) {
+      const first = enemies[i];
+      const second = enemies[j];
+      let dx = second.x - first.x;
+      let dy = second.y - first.y;
+      let length = Math.hypot(dx, dy);
+      const minimum = first.radius + second.radius + 4;
+      if (length >= minimum) continue;
+
+      let directionX;
+      let directionY;
+      if (length <= OVERLAP_EPSILON) {
+        const fallback = deterministicPairDirection(first, second, i, j);
+        directionX = fallback.x;
+        directionY = fallback.y;
+        length = 0;
+      } else {
+        directionX = dx / length;
+        directionY = dy / length;
+      }
+
+      const push = (minimum - length) * 0.5;
+      first.x -= directionX * push;
+      first.y -= directionY * push;
+      second.x += directionX * push;
+      second.y += directionY * push;
+      constrain(first);
+      constrain(second);
+      resolvedPairs += 1;
+    }
+  }
+  return resolvedPairs;
+}
+
 export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
   constructor(canvas, liveRegion = null) {
     super(canvas, liveRegion);
@@ -43,6 +89,10 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
 
   movementDirection() {
     return analogMovementVector(this.keys, this.touchMove);
+  }
+
+  separateEnemies() {
+    return separateOverlappingEnemies(this.enemies, (enemy) => this.constrainCombatCircle(enemy));
   }
 
   update(dt) {
@@ -90,6 +140,7 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       movementHotfix: this.movementHotfixVersion,
       analogTouchMovement: true,
       responsiveMovementDuringHitStop: true,
+      deterministicEnemySeparation: true,
     };
   }
 }

@@ -84,6 +84,17 @@ export class CanvasViewport {
     this.resize(true);
   }
 
+  setQualityProfile(profile = {}, { resize = true } = {}) {
+    const nextMaxDpr = finitePositive(profile.maxDpr, this.maxDpr);
+    const nextPixelBudget = finitePositive(profile.maxBackingPixels, this.maxBackingPixels);
+    const changed = !almostEqual(nextMaxDpr, this.maxDpr, 0.001)
+      || Math.round(nextPixelBudget) !== Math.round(this.maxBackingPixels);
+    this.maxDpr = nextMaxDpr;
+    this.maxBackingPixels = nextPixelBudget;
+    if (changed && resize) this.resize(true);
+    return changed;
+  }
+
   scheduleResize() {
     if (this.resizeScheduled) return;
     this.resizeScheduled = true;

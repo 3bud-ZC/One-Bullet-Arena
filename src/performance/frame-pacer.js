@@ -82,6 +82,7 @@ export class FramePacer {
     this.windowSize = Math.max(30, Math.trunc(Number(options.windowSize) || 240));
     this.longFrameMs = Math.max(12, Number(options.longFrameMs) || 25);
     this.samples = [];
+    this.sampleCursor = 0;
     this.lastTimestamp = null;
     this.totalFrames = 0;
     this.longFrames = 0;
@@ -91,6 +92,7 @@ export class FramePacer {
 
   reset(timestampMs = null) {
     this.samples.length = 0;
+    this.sampleCursor = 0;
     this.lastTimestamp = Number.isFinite(Number(timestampMs)) ? Number(timestampMs) : null;
     this.totalFrames = 0;
     this.longFrames = 0;
@@ -104,8 +106,12 @@ export class FramePacer {
     if (this.lastTimestamp !== null) {
       const delta = Math.max(0, now - this.lastTimestamp);
       if (delta > 0 && delta < 1000) {
-        this.samples.push(delta);
-        if (this.samples.length > this.windowSize) this.samples.shift();
+        if (this.samples.length < this.windowSize) {
+          this.samples.push(delta);
+        } else {
+          this.samples[this.sampleCursor] = delta;
+          this.sampleCursor = (this.sampleCursor + 1) % this.windowSize;
+        }
         if (delta >= this.longFrameMs) this.longFrames += 1;
       }
     }

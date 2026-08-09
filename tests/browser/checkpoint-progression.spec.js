@@ -45,8 +45,9 @@ async function createWaveFiveCheckpoint(page) {
 test('checkpoint runtime boots without changing the normal new-run path', async ({ page }) => {
   await loadGame(page);
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.5.0-production-art');
+  expect(menu.releaseVersion).toBe('3.5.1-ui-repair');
   expect(menu.productionArtActive).toBe(true);
+  expect(menu.uiRepairActive).toBe(true);
   expect(menu.checkpointRuntimeVersion).toBe('3.0.0-checkpoint');
   expect(menu.checkpointSchemaVersion).toBe(1);
   expect(menu.checkpointProgressionActive).toBe(true);
@@ -141,6 +142,7 @@ test('game over offers continue and saved progress can be cleared', async ({ pag
   expect(gameOver.checkpointAvailable).toBe(true);
   expect(gameOver.checkpointWave).toBe(5);
   expect(gameOver.productionOverlaySuite).toBe(true);
+  expect(gameOver.uiRepairActive).toBe(true);
 
   await page.keyboard.press('Enter');
   const continued = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());

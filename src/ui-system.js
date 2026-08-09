@@ -1,3 +1,4 @@
+import { i18n } from './i18n.js';
 import { UI_FONT } from './ui-renderer.js';
 
 export const UI_TOKENS = Object.freeze({
@@ -39,6 +40,16 @@ export const UI_TOKENS = Object.freeze({
   }),
 });
 
+function localizeFunctionalLiteral(value) {
+  const raw = String(value);
+  if (!i18n.isRtl) return { value: raw, localized: false };
+  let localized = raw.replace(/\bWAVE\s+(\d+)\b/gi, (_, wave) => i18n.t('wave.incoming', { wave }));
+  if (localized === 'READY') localized = i18n.t('stat.ready');
+  else if (localized === 'RETURNING') localized = i18n.t('stat.returning');
+  else if (localized === 'Q RECALL') localized = i18n.t('hud.recallKey');
+  return { value: localized, localized: localized !== raw };
+}
+
 export function angularPath(ctx, x, y, w, h, cut = 10) {
   const c = Math.max(2, Math.min(cut, Math.min(w, h) / 3));
   ctx.beginPath();
@@ -54,6 +65,7 @@ export function angularPath(ctx, x, y, w, h, cut = 10) {
 }
 
 export function drawText(ctx, value, x, y, options = {}) {
+  const normalized = localizeFunctionalLiteral(value);
   const {
     size = 12,
     color = UI_TOKENS.color.text,
@@ -65,30 +77,30 @@ export function drawText(ctx, value, x, y, options = {}) {
     maxWidth,
   } = options;
   ctx.save();
-  ctx.direction = direction;
+  ctx.direction = normalized.localized ? 'rtl' : direction;
   ctx.textAlign = align;
   ctx.textBaseline = baseline;
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px ${UI_FONT}`;
-  if (maxWidth) ctx.fillText(String(value), x, y, maxWidth);
-  else ctx.fillText(String(value), x, y);
+  if (maxWidth) ctx.fillText(normalized.value, x, y, maxWidth);
+  else ctx.fillText(normalized.value, x, y);
   ctx.restore();
 }
 
-export function drawLocalizedText(ctx, i18n, value, x, y, options = {}) {
-  const rtl = i18n.isRtl;
+export function drawLocalizedText(ctx, controller, value, x, y, options = {}) {
+  const rtl = controller.isRtl;
   const align = options.align ?? (rtl ? 'right' : 'left');
   const direction = options.direction ?? (rtl ? 'rtl' : 'ltr');
   drawText(ctx, value, x, y, { ...options, align, direction });
 }
 
-export function wrapText(ctx, i18n, value, x, y, maxWidth, options = {}) {
+export function wrapText(ctx, controller, value, x, y, maxWidth, options = {}) {
   const text = String(value);
   const size = options.size ?? 11;
   const lineHeight = options.lineHeight ?? Math.round(size * 1.45);
   const maxLines = options.maxLines ?? 3;
-  const rtl = i18n.isRtl;
+  const rtl = controller.isRtl;
   const words = text.split(/\s+/);
   const lines = [];
   let line = '';
@@ -105,7 +117,7 @@ export function wrapText(ctx, i18n, value, x, y, maxWidth, options = {}) {
   }
   if (line && lines.length < maxLines) lines.push(line);
   ctx.restore();
-  lines.forEach((item, index) => drawLocalizedText(ctx, i18n, item, x, y + index * lineHeight, {
+  lines.forEach((item, index) => drawLocalizedText(ctx, controller, item, x, y + index * lineHeight, {
     size,
     color: options.color,
     weight: options.weight,

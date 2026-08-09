@@ -1,17 +1,17 @@
 {
   "id": "./?source=pwa",
-  "name": "حلبة الطلقة الواحدة",
+  "name": "One Bullet Arena",
   "short_name": "One Bullet",
-  "description": "اهزم كل موجة واختر قدرة جديدة في ساحة تتوسع تلقائيًا.",
-  "lang": "ar",
-  "dir": "rtl",
+  "description": "A tactical one-bullet arcade game built around ricochet, recovery, and survival in an expanding arena.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
-  "background_color": "#02040a",
-  "theme_color": "#02040a",
+  "background_color": "#02070c",
+  "theme_color": "#02070c",
   "categories": ["games", "entertainment"],
   "icons": [
     {

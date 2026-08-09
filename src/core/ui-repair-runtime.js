@@ -52,7 +52,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.syncDocumentCopy();
     this.upgradeFocusIndex = 0;
     this.menuSettingsOpen = false;
-    this.menuSettingsOpen = false;
+    this.deleteConfirmUntil = 0;
     window.addEventListener('keydown', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'l' && ['menu', 'paused'].includes(this.state)) {
@@ -175,14 +175,16 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     });
 
     if (options.meta) {
-      drawText(this.ctx, options.meta, this.rtl() ? rect.x + 18 : rect.x + rect.w - 18, rect.y + rect.h / 2 + 1, {
+      const metaX = this.rtl() ? rect.x + 18 : rect.x + rect.w - 18;
+      const metaOptions = {
         size: 7.8,
         color: options.primary ? C.amber : C.textSoft,
         weight: 900,
         align: this.rtl() ? 'left' : 'right',
         baseline: 'middle',
-        direction: 'ltr',
-      });
+      };
+      if (options.metaLocalized) this.localText(options.meta, metaX, rect.y + rect.h / 2 + 1, metaOptions);
+      else drawText(this.ctx, options.meta, metaX, rect.y + rect.h / 2 + 1, { ...metaOptions, direction: 'ltr' });
     }
     this.addUiRegion(rect.x, rect.y, rect.w, rect.h, action);
   }
@@ -220,25 +222,28 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   languageSelector(rect, key = 'lang') {
     const hover = this.mixUi(key, this.menuHover(rect), 0.22);
+    const rtl = this.rtl();
     drawSurface(this.ctx, rect, {
       fill: `rgba(6,17,25,${0.74 + hover * 0.08})`,
-      border: `rgba(105,215,244,${0.24 + hover * 0.16})`,
+      border: `rgba(83,205,245,${0.24 + hover * 0.16})`,
       cut: 8,
     });
-    drawUiIcon(this.ctx, 'language', rect.x + 18, rect.y + rect.h / 2, { color: C.cyan, scale: 0.62 });
-    this.localText(this.t('menu.language'), rect.x + 34, rect.y + rect.h / 2 + 1, {
+    const iconX = rtl ? rect.x + rect.w - 18 : rect.x + 18;
+    const labelX = rtl ? rect.x + rect.w - 34 : rect.x + 34;
+    drawUiIcon(this.ctx, 'language', iconX, rect.y + rect.h / 2, { color: C.cyan, scale: 0.62 });
+    this.localText(this.t('menu.language'), labelX, rect.y + rect.h / 2 + 1, {
       size: 7.4,
       color: C.textSoft,
       weight: 800,
-      align: 'left',
+      align: rtl ? 'right' : 'left',
       baseline: 'middle',
       direction: this.dir(),
     });
 
     const segW = 34;
     const gap = 4;
-    const enX = rect.x + rect.w - segW;
-    const arX = enX - gap - segW;
+    const arX = rtl ? rect.x : rect.x + rect.w - (segW * 2 + gap);
+    const enX = rtl ? rect.x + segW + gap : rect.x + rect.w - segW;
     const drawLocale = (code, x) => {
       const active = i18n.locale === code.toLowerCase();
       const segment = { x, y: rect.y + 5, w: segW, h: rect.h - 10 };
@@ -275,6 +280,18 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   toggleAudio() {
     const muted = this.audio.toggleMute();
     this.announce(this.t(muted ? 'status.audioMuted' : 'status.audioEnabled'));
+  }
+
+  requestCheckpointDelete() {
+    if (this.deleteConfirmUntil > this.elapsed) {
+      this.deleteConfirmUntil = 0;
+      this.clearCheckpoint();
+      return true;
+    }
+    this.deleteConfirmUntil = this.elapsed + 3;
+    this.audio.play('click');
+    this.announce(this.t('status.confirmDelete'));
+    return false;
   }
 
   drawGlobalBackground() {
@@ -572,8 +589,8 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const next = stage >= STAGE_WAVES.length - 1 ? null : STAGE_WAVES[stage + 1];
     if (next) {
       const captionX = rtl ? rect.x + 28 : rect.x + rect.w - 28;
-      drawText(this.ctx, `WAVE ${next}`, captionX, rect.y + rect.h - 16, {
-        size: 6.8, color: C.textMuted, weight: 820, align: rtl ? 'left' : 'right', direction: 'ltr',
+      this.localText(this.t('wave.incoming', { wave: next }), captionX, rect.y + rect.h - 16, {
+        size: 6.8, color: C.textMuted, weight: 820, align: rtl ? 'left' : 'right',
       });
     }
   }
@@ -610,8 +627,8 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.localText(this.t(`stage.${sector}`), textX, hero.y + 76, {
       size: 18, color: C.text, weight: 900, align: textAlign,
     });
-    drawText(this.ctx, `SECTOR ${String(sector + 1).padStart(2, '0')}`, textX, hero.y + 96, {
-      size: 7, color: C.cyan, weight: 850, align: textAlign, direction: 'ltr',
+    this.localText(`${this.t('stat.sector')} ${String(sector + 1).padStart(2, '0')}`, textX, hero.y + 96, {
+      size: 7, color: C.cyan, weight: 850, align: textAlign,
     });
     drawText(this.ctx, String(wave).padStart(2, '0'), textX, hero.y + 190, {
       size: 76, color: checkpoint ? C.amberBright : C.cyanBright, weight: 900, align: textAlign, direction: 'ltr',
@@ -631,29 +648,33 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     ];
     statData.forEach(([label, value, color, icon, localized], index) => {
       const colW = strip.w / 3;
-      const baseX = strip.x + index * colW;
-      if (index > 0) {
+      const visualIndex = rtl ? 2 - index : index;
+      const baseX = strip.x + visualIndex * colW;
+      if (visualIndex > 0) {
         this.ctx.fillStyle = 'rgba(255,255,255,0.08)';
         this.ctx.fillRect(baseX, strip.y + 12, 1, strip.h - 24);
       }
-      const iconX = baseX + 28;
+      const iconX = rtl ? baseX + colW - 28 : baseX + 28;
+      const valueX = rtl ? baseX + colW - 50 : baseX + 50;
+      const statAlign = rtl ? 'right' : 'left';
       drawUiIcon(this.ctx, icon, iconX, strip.y + strip.h / 2, { color, scale: 0.58 });
-      this.localText(label, baseX + 50, strip.y + 21, { size: 7.2, color: C.textMuted, weight: 760, align: 'left' });
-      if (localized) this.localText(value, baseX + 50, strip.y + 42, { size: 11.2, color, weight: 900, align: 'left' });
-      else drawText(this.ctx, value, baseX + 50, strip.y + 43, { size: 13.8, color, weight: 900, align: 'left', direction: 'ltr' });
+      this.localText(label, valueX, strip.y + 21, { size: 7.2, color: C.textMuted, weight: 760, align: statAlign });
+      if (localized) this.localText(value, valueX, strip.y + 42, { size: 11.2, color, weight: 900, align: statAlign });
+      else drawText(this.ctx, value, valueX, strip.y + 43, { size: 13.8, color, weight: 900, align: statAlign, direction: 'ltr' });
     });
 
     const primary = { x: hero.x + 82, y: hero.y + 306, w: hero.w - 164, h: 58 };
     this.uiButton(primary, checkpoint ? 'continue' : 'start', checkpoint ? this.t('menu.continue') : this.t('menu.start'),
       checkpoint ? () => this.continueFromCheckpoint() : () => this.startRun(),
-      { primary: true, icon: 'bullet', meta: `WAVE ${String(wave).padStart(2, '0')}` });
+      { primary: true, icon: 'bullet', meta: this.t('wave.incoming', { wave: String(wave).padStart(2, '0') }), metaLocalized: true });
 
     if (checkpoint) {
       const secondaryY = hero.y + 376;
       const gap = 18;
       const w = (primary.w - gap) / 2;
       this.uiButton({ x: primary.x, y: secondaryY, w, h: 42 }, 'new-run', this.t('menu.newRun'), () => this.startRun(), { icon: 'restart' });
-      this.uiButton({ x: primary.x + w + gap, y: secondaryY, w, h: 42 }, 'delete-save', this.t('menu.deleteSave'), () => this.clearCheckpoint(), { danger: true, icon: 'checkpoint' });
+      const deleteArmed = this.deleteConfirmUntil > this.elapsed;
+      this.uiButton({ x: primary.x + w + gap, y: secondaryY, w, h: 42 }, 'delete-save', deleteArmed ? this.t('menu.confirmDelete') : this.t('menu.deleteSave'), () => this.requestCheckpointDelete(), { danger: true, icon: 'checkpoint', active: deleteArmed });
     } else {
       drawText(this.ctx, 'WASD  •  MOUSE  •  Q  •  SPACE', hero.x + hero.w / 2, hero.y + 401, {
         size: 7, color: C.textMuted, weight: 820, align: 'center', direction: 'ltr',
@@ -1037,7 +1058,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
     const resume = { x: panel.x + 120, y: panel.y + 238, w: panel.w - 240, h: 58 };
     this.uiButton(resume, 'pause-resume', this.t('pause.resume'), () => this.resume(), {
-      primary: true, icon: 'bullet', meta: `WAVE ${String(this.wave).padStart(2, '0')}`,
+      primary: true, icon: 'bullet', meta: this.t('wave.incoming', { wave: String(this.wave).padStart(2, '0') }), metaLocalized: true,
     });
 
     const secondaryY = panel.y + 310;
@@ -1123,19 +1144,23 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     ];
     values.forEach(([label, value, color, icon, localized], index) => {
       const colW = strip.w / values.length;
-      const x = strip.x + index * colW;
-      if (index > 0) { this.ctx.fillStyle = 'rgba(255,255,255,0.07)'; this.ctx.fillRect(x, strip.y + 14, 1, strip.h - 28); }
-      drawUiIcon(this.ctx, icon, x + 26, strip.y + 35, { color, scale: 0.50 });
-      this.localText(label, x + 48, strip.y + 26, { size: 7, color: C.textMuted, weight: 760, align: 'left' });
-      if (localized) this.localText(value, x + 48, strip.y + 49, { size: 10.2, color, weight: 900, align: 'left' });
-      else drawText(this.ctx, value, x + 48, strip.y + 50, { size: 12.5, color, weight: 900, align: 'left', direction: 'ltr' });
+      const visualIndex = rtl ? values.length - 1 - index : index;
+      const x = strip.x + visualIndex * colW;
+      if (visualIndex > 0) { this.ctx.fillStyle = 'rgba(255,255,255,0.07)'; this.ctx.fillRect(x, strip.y + 14, 1, strip.h - 28); }
+      const iconX = rtl ? x + colW - 26 : x + 26;
+      const valueX = rtl ? x + colW - 48 : x + 48;
+      const statAlign = rtl ? 'right' : 'left';
+      drawUiIcon(this.ctx, icon, iconX, strip.y + 35, { color, scale: 0.50 });
+      this.localText(label, valueX, strip.y + 26, { size: 7, color: C.textMuted, weight: 760, align: statAlign });
+      if (localized) this.localText(value, valueX, strip.y + 49, { size: 10.2, color, weight: 900, align: statAlign });
+      else drawText(this.ctx, value, valueX, strip.y + 50, { size: 12.5, color, weight: 900, align: statAlign, direction: 'ltr' });
     });
 
     const primary = { x: panel.x + 236, y: panel.y + 414, w: panel.w - 472, h: 58 };
     this.uiButton(primary, checkpoint ? 'over-continue' : 'over-retry',
       checkpoint ? this.t('gameOver.continue') : this.t('gameOver.retry'),
       checkpoint ? () => this.continueFromCheckpoint() : () => this.startRun(),
-      { primary: true, icon: 'bullet', meta: checkpoint ? `WAVE ${checkpoint.wave}` : null });
+      { primary: true, icon: 'bullet', meta: checkpoint ? this.t('wave.incoming', { wave: checkpoint.wave }) : null, metaLocalized: Boolean(checkpoint) });
     const gap = 18;
     const w = (primary.w - gap) / 2;
     this.uiButton({ x: primary.x, y: panel.y + 484, w, h: 40 }, 'over-new', this.t('gameOver.retry'), () => this.startRun(), { icon: 'restart' });

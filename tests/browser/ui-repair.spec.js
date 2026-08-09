@@ -65,9 +65,11 @@ test('refined bilingual dashboard is balanced at 1920x1080 and keeps locale stat
   expect(await page.evaluate(() => localStorage.getItem('one-bullet-language'))).toBe('ar');
   await capture(page, testInfo, '02-dashboard-ar-1920');
 
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await setLocaleAndDraw(page, 'en');
-  await capture(page, testInfo, 'dashboard-en-laptop-1366');
+  for (const [width, height, name] of [[1366, 768, '1366'], [1440, 900, '1440'], [1600, 900, '1600'], [2560, 1440, '2560']]) {
+    await page.setViewportSize({ width, height });
+    await setLocaleAndDraw(page, 'en');
+    await capture(page, testInfo, `dashboard-en-${name}`);
+  }
   await page.setViewportSize({ width: 1280, height: 720 });
   await setLocaleAndDraw(page, 'ar');
   await capture(page, testInfo, 'dashboard-ar-1280');

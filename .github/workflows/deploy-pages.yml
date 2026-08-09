@@ -60,7 +60,7 @@ jobs:
           touch _site/.nojekyll
 
           EXPECTED_VERSION=$(node -p "require('./package.json').version")
-          printf '{"version":"%s","sha":"%s","channel":"hires-ui"}\n' "$EXPECTED_VERSION" "$GITHUB_SHA" > _site/release.json
+          printf '{"version":"%s","sha":"%s","channel":"smooth-runtime"}\n' "$EXPECTED_VERSION" "$GITHUB_SHA" > _site/release.json
 
           required_files=(
             index.html
@@ -68,6 +68,8 @@ jobs:
             styles/tokens.css
             styles/ui.css
             styles/responsive.css
+            styles/polish.css
+            styles/smooth-runtime.css
             sw.js
             manifest.webmanifest
             icons/app-icon.svg
@@ -75,8 +77,11 @@ jobs:
             src/release.js
             src/i18n.js
             src/ui-system.js
+            src/performance/frame-pacer.js
+            src/performance/quality-manager.js
             src/ui/icons.js
             src/ui/dom-ui.js
+            src/ui/dom-performance-bridge.js
             src/render/canvas-viewport.js
             src/core/game-events.js
             src/core/event-bus.js
@@ -105,11 +110,14 @@ jobs:
           done
 
           grep -Fq "const version = '$EXPECTED_VERSION'" _site/src/release-config.js
-          grep -Fq "channel: 'hires-ui'" _site/src/release-config.js
-          grep -Fq "src/ui/dom-ui.js" _site/sw.js
-          grep -Fq "src/render/canvas-viewport.js" _site/sw.js
-          grep -Fq "styles/ui.css" _site/sw.js
+          grep -Fq "channel: 'smooth-runtime'" _site/src/release-config.js
+          grep -Fq "src/performance/frame-pacer.js" _site/sw.js
+          grep -Fq "src/performance/quality-manager.js" _site/sw.js
+          grep -Fq "src/ui/dom-performance-bridge.js" _site/sw.js
+          grep -Fq "styles/smooth-runtime.css" _site/sw.js
           grep -Fq "OneBulletGlobalUiRuntime" _site/src/main.js
+          grep -Fq "FixedStepClock" _site/src/core/ui-repair-runtime.js
+          grep -Fq "AdaptiveQualityManager" _site/src/core/ui-repair-runtime.js
           grep -Fq "CanvasViewport" _site/src/core/ui-repair-runtime.js
           grep -Fq "DomUiController" _site/src/core/ui-repair-runtime.js
           grep -Fq "one-bullet-language" _site/src/i18n.js
@@ -118,7 +126,7 @@ jobs:
           grep -Fq "height: 100dvh" _site/game.css
           grep -Fq "\"version\":\"$EXPECTED_VERSION\"" _site/release.json
           grep -Fq "\"sha\":\"$GITHUB_SHA\"" _site/release.json
-          grep -Fq '"channel":"hires-ui"' _site/release.json
+          grep -Fq '"channel":"smooth-runtime"' _site/release.json
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -172,9 +180,9 @@ jobs:
 
             if grep -Fq "\"version\":\"$EXPECTED_VERSION\"" <<<"$RELEASE_BODY" \
               && grep -Fq "\"sha\":\"$GITHUB_SHA\"" <<<"$RELEASE_BODY" \
-              && grep -Fq '"channel":"hires-ui"' <<<"$RELEASE_BODY" \
+              && grep -Fq '"channel":"smooth-runtime"' <<<"$RELEASE_BODY" \
               && grep -Fq "const version = '$EXPECTED_VERSION'" <<<"$CONFIG_BODY" \
-              && grep -Fq "channel: 'hires-ui'" <<<"$CONFIG_BODY"; then
+              && grep -Fq "channel: 'smooth-runtime'" <<<"$CONFIG_BODY"; then
               echo "Live Pages release verified: $EXPECTED_VERSION ($GITHUB_SHA)"
               exit 0
             fi
@@ -215,7 +223,7 @@ jobs:
           LIVE_VERIFIED=false
           if [[ "$DEPLOY_RESULT" == "success" ]]; then LIVE_VERIFIED=true; fi
 
-          printf '{\n  "version": "%s",\n  "source_sha": "%s",\n  "run_id": "%s",\n  "build_result": "%s",\n  "deploy_result": "%s",\n  "live_verified": %s,\n  "channel": "hires-ui"\n}\n' \
+          printf '{\n  "version": "%s",\n  "source_sha": "%s",\n  "run_id": "%s",\n  "build_result": "%s",\n  "deploy_result": "%s",\n  "live_verified": %s,\n  "channel": "smooth-runtime"\n}\n' \
             "$EXPECTED_VERSION" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$BUILD_RESULT" "$DEPLOY_RESULT" "$LIVE_VERIFIED" \
             > verification/workflow-status.json
 

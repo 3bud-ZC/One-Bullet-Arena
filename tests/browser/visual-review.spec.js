@@ -14,17 +14,17 @@ async function attachCanvas(page, testInfo, name) {
   });
 }
 
-test('captures the v3.5 production-art release and existing combat states', async ({ page }, testInfo) => {
+test('captures the v3.5.1 UI repair release and existing combat states', async ({ page }, testInfo) => {
   test.setTimeout(60000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('3.5.0-production-art');
-  expect(menuSnapshot.releaseChannel).toBe('production-art');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.5.0-production-art');
+  expect(menuSnapshot.releaseVersion).toBe('3.5.1-ui-repair');
+  expect(menuSnapshot.releaseChannel).toBe('ui-repair');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.5.1-ui-repair');
   expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('3.5.0-production-art');
+  expect(menuSnapshot.eventFoundationVersion).toBe('3.5.1-ui-repair');
   expect(menuSnapshot.eventSchemaVersion).toBe(4);
   expect(menuSnapshot.gameEventBusActive).toBe(true);
   expect(menuSnapshot.combatDepthActive).toBe(true);
@@ -44,6 +44,10 @@ test('captures the v3.5 production-art release and existing combat states', asyn
   expect(menuSnapshot.productionArtRuntimeVersion).toBe('3.5.0-production-art');
   expect(menuSnapshot.productionArtRevision).toBe('production-command-suite-v1');
   expect(menuSnapshot.productionArtActive).toBe(true);
+  expect(menuSnapshot.uiRepairRuntimeVersion).toBe('3.5.1-ui-repair');
+  expect(menuSnapshot.uiRepairRevision).toBe('production-ui-repair-v1');
+  expect(menuSnapshot.uiRepairActive).toBe(true);
+  expect(menuSnapshot.uiDensity).toBe('balanced-production');
   expect(menuSnapshot.expandingWorldActive).toBe(true);
   expect(menuSnapshot.unifiedInterfaceLanguage).toBe(true);
   expect(menuSnapshot.stableHudDuringShake).toBe(true);
@@ -51,10 +55,10 @@ test('captures the v3.5 production-art release and existing combat states', asyn
   expect(menuSnapshot.collisionGeometryChanged).toBe(true);
   expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
   expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('3.5.0-production-art');
+  expect(menuSnapshot.uiLayoutVersion).toBe('3.5.1-ui-repair');
   expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
   expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'production-art-release-menu');
+  await attachCanvas(page, testInfo, 'ui-repair-release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -68,7 +72,7 @@ test('captures the v3.5 production-art release and existing combat states', asyn
     game.comboTimer = 2.4;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'production-art-combat-hud');
+  await attachCanvas(page, testInfo, 'ui-repair-combat-hud');
 
   const catchSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -145,7 +149,8 @@ test('captures the v3.5 production-art release and existing combat states', asyn
   expect(upgradeSnapshot.state).toBe('upgrade');
   expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
   expect(upgradeSnapshot.productionOverlaySuite).toBe(true);
-  await attachCanvas(page, testInfo, 'production-upgrade-cards');
+  expect(upgradeSnapshot.uiRepairActive).toBe(true);
+  await attachCanvas(page, testInfo, 'ui-repair-upgrade-cards');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -161,5 +166,5 @@ test('captures the v3.5 production-art release and existing combat states', asyn
     game.maxCombo = 11;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'production-game-over');
+  await attachCanvas(page, testInfo, 'ui-repair-game-over');
 });

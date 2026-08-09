@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-09
 
-## Current release candidate
+## Current production release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
 - Release: **v3.6.2 — Dashboard Command**
@@ -12,9 +12,11 @@ Last updated: 2026-08-09
 - Service Worker cache: `one-bullet-arena-v3.6.2-dashboard-command`
 - Canonical presentation owner: `OneBulletGlobalUiRuntime`
 - UI revision: `dashboard-reference-v2`
-- QA branch: `dashboard-reference-polish`
+- Production branch: `main`
+- Production merge: `f74f860afc6caa54fada5cca8c459bd25e601197`
 - Gameplay coordinate system: **1280×720 logical canvas preserved**
 - Checkpoint schema: **1 — unchanged**
+- Production status: **accepted and deployed**
 
 ## Dashboard Command scope
 
@@ -50,7 +52,7 @@ Game Over now uses the same tactical visual system as the dashboard:
 
 ### Visual system
 
-`src/ui-system.js` remains the shared presentation system and now carries the dashboard command refinements:
+`src/ui-system.js` remains the shared presentation system and carries the Dashboard Command refinements:
 
 - near-black/navy foundation;
 - controlled cyan structural accents;
@@ -74,7 +76,7 @@ Supported locales:
 - English (`en`, LTR)
 - العربية (`ar`, RTL)
 
-Behavior verified in the redesigned surfaces:
+Verified behavior:
 
 - persisted locale key remains `one-bullet-language`;
 - language changes update the active interface without reload;
@@ -120,25 +122,40 @@ Existing local checkpoint data remains compatible. Continue Run, New Run, checkp
 
 ## Automated verification
 
-Product HEAD used for visual acceptance before documentation update: `2bd934340849a5fb4dd0da287bee7b92210b8aa0`.
+### Product visual-acceptance HEAD — `2bd934340849a5fb4dd0da287bee7b92210b8aa0`
 
-### Verify #1199 — SUCCESS
-
-GitHub Actions ran the repository Verify workflow successfully.
-
-Observed result:
+**Verify #1199 — SUCCESS**
 
 - syntax/static verification: passed;
 - Node test suite: **85 tests, 85 passed, 0 failed**;
 - release identity: `3.6.2-dashboard-command`.
 
-### Browser Smoke #430 — SUCCESS
+**Browser Smoke #430 — SUCCESS**
 
-GitHub Actions ran the full Playwright Browser Smoke workflow successfully on the same product HEAD.
+- full Playwright Browser Smoke workflow passed;
+- browser artifact generated dashboard/game-state evidence across the repository browser matrix.
 
-The browser artifact includes dashboard and game-state screenshots across Chromium/Firefox/WebKit coverage and the repository's existing runtime, checkpoint, touch-safe-zone, combat, Warden, fullscreen, localization, and visual contracts.
+### Final documentation HEAD — `1788b1bbf6ebc962dc2b7edc1f628c8d288ff0dc`
 
-Documentation commits are required to pass the same Verify and Browser Smoke gates again before merge.
+- **Verify #1203 — SUCCESS**
+- **Browser Smoke #432 — SUCCESS**
+
+The merge was performed only after both final documentation gates were green.
+
+## Production deployment
+
+GitHub Pages deployment for production merge `f74f860afc6caa54fada5cca8c459bd25e601197` completed successfully.
+
+Deployment proof:
+
+- workflow run: `31329753211`;
+- version: `3.6.2-dashboard-command`;
+- build result: **success**;
+- deploy result: **success**;
+- live release verification: **true**;
+- channel: `global-ui`.
+
+The deployment workflow validates both `release.json` and the live `src/release-config.js` with cache-busting requests after Pages deployment.
 
 ## Visual QA
 
@@ -167,18 +184,19 @@ The manually inspected states showed no clipping, accidental overlap, normal-das
 
 ## Acceptance status
 
-Current status: **verified release candidate, pending final documentation gate and merge/deployment to `main`.**
+**v3.6.2 Dashboard Command is production accepted.**
 
-Acceptance already demonstrated on the product HEAD:
+Accepted qualities:
 
 - Current Run is the dominant dashboard focus;
 - Continue / Start is visually dominant without spanning the entire viewport;
 - Run Snapshot is compact and aligned;
 - World Progression communicates completed/current/future sectors;
 - utility controls form one coherent visual family;
-- Arabic and English dashboard layouts are both represented in visual QA;
+- Arabic and English dashboard layouts are represented in visual QA;
 - Game Over belongs to the same product language;
-- mobile landscape no longer uses the desktop side-by-side composition;
-- existing gameplay and saved-run semantics remain isolated from the presentation redesign.
+- mobile landscape uses a dedicated stacked composition;
+- existing gameplay and saved-run semantics remain isolated from the presentation redesign;
+- production Pages release was verified live after deployment.
 
-The final production acceptance requirement is a green Verify + Browser Smoke on the documentation HEAD, followed by a successful GitHub Pages deployment of `3.6.2-dashboard-command` from `main`.
+Real remaining limitation: the 2560×1440 state was generated and passed automated browser coverage but was not part of the manually opened screenshot subset; the manually reviewed desktop states were 1920×1080, 1366×768, and 1280×720 Arabic.

@@ -1,9 +1,9 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.4.0-expanding-world';
+  const version = '3.5.0-production-art';
   const release = Object.freeze({
     version,
     label: `v${version}`,
-    channel: 'expanding-world',
+    channel: 'production-art',
     cacheName: `one-bullet-arena-v${version}`,
     schemaVersion: 1,
   });

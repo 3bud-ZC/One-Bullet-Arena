@@ -22,6 +22,63 @@
 
 There are no currencies, hubs, difficulty presets, or meta-progression trees. Progression happens inside the run through upgrades, encounter pressure, skill execution, and world expansion.
 
+## v3.7.0 High-Resolution Presentation
+
+`3.7.0-hires-ui` separates **simulation resolution**, **Canvas render resolution**, and **application UI rendering**.
+
+### Rendering architecture
+
+- Gameplay simulation remains exactly **1280×720 logical coordinates**.
+- The arena, player, enemies, bullets, particles, combat effects, telegraphs, world camera, touch controls, and other world-space graphics remain Canvas2D.
+- The gameplay Canvas is rendered through a DPR-aware backing store and a single logical-to-physical transform.
+- The Canvas is always presented with a centered **16:9 contain** model; non-16:9 screens letterbox rather than stretch geometry.
+- Main Dashboard, desktop HUD, Pause, Upgrade Selection, Game Over, settings, language controls, run statistics, and world progression are semantic **HTML + CSS + SVG**.
+- The late-game minimap is a DOM/SVG projection of the real exploration/camera state on desktop.
+
+This removes the previous dependency on a 1280×720 rasterized Canvas for text-heavy player-facing UI while preserving deterministic gameplay coordinates.
+
+### HiDPI Canvas
+
+`src/render/canvas-viewport.js` owns display geometry and backing-store sizing:
+
+- reads `window.devicePixelRatio`;
+- clamps effective DPR using a performance ceiling and backing-pixel budget;
+- resizes on browser resize, orientation change, fullscreen transitions, visual viewport changes, and DPR changes;
+- maps logical 1280×720 drawing commands to the physical backing store with `ctx.setTransform()`;
+- keeps image smoothing enabled for the non-pixel-art renderer;
+- uses consistent round caps/joins and a bounded miter limit.
+
+Pointer and touch input continues to map from the CSS Canvas rectangle into logical game coordinates before the existing world-camera mapping is applied.
+
+### DOM presentation system
+
+The active presentation owner remains `OneBulletGlobalUiRuntime`; no additional “final UI” runtime was stacked on top.
+
+New presentation modules:
+
+- `src/ui/dom-ui.js` — semantic UI controller driven directly from current game state.
+- `src/ui/icons.js` — reusable inline SVG icon library using `currentColor` and consistent vector geometry.
+- `styles/tokens.css` — color, surface, radius, spacing, shadow, typography, and motion tokens.
+- `styles/ui.css` — premium Dashboard/HUD/overlay/component system.
+- `styles/responsive.css` — laptop, low-height, mobile-landscape, and reduced-motion composition.
+
+The DOM layer uses real buttons, focus-visible states, ARIA labels, CSS Grid/Flexbox, logical CSS properties, tabular numeric telemetry, transform-based HUD gauges, restrained blur, and layered surfaces.
+
+### Typography and localization
+
+The UI uses browser text rendering instead of Canvas text for migrated screens. This improves anti-aliasing, Arabic shaping, kerning, baseline handling, wrapping, accessibility, and scaling at 100–200% display scale.
+
+No external runtime font dependency was introduced. The font stack prioritizes modern system UI families and professional Arabic fallbacks so the offline/PWA contract remains intact.
+
+Localization remains centralized in `src/i18n.js`:
+
+- English (`en`, LTR)
+- العربية (`ar`, RTL)
+- preference stored under `one-bullet-language`
+- active UI updates without reload
+- document `lang` and `dir` follow the selected language
+- layout uses logical properties and progression direction mirrors in RTL
+
 ## Expanding world
 
 | Waves | World stage |
@@ -35,19 +92,7 @@ There are no currencies, hubs, difficulty presets, or meta-progression trees. Pr
 | 25–34 | Open Matrix |
 | 35+ | Final Belt |
 
-Late stages use a world-space camera, directional look-ahead, progressive zoom, player-relative spawning, exploration tracking, and a compact minimap.
-
-## Late-game encounter director
-
-From Wave 10 onward, encounters rotate through distinct bounded pressure profiles:
-
-- **Rush** — fast Charger pressure.
-- **Crossfire** — stronger ranged Sniper pressure.
-- **Swarm** — Splitter-heavy crowd pressure.
-- **Siege** — Wardens and Brutes create armored fights.
-- **Hunters** — mixed elite pressure.
-
-The active enemy population continues scaling into the late game up to a bounded cap of **18**.
+Late stages use a world-space camera, directional look-ahead, progressive zoom, player-relative spawning, exploration tracking, and a compact SVG minimap in the desktop HUD.
 
 ## Combat
 
@@ -61,55 +106,6 @@ The active enemy population continues scaling into the late game up to a bounded
 - Sub-stepped bullet simulation prevents high-speed tunneling.
 - Perfect catches, precision shots, bank-shot chains, momentum, and temporary Overdrive reward skilled execution.
 
-## v3.6.2 Dashboard Command
-
-`3.6.2-dashboard-command` refines the canonical `OneBulletGlobalUiRuntime` into a premium tactical command surface inspired by the game's one-bullet / ricochet identity.
-
-The dashboard now includes:
-
-- a compact ONE BULLET ARENA identity header with the `PRECISION. DODGE. SURVIVE.` tagline;
-- one unified utility family for language, audio, fullscreen, and settings;
-- a dominant **Current Run** surface driven by the real checkpoint, wave, score, upgrades, and sector state;
-- a lightweight procedural tactical radar that fills the former dead center without adding a fake gameplay mechanic;
-- a compact real-data stat strip for Score, Upgrades, and Checkpoint state;
-- a controlled gold Continue / Start CTA with smaller New Run and destructive checkpoint actions;
-- a structured **Run Snapshot** for Wave, Score, Upgrades, Best Wave, High Score, and Sector;
-- a data-driven eight-stage World Progression path sourced from the existing stage thresholds;
-- a two-step localized checkpoint-delete confirmation while keeping the existing checkpoint storage semantics;
-- a matching Run End / Game Over presentation using the same tactical visual system;
-- a dedicated stacked touch/mobile dashboard instead of shrinking the desktop two-column composition;
-- no production FPS/debug overlay.
-
-The deterministic **1280×720 logical gameplay canvas remains unchanged** and scales to the browser viewport.
-
-## English + Arabic localization
-
-The active UI has centralized translations in `src/i18n.js`.
-
-Supported languages:
-
-- English (`en`, LTR)
-- العربية (`ar`, RTL)
-
-Behavior:
-
-- preference persists under `one-bullet-language`;
-- saved preference wins on startup;
-- otherwise Arabic browser locales start in Arabic;
-- all other browser locales start in English;
-- switching language updates the active interface immediately without a page reload;
-- document `lang` and `dir` update with the selected language;
-- the AR / EN selector mirrors correctly in RTL and clearly marks the active locale;
-- dashboard stat strips, progression, Game Over metrics, icons, and functional metadata mirror in Arabic while numeric game values remain readable;
-- functional UI copy does not intentionally mix both languages at the same time;
-- game-control keys remain Latin where appropriate.
-
-Language can be switched from the Main Menu and Pause surfaces, or with `L` while those surfaces are active.
-
-## Run upgrades
-
-Every cleared wave requires one upgrade selection before the next wave begins. Twelve stackable upgrades cover bullet damage and velocity, ricochet depth, electrical area damage, recall, mobility, health, shields, and a final second chance.
-
 ## Controls
 
 | Action | Desktop | Mobile landscape |
@@ -122,30 +118,24 @@ Every cleared wave requires one upgrade selection before the next wave begins. T
 | Select upgrade | Click or `1`, `2`, `3` | Tap a choice |
 | Language | `L` on Menu/Pause | Language selector |
 | Mute | `M` / UI control | UI control |
-| Fullscreen | Direct play interaction or `F` | Browser/app fullscreen |
+| Fullscreen | `F` / UI control | Browser/app fullscreen |
 
 ## Active architecture
 
-The project keeps accepted gameplay systems isolated while one final layer owns player-facing presentation:
-
 - `src/main.js` — boots `OneBulletGlobalUiRuntime`, exposes QA hooks, handles fullscreen and service-worker updates.
+- `src/render/canvas-viewport.js` — canonical HiDPI Canvas sizing, contain geometry, backing-store and input-coordinate conversion.
+- `src/ui/dom-ui.js` — crisp DOM application UI bound to real game state.
+- `src/ui/icons.js` — vector SVG icon system.
 - `src/i18n.js` — locale selection, persistence, translation, number formatting, and document direction.
-- `src/ui-system.js` — reusable visual tokens, typography, angular surfaces, button states, gauges, procedural glyphs, wrapping, and tactical background rendering.
-- `src/core/ui-repair-runtime.js` — **canonical final presentation owner**; owns Dashboard, HUD, minimap, touch UI, Pause, Game Over, Upgrade Selection, banners, and the responsive mobile dashboard.
+- `src/core/ui-repair-runtime.js` — **canonical final presentation owner**; bridges the Canvas world to the DOM UI and removes obsolete Canvas ownership of migrated surfaces.
 - `src/core/production-art-runtime.js` — retained lower-level arena presentation foundation.
-- `src/core/unified-ui-runtime.js` — retained camera-safe-zone and transition compatibility layer; its old UI is overridden by the canonical Global UI owner.
+- `src/core/unified-ui-runtime.js` — retained camera-safe-zone and transition compatibility layer; its old screen UI is overridden by the canonical Global UI owner.
 - `src/core/world-expansion-runtime.js` — expanding world, camera, exploration, player-relative spawning, and encounter integration.
-- `src/core/dashboard-polish-runtime.js` — legacy lower presentation layer retained only for runtime compatibility; it no longer owns the active dashboard.
-- `src/core/visual-overhaul-runtime.js` — environmental/combat rendering foundation.
-- `src/core/world-2d-runtime.js` — accepted top-down 2D world rendering.
-- `src/core/warden-runtime.js` — Warden guard mechanics.
 - `src/core/checkpoint-runtime.js` — backward-compatible local checkpoint progression.
 - `src/core/combat-depth-runtime.js` — precision, bank-shot, momentum, and Overdrive systems.
 - `src/game.js` — base state machine and combat loop.
 - `src/game-data.js` — enemy, encounter, wave-scaling, and upgrade data.
 - `src/arena.js` — collision geometry and world expansion milestones.
-
-No new presentation runtime was stacked on top of the existing Global UI; the canonical owner itself was refined.
 
 ## Local development and verification
 
@@ -154,17 +144,16 @@ npm install
 npm run verify
 npx playwright install chromium firefox webkit
 npm run test:browser
-# complete gate
 npm run verify:all
 ```
 
-The browser suite captures English and Arabic dashboard/checkpoint states, combat HUD, Pause, Upgrade Selection, Game Over, expanded-world/minimap, orientation handling, and mobile landscape. Dashboard visual QA generates coverage for **1366×768, 1440×900, 1600×900, 1920×1080, 2560×1440, 1280×720**, plus approximately **844×390 mobile landscape**.
+Browser verification covers the Dashboard at **1280×720, 1366×768, 1440×900, 1600×900, 1920×1080, and 2560×1440**, non-16:9 desktop sizes including **1792×832 and 1680×1050**, explicit HiDPI device scale, mobile landscape around **844×390**, pointer mapping, localization, Pause, Upgrade Selection, Game Over, and combat HUD states.
 
 ## Saved progression compatibility
 
-The v3.6.2 dashboard release intentionally preserves:
+The v3.7 presentation architecture intentionally preserves:
 
-- existing checkpoint schema and saved local checkpoint data;
+- checkpoint schema and existing local checkpoint data;
 - Continue Run / checkpoint restore behavior;
 - scoring, best-wave, and high-score state;
 - upgrades and run progression;
@@ -175,4 +164,4 @@ The v3.6.2 dashboard release intentionally preserves:
 
 ## Status
 
-[`STATUS.md`](./STATUS.md) is the only project status file and the source of truth for release verification and visual QA acceptance.
+[`STATUS.md`](./STATUS.md) is the only project status file and remains the source of truth for release verification and visual QA acceptance.

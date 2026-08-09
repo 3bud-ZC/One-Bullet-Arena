@@ -35,7 +35,7 @@ async function createWaveFiveCheckpoint(page) {
 test('checkpoint runtime boots without changing the normal new-run path', async ({ page }) => {
   await loadGame(page);
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.6.2-dashboard-command');
+  expect(menu.releaseVersion).toBe('3.7.0-hires-ui');
   expect(menu.globalUiActive).toBe(true);
   expect(menu.checkpointRuntimeVersion).toBe('3.0.0-checkpoint');
   expect(menu.checkpointSchemaVersion).toBe(1);

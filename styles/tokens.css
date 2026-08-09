@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  --font-ui-latin: Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-ui-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-ui: var(--font-ui-latin);
+
+  --bg-0: #02070c;
+  --bg-1: #041019;
+  --bg-2: #071722;
+  --surface-0: rgba(3, 12, 19, 0.72);
+  --surface-1: rgba(6, 18, 27, 0.78);
+  --surface-2: rgba(9, 25, 36, 0.84);
+  --surface-elevated: rgba(9, 23, 33, 0.94);
+  --surface-hover: rgba(12, 31, 43, 0.92);
+
+  --line-soft: rgba(123, 205, 232, 0.11);
+  --line: rgba(123, 205, 232, 0.18);
+  --line-strong: rgba(123, 205, 232, 0.34);
+  --text-strong: #f5f8fa;
+  --text: #dce8ed;
+  --text-soft: #9fb5bf;
+  --text-muted: #738c98;
+
+  --cyan: #6dd7f2;
+  --cyan-strong: #8ce5fb;
+  --cyan-soft: rgba(109, 215, 242, 0.14);
+  --amber: #e7b84d;
+  --amber-strong: #f4cf78;
+  --amber-soft: rgba(231, 184, 77, 0.14);
+  --green: #58d79c;
+  --green-soft: rgba(88, 215, 156, 0.14);
+  --red: #e36a79;
+  --red-soft: rgba(227, 106, 121, 0.12);
+
+  --shadow-ambient: 0 24px 70px rgba(0, 0, 0, 0.36);
+  --shadow-contact: 0 7px 20px rgba(0, 0, 0, 0.24);
+  --shadow-float: 0 30px 90px rgba(0, 0, 0, 0.52);
+  --inset-highlight: inset 0 1px rgba(255, 255, 255, 0.035);
+
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 17px;
+  --radius-xl: 22px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --text-xs: clamp(0.72rem, 0.68rem + 0.12vw, 0.8rem);
+  --text-sm: clamp(0.82rem, 0.77rem + 0.16vw, 0.94rem);
+  --text-md: clamp(0.95rem, 0.88rem + 0.2vw, 1.08rem);
+  --text-lg: clamp(1.12rem, 1rem + 0.36vw, 1.38rem);
+  --text-xl: clamp(1.55rem, 1.25rem + 0.8vw, 2.15rem);
+  --text-display: clamp(2.2rem, 1.6rem + 2.2vw, 4.25rem);
+  --text-metric: clamp(2.55rem, 1.9rem + 2vw, 4.8rem);
+
+  --ease-premium: cubic-bezier(.2, .75, .25, 1);
+  --motion-fast: 140ms;
+  --motion-normal: 190ms;
+}
+
+html[lang="ar"] {
+  --font-ui: var(--font-ui-arabic);
+}

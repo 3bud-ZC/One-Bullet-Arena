@@ -6,8 +6,10 @@ if (!RELEASE) throw new Error('Release configuration failed to initialize in the
 const CACHE_NAME = RELEASE.cacheName;
 const CACHE_PREFIX = 'one-bullet-arena-v';
 const APP_SHELL = [
-  './', './index.html', './game.css', './manifest.webmanifest', './icons/app-icon.svg',
+  './', './index.html', './game.css', './styles/tokens.css', './styles/ui.css', './styles/responsive.css',
+  './manifest.webmanifest', './icons/app-icon.svg',
   './src/release-config.js', './src/release.js', './src/i18n.js', './src/ui-system.js', './src/main.js', './src/game.js',
+  './src/render/canvas-viewport.js', './src/ui/icons.js', './src/ui/dom-ui.js',
   './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js',
   './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
   './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',

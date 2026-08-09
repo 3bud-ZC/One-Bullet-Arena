@@ -1,4 +1,11 @@
-import { clamp, normalize } from './arena.js';
+import {
+  circleOverlap,
+  circleRectOverlap,
+  clamp,
+  normalize,
+  pointInsideBounds,
+} from './arena.js';
+import { enemyScaleForWave } from './game-data.js';
 import { OneBulletPolishRuntime } from './polish-runtime.js';
 import { TOUCH_LAYOUT } from './ui-renderer.js';
 
@@ -91,8 +98,50 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
     return analogMovementVector(this.keys, this.touchMove);
   }
 
+  updateEnemies(dt) {
+    const scale = enemyScaleForWave(this.wave);
+    const enemies = this.enemies;
+    for (let index = 0; index < enemies.length; index += 1) {
+      const enemy = enemies[index];
+      enemy.spawnTime = Math.max(0, enemy.spawnTime - dt);
+      enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+      enemy.attackCooldown -= dt;
+      enemy.phase += dt * 2;
+      const toPlayer = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
+
+      if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
+      else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
+      else {
+        const orbit = enemy.type === 'scout' ? Math.sin(enemy.phase) * 0.18 : 0;
+        enemy.x += (toPlayer.x - toPlayer.y * orbit) * enemy.speed * dt;
+        enemy.y += (toPlayer.y + toPlayer.x * orbit) * enemy.speed * dt;
+      }
+      this.constrainCombatCircle(enemy);
+      if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);
+    }
+    this.separateEnemies();
+  }
+
   separateEnemies() {
     return separateOverlappingEnemies(this.enemies, (enemy) => this.constrainCombatCircle(enemy));
+  }
+
+  updateEnemyShots(dt) {
+    const shots = this.enemyShots;
+    let write = 0;
+    for (let read = 0; read < shots.length; read += 1) {
+      const shot = shots[read];
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+      shot.life -= dt;
+      if (this.arenaStage.obstacles.some((rect) => circleRectOverlap(shot, rect))) shot.life = 0;
+      if (shot.life > 0 && circleOverlap(shot, this.player)) {
+        shot.life = 0;
+        this.damagePlayer(shot.x, shot.y);
+      }
+      if (shot.life > 0 && pointInsideBounds(shot, this.arenaStage.bounds, 20)) shots[write++] = shot;
+    }
+    shots.length = write;
   }
 
   update(dt) {
@@ -141,6 +190,7 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       analogTouchMovement: true,
       responsiveMovementDuringHitStop: true,
       deterministicEnemySeparation: true,
+      allocationReducedCombatLoops: true,
     };
   }
 }

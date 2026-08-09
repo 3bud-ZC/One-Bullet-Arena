@@ -37,13 +37,15 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.match(source, /visualOverhaulActive: true/);
 });
 
-test('visual, dashboard, world, unified UI, and production art form one runtime chain', async () => {
+test('visual, dashboard, world, unified UI, production art, and UI repair form one runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const expansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
   const unifiedSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
   const productionSource = await readFile(new URL('../src/core/production-art-runtime.js', import.meta.url), 'utf8');
+  const repairSource = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
+
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(dashboardSource, /command-deck-v12/);
   assert.match(expansionSource, /extends OneBulletDashboardPolishRuntime/);
@@ -51,9 +53,12 @@ test('visual, dashboard, world, unified UI, and production art form one runtime 
   assert.match(unifiedSource, /unifiedInterfaceLanguage: true/);
   assert.match(productionSource, /extends OneBulletUnifiedUiRuntime/);
   assert.match(productionSource, /production-command-suite-v1/);
-  assert.match(mainSource, /OneBulletProductionArtRuntime/);
+  assert.match(repairSource, /extends OneBulletProductionArtRuntime/);
+  assert.match(repairSource, /production-ui-repair-v1/);
+  assert.match(mainSource, /OneBulletUiRepairRuntime/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/unified-ui-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/production-art-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/ui-repair-runtime\.js/);
 });

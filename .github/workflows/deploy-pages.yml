@@ -33,6 +33,16 @@ jobs:
       - name: Verify source and browser contracts
         run: npm run verify:all
 
+      - name: Upload browser verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-verification-${{ github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
@@ -103,7 +113,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
     environment:
@@ -116,6 +126,12 @@ jobs:
           sparse-checkout: |
             package.json
           sparse-checkout-cone-mode: false
+
+      - name: Download browser verification evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-verification-${{ github.sha }}
+          path: verification-evidence
 
       - name: Deploy to GitHub Pages
         id: deployment
@@ -160,3 +176,31 @@ jobs:
           echo "release-config.js response:"
           printf '%s\n' "$CONFIG_BODY"
           exit 1
+
+      - name: Persist verified deployment proof
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          EXPECTED_VERSION=$(node -p "require('./package.json').version")
+          SOURCE_SHA="$GITHUB_SHA"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B deployment-proof
+
+          rm -rf verification
+          mkdir -p verification/screenshots
+          printf '{\n  "version": "%s",\n  "source_sha": "%s",\n  "page_url": "%s",\n  "live_verified": true,\n  "verify_all_passed": true,\n  "channel": "ui-repair"\n}\n' \
+            "$EXPECTED_VERSION" "$SOURCE_SHA" "$PAGE_URL" > verification/deployment-proof.json
+
+          find verification-evidence -type f -name '*.png' -print0 | while IFS= read -r -d '' image; do
+            base=$(basename "$image")
+            dir=$(basename "$(dirname "$image")")
+            cp "$image" "verification/screenshots/${dir}-${base}"
+          done
+
+          git add -f verification
+          git commit -m "proof: verified Pages $EXPECTED_VERSION at $SOURCE_SHA"
+          git push --force origin deployment-proof

@@ -74,6 +74,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       bilingualUi: true,
       vectorIconSystem: true,
       browserTypography: true,
+      hiDpiFeedbackTransformGuard: true,
       legacyUiOverridesBypassed: true,
     };
   }
@@ -90,8 +91,22 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     document.title = i18n.t('brand.title');
   }
 
+  prepareHiDpiFeedbackOrder() {
+    if (!Array.isArray(this.feedbackEvents) || this.feedbackEvents.length < 2) return;
+    const muzzleIndex = this.feedbackEvents.findIndex((event) => event?.type === 'muzzle');
+    if (muzzleIndex < 0 || muzzleIndex === this.feedbackEvents.length - 1) return;
+
+    // The inherited muzzle renderer intentionally resets its local transform at
+    // the end of the flash. One Bullet Arena can only have one active muzzle
+    // flash, so render it last and let the enclosing save/restore restore the
+    // logical HiDPI transform before any later world layer is drawn.
+    const [muzzle] = this.feedbackEvents.splice(muzzleIndex, 1);
+    this.feedbackEvents.push(muzzle);
+  }
+
   draw() {
     this.canvasViewport?.beginFrame(this.ctx);
+    this.prepareHiDpiFeedbackOrder();
     super.draw();
     this.domUi?.sync();
   }

@@ -52,6 +52,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.syncDocumentCopy();
     this.upgradeFocusIndex = 0;
     this.menuSettingsOpen = false;
+    this.menuSettingsOpen = false;
     window.addEventListener('keydown', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'l' && ['menu', 'paused'].includes(this.state)) {

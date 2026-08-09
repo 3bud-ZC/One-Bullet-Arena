@@ -313,6 +313,11 @@ export function drawUiIcon(ctx, kind, x, y, options = {}) {
       for (let i = 0; i < 8; i += 1) { const a = i * Math.PI / 4; line(Math.cos(a) * 7, Math.sin(a) * 7, Math.cos(a) * 11, Math.sin(a) * 11); } break;
     case 'check':
       line(-8, 0, -2, 6, 9, -7); break;
+    case 'settings':
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 8; i += 1) { const a = i * Math.PI / 4; line(Math.cos(a) * 7, Math.sin(a) * 7, Math.cos(a) * 11, Math.sin(a) * 11); } break;
+    case 'check':
+      line(-8, 0, -2, 6, 9, -7); break;
     case 'health':
       ctx.beginPath(); ctx.moveTo(0, 9); ctx.bezierCurveTo(-2, 5, -10, 0, -10, -5);
       ctx.bezierCurveTo(-10, -10, -3, -11, 0, -6); ctx.bezierCurveTo(3, -11, 10, -10, 10, -5);

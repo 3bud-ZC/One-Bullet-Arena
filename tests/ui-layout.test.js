@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { RELEASE_VERSION } from '../src/release.js';
 import { UI_LAYOUT_VERSION, bulletHudCopy, compactHudLayout } from '../src/ui-layout-runtime.js';
 
 test('UI release identity follows the canonical release source', () => {
-  assert.equal(UI_LAYOUT_VERSION, '3.6.0-global-ui');
+  assert.equal(UI_LAYOUT_VERSION, RELEASE_VERSION);
 });
 
 test('legacy bullet HUD helpers remain deterministic for gameplay compatibility', () => {

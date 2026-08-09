@@ -50,9 +50,9 @@ test('refined bilingual dashboard is balanced at 1920x1080 and keeps locale stat
   await loadGame(page, 'en');
 
   let snapshot = await makeCheckpoint(page, 64);
-  expect(snapshot.releaseVersion).toBe('3.6.1-ui-refinement');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.6.1-ui-refinement');
-  expect(snapshot.globalUiRevision).toBe('production-refinement-v1');
+  expect(snapshot.releaseVersion).toBe('3.6.2-dashboard-command');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.6.2-dashboard-command');
+  expect(snapshot.globalUiRevision).toBe('dashboard-reference-v2');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.visualRefinementActive).toBe(true);
   expect(snapshot.locale).toBe('en');

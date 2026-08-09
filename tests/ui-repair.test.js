@@ -8,9 +8,9 @@ import {
 } from '../src/core/ui-repair-runtime.js';
 
 test('canonical UI runtime exposes the v3.6.1 refinement contract', () => {
-  assert.equal(GLOBAL_UI_RUNTIME_VERSION, '3.6.1-ui-refinement');
+  assert.equal(GLOBAL_UI_RUNTIME_VERSION, '3.6.2-dashboard-command');
   assert.equal(UI_REPAIR_RUNTIME_VERSION, GLOBAL_UI_RUNTIME_VERSION);
-  assert.equal(GLOBAL_UI_REVISION, 'production-refinement-v1');
+  assert.equal(GLOBAL_UI_REVISION, 'dashboard-reference-v2');
 });
 
 test('global UI runtime canonically owns player-facing refinement without gameplay mutation', async () => {

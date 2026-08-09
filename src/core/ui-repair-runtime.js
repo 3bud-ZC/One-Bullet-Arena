@@ -18,8 +18,8 @@ import {
 } from '../ui-system.js';
 import { OneBulletProductionArtRuntime } from './production-art-runtime.js';
 
-export const GLOBAL_UI_RUNTIME_VERSION = '3.6.1-ui-refinement';
-export const GLOBAL_UI_REVISION = 'production-refinement-v1';
+export const GLOBAL_UI_RUNTIME_VERSION = '3.6.2-dashboard-command';
+export const GLOBAL_UI_REVISION = 'dashboard-reference-v2';
 export const UI_REPAIR_RUNTIME_VERSION = GLOBAL_UI_RUNTIME_VERSION;
 export const UI_REPAIR_REVISION = GLOBAL_UI_REVISION;
 
@@ -51,6 +51,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     });
     this.syncDocumentCopy();
     this.upgradeFocusIndex = 0;
+    this.menuSettingsOpen = false;
     window.addEventListener('keydown', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'l' && ['menu', 'paused'].includes(this.state)) {
@@ -189,25 +190,29 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const hover = this.mixUi(key, this.menuHover(rect), 0.22);
     const active = options.active ?? false;
     const accent = options.accent || C.cyan;
+    const rtl = Boolean(options.rtl);
     drawSurface(this.ctx, rect, {
-      fill: `rgba(6,17,25,${0.72 + hover * 0.10})`,
-      border: active ? withAlpha(accent, '55') : `rgba(115,164,184,${0.18 + hover * 0.16})`,
+      fill: `rgba(4,14,22,${0.76 + hover * 0.08})`,
+      border: active ? withAlpha(accent, '62') : `rgba(115,184,210,${0.18 + hover * 0.16})`,
       cut: 7,
+      accent: hover > 0.12 ? accent : null,
     });
+    const iconX = rtl ? rect.x + rect.w - 17 : rect.x + 17;
     if (options.icon) {
-      drawUiIcon(this.ctx, options.icon, rect.x + 17, rect.y + rect.h / 2, {
+      drawUiIcon(this.ctx, options.icon, iconX, rect.y + rect.h / 2, {
         color: active ? accent : C.textSoft,
-        scale: 0.62,
+        scale: 0.60,
         active: options.icon !== 'audio' || !this.audio.settings.muted,
       });
     }
-    drawText(this.ctx, textValue, rect.x + (options.icon ? 32 : 12), rect.y + rect.h / 2 + 1, {
-      size: 7.6,
+    const textX = rtl ? rect.x + rect.w - (options.icon ? 32 : 12) : rect.x + (options.icon ? 32 : 12);
+    this.localText(textValue, textX, rect.y + rect.h / 2 + 1, {
+      size: 7.4,
       color: active ? (options.accent || C.cyanBright) : C.textSoft,
       weight: 850,
-      align: 'left',
+      align: rtl ? 'right' : 'left',
       baseline: 'middle',
-      direction: options.direction || 'ltr',
+      direction: options.direction || this.dir(),
     });
     this.addUiRegion(rect.x, rect.y, rect.w, rect.h, action);
   }
@@ -273,63 +278,173 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   drawGlobalBackground() {
     drawTrajectoryBackground(this.ctx, WIDTH, HEIGHT, this.elapsed, this.reducedMotion);
-    this.ctx.save();
-    this.ctx.strokeStyle = 'rgba(105,215,244,0.07)';
-    this.ctx.lineWidth = 1;
-    const sectors = [
-      { x: 94, y: 164, w: 330, h: 226 },
-      { x: 842, y: 126, w: 326, h: 188 },
-      { x: 916, y: 434, w: 242, h: 146 },
-    ];
-    for (const rect of sectors) {
-      angularPath(this.ctx, rect.x, rect.y, rect.w, rect.h, 18);
-      this.ctx.stroke();
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(83,205,245,0.055)';
+    ctx.lineWidth = 1;
+    const horizon = 112;
+    for (let i = 0; i < 4; i += 1) {
+      const inset = 26 + i * 18;
+      angularPath(ctx, inset, horizon + i * 7, WIDTH - inset * 2, HEIGHT - horizon - 46 - i * 12, 22);
+      ctx.globalAlpha = 0.45 - i * 0.08;
+      ctx.stroke();
     }
-    this.ctx.restore();
+    ctx.globalAlpha = 1;
+    const scanX = this.reducedMotion ? WIDTH * 0.54 : ((this.elapsed * 22) % (WIDTH + 260)) - 130;
+    const scan = ctx.createLinearGradient(scanX - 90, 0, scanX + 90, 0);
+    scan.addColorStop(0, 'rgba(83,205,245,0)');
+    scan.addColorStop(0.5, 'rgba(83,205,245,0.028)');
+    scan.addColorStop(1, 'rgba(83,205,245,0)');
+    ctx.fillStyle = scan;
+    ctx.fillRect(0, 106, WIDTH, HEIGHT - 106);
+    ctx.restore();
   }
 
   drawTopUtility() {
     const rtl = this.rtl();
-    const identityX = rtl ? WIDTH - 64 : 64;
-    const identityAlign = rtl ? 'right' : 'left';
+    const markX = rtl ? WIDTH - 62 : 62;
+    const textX = rtl ? WIDTH - 106 : 106;
+    const align = rtl ? 'right' : 'left';
+    const ctx = this.ctx;
 
-    drawText(this.ctx, this.t('brand.name'), identityX, 34, {
-      size: 9.5, color: C.cyan, weight: 900, align: identityAlign, direction: 'ltr',
+    ctx.save();
+    ctx.strokeStyle = 'rgba(83,205,245,0.72)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i += 1) {
+      const a = Math.PI / 3 * i - Math.PI / 6;
+      const x = markX + Math.cos(a) * 24;
+      const y = 52 + Math.sin(a) * 24;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    drawTargetGlyph(ctx, markX, 52, 13, C.cyan);
+    drawBulletGlyph(ctx, markX, 52, { color: C.amberBright, scale: 0.42, angle: -Math.PI / 2 });
+    ctx.restore();
+
+    drawText(ctx, this.t('brand.name'), textX, 39, {
+      size: 17.5, color: C.text, weight: 900, align, direction: 'ltr',
     });
-    this.localText(this.t('brand.title'), identityX, 63, {
-      size: 22, color: C.text, weight: 900, align: identityAlign,
+    this.localText(this.t('brand.shortMantra'), textX, 61, {
+      size: 7.4, color: C.cyan, weight: 820, align,
     });
-    drawText(this.ctx, `v${RELEASE_VERSION}`, identityX, 82, {
-      size: 6.8, color: C.textMuted, weight: 800, align: identityAlign, direction: 'ltr',
+    drawText(ctx, `v${RELEASE_VERSION}`, textX, 78, {
+      size: 6.4, color: C.textMuted, weight: 760, align, direction: 'ltr',
     });
 
-    const utilityStart = rtl ? 64 : 802;
-    this.languageSelector({ x: utilityStart, y: 31, w: 178, h: 38 }, 'top-language');
+    const totalW = 494;
+    const start = rtl ? 54 : WIDTH - 54 - totalW;
+    this.languageSelector({ x: start, y: 31, w: 148, h: 38 }, 'top-language');
     this.utilityChip(
-      { x: utilityStart + 188, y: 31, w: 105, h: 38 },
+      { x: start + 156, y: 31, w: 102, h: 38 },
       'top-audio',
       this.audio.settings.muted ? this.t('menu.muted') : this.t('menu.audio'),
       () => this.toggleAudio(),
-      {
-        icon: 'audio',
-        active: !this.audio.settings.muted,
-        accent: this.audio.settings.muted ? C.red : C.green,
-        direction: this.dir(),
-      },
+      { icon: 'audio', active: !this.audio.settings.muted, accent: this.audio.settings.muted ? C.red : C.green, rtl, direction: this.dir() },
     );
     this.utilityChip(
-      { x: utilityStart + 303, y: 31, w: 111, h: 38 },
+      { x: start + 266, y: 31, w: 118, h: 38 },
       'top-fullscreen',
       this.t('menu.fullscreen'),
       () => this.toggleFullscreen(),
-      { icon: 'fullscreen', direction: this.dir() },
+      { icon: 'fullscreen', rtl, direction: this.dir() },
+    );
+    this.utilityChip(
+      { x: start + 392, y: 31, w: 102, h: 38 },
+      'top-settings',
+      this.t('menu.settings'),
+      () => { this.menuSettingsOpen = !this.menuSettingsOpen; },
+      { icon: 'settings', active: this.menuSettingsOpen, rtl, direction: this.dir() },
     );
 
-    this.ctx.strokeStyle = C.line;
-    this.ctx.beginPath();
-    this.ctx.moveTo(64, 100);
-    this.ctx.lineTo(WIDTH - 64, 100);
-    this.ctx.stroke();
+    ctx.strokeStyle = 'rgba(116,188,216,0.14)';
+    ctx.beginPath();
+    ctx.moveTo(54, 100);
+    ctx.lineTo(WIDTH - 54, 100);
+    ctx.stroke();
+  }
+
+  drawMenuSettingsPanel() {
+    if (!this.menuSettingsOpen) return;
+    const rtl = this.rtl();
+    const rect = rtl ? { x: 54, y: 78, w: 302, h: 86 } : { x: WIDTH - 356, y: 78, w: 302, h: 86 };
+    drawSurface(this.ctx, rect, {
+      fill: 'rgba(3,12,19,0.96)',
+      border: 'rgba(83,205,245,0.28)',
+      cut: 9,
+      accent: C.cyan,
+    });
+    const x = rtl ? rect.x + rect.w - 18 : rect.x + 18;
+    this.localText(this.t('menu.settings'), x, rect.y + 23, {
+      size: 8.4, color: C.text, weight: 900, align: rtl ? 'right' : 'left',
+    });
+    this.localText(`${this.t('controls.move')}  •  ${this.t('controls.fire')}  •  ${this.t('controls.recall')}  •  ${this.t('controls.dash')}`,
+      x, rect.y + 46, { size: 7.1, color: C.textSoft, weight: 730, align: rtl ? 'right' : 'left' });
+    drawText(this.ctx, 'WASD  •  MOUSE  •  Q  •  SPACE', x, rect.y + 67, {
+      size: 6.8, color: C.textMuted, weight: 820, align: rtl ? 'right' : 'left', direction: 'ltr',
+    });
+  }
+
+  drawRunRadar(cx, cy, radius, wave, stage) {
+    const ctx = this.ctx;
+    const pulse = this.reducedMotion ? 0 : (Math.sin(this.elapsed * 2.2) + 1) * 0.5;
+    const scanner = this.reducedMotion ? -0.9 : this.elapsed * 0.48;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 5; ring += 1) {
+      const r = radius * (ring / 5);
+      ctx.strokeStyle = `rgba(83,205,245,${0.055 + ring * 0.018})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(83,205,245,0.20)';
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath();
+    ctx.moveTo(-radius - 16, 0); ctx.lineTo(radius + 16, 0);
+    ctx.moveTo(0, -radius - 16); ctx.lineTo(0, radius + 16);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const sides = 6;
+    for (let layer = 0; layer < 3; layer += 1) {
+      const r = 24 + layer * 15;
+      ctx.strokeStyle = `rgba(83,205,245,${0.26 - layer * 0.05})`;
+      ctx.beginPath();
+      for (let i = 0; i <= sides; i += 1) {
+        const a = Math.PI / 3 * i - Math.PI / 6;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(240,189,77,0.58)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius - 5, scanner, scanner + 0.48);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(240,189,77,${0.55 + pulse * 0.20})`;
+    ctx.beginPath();
+    ctx.arc(Math.cos(scanner + 0.48) * (radius - 5), Math.sin(scanner + 0.48) * (radius - 5), 3.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    const markerCount = Math.min(9, 4 + stage);
+    for (let i = 0; i < markerCount; i += 1) {
+      const angle = ((wave * 0.61 + i * 2.13) % 6.283) - Math.PI;
+      const rr = radius * (0.40 + ((wave * (i + 3) * 17) % 46) / 100);
+      const mx = Math.cos(angle) * rr;
+      const my = Math.sin(angle) * rr;
+      ctx.fillStyle = i === markerCount - 1 ? C.amberBright : 'rgba(238,100,118,0.78)';
+      ctx.beginPath();
+      ctx.arc(mx, my, i === markerCount - 1 ? 3 : 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    drawTargetGlyph(ctx, cx, cy, 7, C.cyanBright);
   }
 
   drawRunSnapshot(rect, checkpoint) {
@@ -338,136 +453,126 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const score = checkpoint?.score || 0;
     const sector = stageIndexForWave(wave);
     const entries = [
-      [this.t('stat.score'), this.n(score), C.amber, 'score'],
-      [this.t('stat.upgrades'), this.n(stats.upgrades || 0), C.cyan, 'upgrade'],
-      [this.t('stat.bestWave'), this.n(this.highWave), C.cyan, 'wave'],
-      [this.t('stat.highScore'), this.n(this.highScore), C.amber, 'score'],
-      [this.t('stat.sector'), this.t(`stage.${sector}`), C.green, 'sector'],
+      [this.t('stat.wave'), String(wave).padStart(2, '0'), C.cyanBright, 'wave', false],
+      [this.t('stat.score'), this.n(score), C.amberBright, 'score', false],
+      [this.t('stat.upgrades'), this.n(stats.upgrades || 0), C.cyanBright, 'upgrade', false],
+      [this.t('stat.bestWave'), this.n(this.highWave), C.cyan, 'wave', false],
+      [this.t('stat.highScore'), this.n(this.highScore), C.amber, 'score', false],
+      [this.t('stat.sector'), this.t(`stage.${sector}`), C.green, 'sector', true],
     ];
 
     drawSurface(this.ctx, rect, {
-      fill: 'rgba(4,14,22,0.62)',
-      border: 'rgba(105,215,244,0.16)',
-      cut: 12,
+      fill: 'rgba(3,12,19,0.82)',
+      border: 'rgba(83,205,245,0.24)',
+      cut: 13,
+      accent: C.cyan,
     });
-    const titleX = this.rtl() ? rect.x + rect.w - 22 : rect.x + 22;
-    this.localText(this.t('menu.runSnapshot'), titleX, rect.y + 31, {
-      size: 12, color: C.text, weight: 900, align: this.rtl() ? 'right' : 'left',
+    const titleX = this.rtl() ? rect.x + rect.w - 24 : rect.x + 24;
+    this.localText(this.t('menu.runSnapshot'), titleX, rect.y + 34, {
+      size: 12.5, color: C.cyanBright, weight: 900, align: this.rtl() ? 'right' : 'left',
     });
-    drawText(this.ctx, checkpoint ? `WAVE ${String(wave).padStart(2, '0')}` : this.t('menu.freshRun'), this.rtl() ? rect.x + 20 : rect.x + rect.w - 20, rect.y + 31, {
-      size: 7, color: checkpoint ? C.green : C.textMuted, weight: 900,
-      align: this.rtl() ? 'left' : 'right', direction: 'ltr',
-    });
+    this.ctx.fillStyle = 'rgba(83,205,245,0.11)';
+    this.ctx.fillRect(rect.x + 22, rect.y + 51, rect.w - 44, 1);
 
-    const rowY = rect.y + 58;
-    const rowH = 43;
-    entries.forEach(([labelValue, value, accent, icon], index) => {
+    const rowY = rect.y + 70;
+    const rowH = 48;
+    entries.forEach(([labelValue, value, accent, icon, localized], index) => {
       const y = rowY + index * rowH;
       if (index > 0) {
         this.ctx.fillStyle = 'rgba(255,255,255,0.055)';
-        this.ctx.fillRect(rect.x + 18, y - 7, rect.w - 36, 1);
+        this.ctx.fillRect(rect.x + 22, y - 18, rect.w - 44, 1);
       }
-      const iconX = this.rtl() ? rect.x + rect.w - 27 : rect.x + 27;
-      drawUiIcon(this.ctx, icon, iconX, y + 9, { color: accent, scale: 0.52, alpha: 0.9 });
-      this.localText(labelValue, this.rtl() ? rect.x + rect.w - 46 : rect.x + 46, y + 13, {
-        size: 8.5, color: C.textSoft, weight: 760, align: this.rtl() ? 'right' : 'left',
+      const iconX = this.rtl() ? rect.x + rect.w - 31 : rect.x + 31;
+      drawUiIcon(this.ctx, icon, iconX, y, { color: accent, scale: 0.54, alpha: 0.94 });
+      this.localText(labelValue, this.rtl() ? rect.x + rect.w - 52 : rect.x + 52, y + 4, {
+        size: 8.3, color: C.textSoft, weight: 760, align: this.rtl() ? 'right' : 'left',
       });
-      const valueX = this.rtl() ? rect.x + 18 : rect.x + rect.w - 18;
-      const localized = icon === 'sector';
+      const valueX = this.rtl() ? rect.x + 22 : rect.x + rect.w - 22;
       if (localized) {
-        this.localText(value, valueX, y + 13, {
-          size: 10, color: accent, weight: 900, align: this.rtl() ? 'left' : 'right',
-        });
+        this.localText(value, valueX, y + 4, { size: 10.6, color: accent, weight: 900, align: this.rtl() ? 'left' : 'right' });
       } else {
-        drawText(this.ctx, value, valueX, y + 13, {
-          size: 12.5, color: accent, weight: 900, align: this.rtl() ? 'left' : 'right', direction: 'ltr',
-        });
+        drawText(this.ctx, value, valueX, y + 4, { size: index === 1 || index === 4 ? 13.5 : 12.5, color: accent, weight: 900, align: this.rtl() ? 'left' : 'right', direction: 'ltr' });
       }
     });
 
-    const statusY = rect.y + rect.h - 30;
-    this.ctx.fillStyle = checkpoint ? C.green : C.textMuted;
-    this.ctx.beginPath();
-    this.ctx.arc(this.rtl() ? rect.x + rect.w - 23 : rect.x + 23, statusY, 3.2, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.localText(
-      checkpoint ? this.t('menu.checkpointReady') : this.t('menu.noCheckpoint'),
-      this.rtl() ? rect.x + rect.w - 36 : rect.x + 36,
-      statusY + 3,
-      { size: 7.8, color: checkpoint ? C.green : C.textMuted, weight: 800, align: this.rtl() ? 'right' : 'left' },
-    );
+    const status = { x: rect.x + 20, y: rect.y + rect.h - 48, w: rect.w - 40, h: 30 };
+    drawSurface(this.ctx, status, {
+      fill: checkpoint ? 'rgba(41,104,80,0.16)' : 'rgba(255,255,255,0.025)',
+      border: checkpoint ? 'rgba(85,224,176,0.28)' : 'rgba(255,255,255,0.06)',
+      cut: 6,
+    });
+    drawUiIcon(this.ctx, 'checkpoint', this.rtl() ? status.x + status.w - 18 : status.x + 18, status.y + status.h / 2, {
+      color: checkpoint ? C.green : C.textMuted, scale: 0.46,
+    });
+    this.localText(checkpoint ? this.t('menu.checkpointReady') : this.t('menu.noCheckpoint'),
+      this.rtl() ? status.x + status.w - 34 : status.x + 34, status.y + 19,
+      { size: 7.6, color: checkpoint ? C.green : C.textMuted, weight: 850, align: this.rtl() ? 'right' : 'left' });
   }
 
   drawWorldTimeline(rect, wave) {
     const stage = stageIndexForWave(wave);
-    const railX = rect.x + 22;
-    const railW = rect.w - 44;
+    const rtl = this.rtl();
+    const railX = rect.x + 112;
+    const railW = rect.w - 290;
     const nodeGap = railW / (STAGE_WAVES.length - 1);
-    const y = rect.y + 42;
+    const y = rect.y + 60;
 
     drawSurface(this.ctx, rect, {
-      fill: 'rgba(4,14,22,0.48)',
-      border: 'rgba(105,215,244,0.12)',
-      cut: 10,
+      fill: 'rgba(3,12,19,0.72)',
+      border: 'rgba(83,205,245,0.18)',
+      cut: 11,
+      accent: C.cyan,
     });
-    const labelX = this.rtl() ? rect.x + rect.w - 20 : rect.x + 20;
-    this.localText(this.t('menu.worldProgress'), labelX, rect.y + 21, {
-      size: 8.8, color: C.textSoft, weight: 850, align: this.rtl() ? 'right' : 'left',
+    const leftX = rtl ? rect.x + rect.w - 28 : rect.x + 28;
+    this.localText(this.t('menu.worldProgress'), leftX, rect.y + 25, {
+      size: 9.3, color: C.cyanBright, weight: 900, align: rtl ? 'right' : 'left',
+    });
+    const stageLabelX = rtl ? rect.x + 28 : rect.x + rect.w - 28;
+    this.localText(this.t(`stage.${stage}`), stageLabelX, rect.y + 25, {
+      size: 9.3, color: C.amberBright, weight: 900, align: rtl ? 'left' : 'right',
     });
 
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = 'rgba(111,133,145,0.18)';
-    this.ctx.beginPath();
-    this.ctx.moveTo(railX, y);
-    this.ctx.lineTo(railX + railW, y);
-    this.ctx.stroke();
-
-    if (stage > 0) {
-      this.ctx.strokeStyle = withAlpha(C.cyan, '66');
-      this.ctx.beginPath();
-      this.ctx.moveTo(railX, y);
-      this.ctx.lineTo(railX + nodeGap * stage, y);
-      this.ctx.stroke();
-    }
+    const nodeX = (index) => rtl ? railX + railW - index * nodeGap : railX + index * nodeGap;
+    const startX = nodeX(0);
+    const currentX = nodeX(stage);
+    const endX = nodeX(STAGE_WAVES.length - 1);
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeStyle = 'rgba(102,130,143,0.20)';
+    this.ctx.beginPath(); this.ctx.moveTo(startX, y); this.ctx.lineTo(endX, y); this.ctx.stroke();
+    this.ctx.strokeStyle = 'rgba(83,205,245,0.62)';
+    this.ctx.beginPath(); this.ctx.moveTo(startX, y); this.ctx.lineTo(currentX, y); this.ctx.stroke();
 
     for (let index = 0; index < STAGE_WAVES.length; index += 1) {
-      const nodeX = railX + index * nodeGap;
+      const x = nodeX(index);
       const completed = index < stage;
       const current = index === stage;
-      const accent = current ? C.amber : completed ? C.cyan : C.textMuted;
-      this.ctx.save();
+      const future = index > stage;
+      const accent = current ? C.amberBright : completed ? C.cyanBright : C.textMuted;
       if (current && !this.reducedMotion) {
-        this.ctx.globalAlpha = 0.18 + (Math.sin(this.elapsed * 4) + 1) * 0.07;
+        this.ctx.save();
+        this.ctx.globalAlpha = 0.08 + (Math.sin(this.elapsed * 4) + 1) * 0.05;
         this.ctx.fillStyle = C.amber;
-        this.ctx.beginPath();
-        this.ctx.arc(nodeX, y, 14, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.ctx.beginPath(); this.ctx.arc(x, y, 18, 0, Math.PI * 2); this.ctx.fill();
+        this.ctx.restore();
       }
-      this.ctx.globalAlpha = 1;
-      this.ctx.fillStyle = accent;
-      this.ctx.beginPath();
-      this.ctx.arc(nodeX, y, current ? 6.5 : completed ? 4 : 3.2, 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.restore();
-      drawText(this.ctx, String(index + 1).padStart(2, '0'), nodeX, y + 20, {
-        size: 6.8, color: current ? C.amberBright : completed ? C.textSoft : C.textMuted,
+      drawTargetGlyph(this.ctx, x, y, current ? 10 : 8, future ? 'rgba(113,137,149,0.34)' : accent);
+      if (completed) drawUiIcon(this.ctx, 'check', x, y, { color: C.cyanBright, scale: 0.42 });
+      else if (current) drawUiIcon(this.ctx, 'sector', x, y, { color: C.amberBright, scale: 0.38 });
+      else {
+        this.ctx.fillStyle = 'rgba(113,137,149,0.42)';
+        this.ctx.beginPath(); this.ctx.arc(x, y, 2.2, 0, Math.PI * 2); this.ctx.fill();
+      }
+      drawText(this.ctx, String(index + 1).padStart(2, '0'), x, y + 29, {
+        size: current ? 8.5 : 7, color: current ? C.amberBright : completed ? C.cyan : C.textMuted,
         weight: 900, align: 'center', direction: 'ltr',
       });
     }
 
-    const stageLabel = this.t(`stage.${stage}`);
-    const stageX = railX + nodeGap * stage;
-    this.localText(stageLabel, Math.max(rect.x + 86, Math.min(rect.x + rect.w - 86, stageX)), rect.y + 88, {
-      size: 10.5, color: C.amberBright, weight: 900, align: 'center',
-    });
     const next = stage >= STAGE_WAVES.length - 1 ? null : STAGE_WAVES[stage + 1];
     if (next) {
-      const captionX = this.rtl() ? rect.x + 20 : rect.x + rect.w - 20;
-      this.localText(this.t('menu.nextExpansion'), captionX, rect.y + 21, {
-        size: 6.8, color: C.textMuted, weight: 750, align: this.rtl() ? 'left' : 'right',
-      });
-      drawText(this.ctx, `WAVE ${next}`, captionX, rect.y + 35, {
-        size: 6.8, color: C.cyan, weight: 900, align: this.rtl() ? 'left' : 'right', direction: 'ltr',
+      const captionX = rtl ? rect.x + 28 : rect.x + rect.w - 28;
+      drawText(this.ctx, `WAVE ${next}`, captionX, rect.y + rect.h - 16, {
+        size: 6.8, color: C.textMuted, weight: 820, align: rtl ? 'left' : 'right', direction: 'ltr',
       });
     }
   }
@@ -481,126 +586,95 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.drawGlobalBackground();
     this.drawTopUtility();
 
-    const hero = rtl
-      ? { x: 438, y: 142, w: 740, h: 404 }
-      : { x: 102, y: 142, w: 740, h: 404 };
-    const summary = rtl
-      ? { x: 102, y: 154, w: 300, h: 352 }
-      : { x: 878, y: 154, w: 300, h: 352 };
-    const textX = rtl ? hero.x + hero.w - 30 : hero.x + 30;
-    const textAlign = rtl ? 'right' : 'left';
+    const hero = rtl ? { x: 430, y: 128, w: 794, h: 424 } : { x: 56, y: 128, w: 794, h: 424 };
+    const summary = rtl ? { x: 56, y: 128, w: 350, h: 424 } : { x: 874, y: 128, w: 350, h: 424 };
     const accent = checkpoint ? C.amber : C.cyan;
-
-    this.ctx.save();
-    this.ctx.fillStyle = 'rgba(4,14,22,0.28)';
-    angularPath(this.ctx, hero.x, hero.y, hero.w, hero.h, 18);
-    this.ctx.fill();
-    this.ctx.strokeStyle = withAlpha(accent, '2E');
-    this.ctx.lineWidth = 1;
-    this.ctx.stroke();
-    this.ctx.fillStyle = accent;
-    this.ctx.fillRect(rtl ? hero.x + hero.w - 3 : hero.x, hero.y + 34, 3, 92);
-    this.ctx.restore();
-
-    this.localText(checkpoint ? this.t('menu.currentRun') : this.t('menu.freshRun'), textX, hero.y + 40, {
-      size: 9.5, color: checkpoint ? C.green : C.cyan, weight: 900, align: textAlign,
-    });
-    this.localText(this.t(`stage.${sector}`), textX, hero.y + 73, {
-      size: 16, color: C.textSoft, weight: 850, align: textAlign,
+    drawSurface(this.ctx, hero, {
+      fill: 'rgba(3,12,19,0.78)',
+      border: withAlpha(accent, '38'),
+      cut: 15,
+      accent,
     });
 
-    drawText(this.ctx, String(wave).padStart(2, '0'), textX, hero.y + 179, {
-      size: 78, color: checkpoint ? C.amberBright : C.cyanBright, weight: 900,
-      align: textAlign, direction: 'ltr',
+    const leftPad = 44;
+    const textX = rtl ? hero.x + hero.w - leftPad : hero.x + leftPad;
+    const textAlign = rtl ? 'right' : 'left';
+    const radarX = rtl ? hero.x + 268 : hero.x + hero.w - 278;
+    const radarY = hero.y + 154;
+    this.drawRunRadar(radarX, radarY, 102, wave, sector);
+
+    this.localText(checkpoint ? this.t('menu.currentRun') : this.t('menu.freshRun'), textX, hero.y + 38, {
+      size: 9.2, color: C.cyanBright, weight: 900, align: textAlign,
     });
-    this.localText(this.t('stat.wave'), textX, hero.y + 205, {
-      size: 9, color: C.textMuted, weight: 850, align: textAlign,
+    this.localText(this.t(`stage.${sector}`), textX, hero.y + 76, {
+      size: 18, color: C.text, weight: 900, align: textAlign,
+    });
+    drawText(this.ctx, `SECTOR ${String(sector + 1).padStart(2, '0')}`, textX, hero.y + 96, {
+      size: 7, color: C.cyan, weight: 850, align: textAlign, direction: 'ltr',
+    });
+    drawText(this.ctx, String(wave).padStart(2, '0'), textX, hero.y + 190, {
+      size: 76, color: checkpoint ? C.amberBright : C.cyanBright, weight: 900, align: textAlign, direction: 'ltr',
+    });
+    this.localText(this.t('stat.wave'), textX, hero.y + 216, {
+      size: 9.2, color: C.textSoft, weight: 850, align: textAlign,
     });
 
-    const metaStart = rtl ? hero.x + hero.w - 30 : hero.x + 30;
-    const metricWidth = 168;
-    const metricGap = 16;
-    const metricX = (index) => rtl
-      ? metaStart - metricWidth - index * (metricWidth + metricGap)
-      : metaStart + index * (metricWidth + metricGap);
-    const compactMetric = (index, label, value, color, icon, localized = false) => {
-      const x = metricX(index);
-      const y = hero.y + 230;
-      drawUiIcon(this.ctx, icon, x + (rtl ? metricWidth - 12 : 12), y + 10, { color, scale: 0.48 });
-      this.localText(label, rtl ? x + metricWidth - 28 : x + 28, y + 12, {
-        size: 7.8, color: C.textMuted, weight: 750, align: rtl ? 'right' : 'left',
-      });
-      if (localized) {
-        this.localText(value, rtl ? x + metricWidth : x, y + 36, {
-          size: 11, color, weight: 900, align: rtl ? 'right' : 'left',
-        });
-      } else {
-        drawText(this.ctx, value, rtl ? x + metricWidth : x, y + 36, {
-          size: 14, color, weight: 900, align: rtl ? 'right' : 'left', direction: 'ltr',
-        });
+    const strip = { x: hero.x + 40, y: hero.y + 234, w: hero.w - 80, h: 56 };
+    drawSurface(this.ctx, strip, {
+      fill: 'rgba(1,7,12,0.64)', border: 'rgba(255,255,255,0.08)', cut: 8,
+    });
+    const statData = [
+      [this.t('stat.score'), this.n(checkpoint?.score || 0), C.amberBright, 'score', false],
+      [this.t('stat.upgrades'), this.n(checkpoint?.stats?.upgrades || 0), C.cyanBright, 'upgrade', false],
+      [this.t('stat.checkpoint'), checkpoint ? this.t('stat.ready') : this.t('stat.empty'), checkpoint ? C.green : C.textMuted, 'checkpoint', true],
+    ];
+    statData.forEach(([label, value, color, icon, localized], index) => {
+      const colW = strip.w / 3;
+      const baseX = strip.x + index * colW;
+      if (index > 0) {
+        this.ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        this.ctx.fillRect(baseX, strip.y + 12, 1, strip.h - 24);
       }
-    };
-    compactMetric(0, this.t('stat.score'), this.n(checkpoint?.score || 0), C.amber, 'score');
-    compactMetric(1, this.t('stat.upgrades'), this.n(checkpoint?.stats?.upgrades || 0), C.cyan, 'upgrade');
-    compactMetric(2, this.t('stat.checkpoint'), checkpoint ? this.t('stat.ready') : this.t('stat.empty'), checkpoint ? C.green : C.textMuted, 'checkpoint', true);
+      const iconX = baseX + 28;
+      drawUiIcon(this.ctx, icon, iconX, strip.y + strip.h / 2, { color, scale: 0.58 });
+      this.localText(label, baseX + 50, strip.y + 21, { size: 7.2, color: C.textMuted, weight: 760, align: 'left' });
+      if (localized) this.localText(value, baseX + 50, strip.y + 42, { size: 11.2, color, weight: 900, align: 'left' });
+      else drawText(this.ctx, value, baseX + 50, strip.y + 43, { size: 13.8, color, weight: 900, align: 'left', direction: 'ltr' });
+    });
 
-    const primary = {
-      x: rtl ? hero.x + hero.w - 30 - 540 : hero.x + 30,
-      y: hero.y + 286,
-      w: 540,
-      h: this.touchMode ? 68 : 60,
-    };
-    this.uiButton(
-      primary,
-      checkpoint ? 'continue' : 'start',
-      checkpoint ? this.t('menu.continue') : this.t('menu.start'),
+    const primary = { x: hero.x + 82, y: hero.y + 306, w: hero.w - 164, h: 58 };
+    this.uiButton(primary, checkpoint ? 'continue' : 'start', checkpoint ? this.t('menu.continue') : this.t('menu.start'),
       checkpoint ? () => this.continueFromCheckpoint() : () => this.startRun(),
-      { primary: true, icon: 'bullet', meta: `WAVE ${String(wave).padStart(2, '0')}` },
-    );
+      { primary: true, icon: 'bullet', meta: `WAVE ${String(wave).padStart(2, '0')}` });
 
     if (checkpoint) {
-      const secondaryY = primary.y + primary.h + 12;
-      const secondaryW = 258;
-      const firstX = primary.x;
-      const secondX = primary.x + 270;
-      this.uiButton(
-        { x: firstX, y: secondaryY, w: secondaryW, h: 44 },
-        'new-run',
-        this.t('menu.newRun'),
-        () => this.startRun(),
-        { icon: 'restart' },
-      );
-      this.uiButton(
-        { x: secondX, y: secondaryY, w: secondaryW, h: 44 },
-        'delete-save',
-        this.t('menu.deleteSave'),
-        () => this.clearCheckpoint(),
-        { danger: true, icon: 'checkpoint' },
-      );
+      const secondaryY = hero.y + 376;
+      const gap = 18;
+      const w = (primary.w - gap) / 2;
+      this.uiButton({ x: primary.x, y: secondaryY, w, h: 42 }, 'new-run', this.t('menu.newRun'), () => this.startRun(), { icon: 'restart' });
+      this.uiButton({ x: primary.x + w + gap, y: secondaryY, w, h: 42 }, 'delete-save', this.t('menu.deleteSave'), () => this.clearCheckpoint(), { danger: true, icon: 'checkpoint' });
     } else {
-      const controlsX = rtl ? primary.x + primary.w : primary.x;
-      drawText(this.ctx, 'WASD   •   MOUSE   •   Q   •   SPACE', controlsX, primary.y + primary.h + 31, {
-        size: 7.5, color: C.textMuted, weight: 800,
-        align: rtl ? 'right' : 'left', direction: 'ltr',
+      drawText(this.ctx, 'WASD  •  MOUSE  •  Q  •  SPACE', hero.x + hero.w / 2, hero.y + 401, {
+        size: 7, color: C.textMuted, weight: 820, align: 'center', direction: 'ltr',
       });
     }
 
     this.drawRunSnapshot(summary, checkpoint);
+    this.drawWorldTimeline({ x: 56, y: 568, w: 1168, h: 104 }, wave);
 
-    const progression = { x: 188, y: 562, w: 904, h: 112 };
-    this.drawWorldTimeline(progression, wave);
-
-    const footerX = rtl ? WIDTH - 64 : 64;
-    const footerAlign = rtl ? 'right' : 'left';
-    this.localText(
-      checkpoint ? this.t('menu.savedLocally') : this.t('brand.shortMantra'),
-      footerX,
-      699,
-      { size: 7.5, color: checkpoint ? C.green : C.textMuted, weight: 800, align: footerAlign },
-    );
-    drawText(this.ctx, 'L  •  M  •  F', rtl ? 64 : WIDTH - 64, 699, {
-      size: 7.2, color: C.textMuted, weight: 850, align: rtl ? 'left' : 'right', direction: 'ltr',
+    const saveRect = rtl ? { x: WIDTH - 192, y: 684, w: 136, h: 24 } : { x: 56, y: 684, w: 136, h: 24 };
+    drawSurface(this.ctx, saveRect, {
+      fill: checkpoint ? 'rgba(41,104,80,0.13)' : 'rgba(255,255,255,0.02)',
+      border: checkpoint ? 'rgba(85,224,176,0.24)' : 'rgba(255,255,255,0.05)', cut: 6,
     });
+    drawUiIcon(this.ctx, checkpoint ? 'check' : 'bullet', rtl ? saveRect.x + saveRect.w - 14 : saveRect.x + 14, saveRect.y + 12, {
+      color: checkpoint ? C.green : C.textMuted, scale: 0.38,
+    });
+    this.localText(checkpoint ? this.t('menu.savedLocally') : this.t('brand.shortMantra'),
+      rtl ? saveRect.x + saveRect.w - 28 : saveRect.x + 28, saveRect.y + 15,
+      { size: 6.4, color: checkpoint ? C.green : C.textMuted, weight: 820, align: rtl ? 'right' : 'left' });
+
+    this.drawMenuSettingsPanel();
   }
 
   drawPlayer() {
@@ -1010,54 +1084,61 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   drawGameOver() {
     const checkpoint = this.hasContinueCheckpoint() ? this.savedCheckpoint : null;
-    this.drawModalBackdrop(0.76);
-    const x = 148;
-    const y = 104;
-    this.localText(this.t('gameOver.kicker'), this.rtl() ? WIDTH - x : x, y, {
-      size: 8, color: C.red, weight: 900, align: this.rtl() ? 'right' : 'left',
+    const rtl = this.rtl();
+    const sector = Math.min(7, this.arenaStage?.id ?? stageIndexForWave(this.wave));
+    this.drawModalBackdrop(0.70);
+    const panel = { x: 116, y: 96, w: 1048, h: 528 };
+    drawSurface(this.ctx, panel, {
+      fill: 'rgba(3,11,18,0.94)',
+      border: 'rgba(238,102,120,0.26)',
+      cut: 16,
+      accent: C.red,
     });
-    this.localText(this.t('gameOver.title'), this.rtl() ? WIDTH - x : x, y + 70, {
-      size: 44, color: C.text, weight: 900, align: this.rtl() ? 'right' : 'left',
-    });
-    this.ctx.strokeStyle = 'rgba(221,102,117,0.35)';
-    this.ctx.beginPath();
-    this.ctx.moveTo(x, y + 96);
-    this.ctx.lineTo(WIDTH - x, y + 96);
-    this.ctx.stroke();
 
-    const metrics = [
-      [this.t('gameOver.waveReached'), String(this.wave).padStart(2, '0'), C.amber],
-      [this.t('gameOver.finalScore'), this.n(this.score), C.text],
-      [this.t('gameOver.bestScore'), this.n(this.highScore), C.cyan],
-      [this.t('stat.upgrades'), this.n(this.stats.upgrades), C.green],
+    const textSideX = rtl ? panel.x + panel.w - 54 : panel.x + 54;
+    const align = rtl ? 'right' : 'left';
+    this.localText(this.t('gameOver.kicker'), textSideX, panel.y + 42, { size: 8, color: C.red, weight: 900, align });
+    this.localText(this.t('gameOver.title'), textSideX, panel.y + 88, { size: 34, color: C.text, weight: 900, align });
+
+    const radarX = rtl ? panel.x + 250 : panel.x + panel.w - 250;
+    this.drawRunRadar(radarX, panel.y + 185, 88, this.wave, sector);
+    drawUiIcon(this.ctx, 'bullet', radarX, panel.y + 185, { color: C.red, scale: 0.62 });
+
+    const resultX = textSideX;
+    drawText(this.ctx, String(this.wave).padStart(2, '0'), resultX, panel.y + 190, {
+      size: 68, color: C.amberBright, weight: 900, align, direction: 'ltr',
+    });
+    this.localText(this.t('gameOver.waveReached'), resultX, panel.y + 218, { size: 8.4, color: C.textSoft, weight: 820, align });
+    drawText(this.ctx, this.n(this.score), resultX, panel.y + 272, { size: 28, color: C.text, weight: 900, align, direction: 'ltr' });
+    this.localText(this.t('gameOver.finalScore'), resultX, panel.y + 294, { size: 7.8, color: C.textMuted, weight: 760, align });
+
+    const strip = { x: panel.x + 52, y: panel.y + 320, w: panel.w - 104, h: 70 };
+    drawSurface(this.ctx, strip, { fill: 'rgba(1,7,12,0.62)', border: 'rgba(255,255,255,0.07)', cut: 8 });
+    const values = [
+      [this.t('gameOver.bestScore'), this.n(this.highScore), C.cyanBright, 'score', false],
+      [this.t('stat.upgrades'), this.n(this.stats.upgrades), C.green, 'upgrade', false],
+      [this.t('stat.sector'), this.t(`stage.${sector}`), C.cyan, 'sector', true],
+      [this.t('stat.checkpoint'), checkpoint ? this.t('stat.ready') : this.t('stat.empty'), checkpoint ? C.green : C.textMuted, 'checkpoint', true],
     ];
-    metrics.forEach(([labelValue, value, accent], index) => {
-      const col = index % 2;
-      const row = Math.floor(index / 2);
-      const mx = x + col * 360;
-      const my = y + 145 + row * 100;
-      this.localText(labelValue, this.rtl() ? mx + 300 : mx, my, {
-        size: 8, color: C.textMuted, weight: 750, align: this.rtl() ? 'right' : 'left',
-      });
-      drawText(this.ctx, value, this.rtl() ? mx + 300 : mx, my + 37, {
-        size: 25, color: accent, weight: 900, align: this.rtl() ? 'right' : 'left', direction: 'ltr',
-      });
+    values.forEach(([label, value, color, icon, localized], index) => {
+      const colW = strip.w / values.length;
+      const x = strip.x + index * colW;
+      if (index > 0) { this.ctx.fillStyle = 'rgba(255,255,255,0.07)'; this.ctx.fillRect(x, strip.y + 14, 1, strip.h - 28); }
+      drawUiIcon(this.ctx, icon, x + 26, strip.y + 35, { color, scale: 0.50 });
+      this.localText(label, x + 48, strip.y + 26, { size: 7, color: C.textMuted, weight: 760, align: 'left' });
+      if (localized) this.localText(value, x + 48, strip.y + 49, { size: 10.2, color, weight: 900, align: 'left' });
+      else drawText(this.ctx, value, x + 48, strip.y + 50, { size: 12.5, color, weight: 900, align: 'left', direction: 'ltr' });
     });
 
-    if (checkpoint) {
-      this.uiButton({ x, y: y + 357, w: 650, h: 64 }, 'over-continue', this.t('gameOver.continue'), () => this.continueFromCheckpoint(), {
-        primary: true, icon: 'bullet', meta: `WAVE ${checkpoint.wave}`,
-      });
-    } else {
-      this.uiButton({ x, y: y + 357, w: 650, h: 64 }, 'over-retry', this.t('gameOver.retry'), () => this.startRun(), {
-        primary: true, icon: 'bullet',
-      });
-    }
-    this.uiButton({ x, y: y + 437, w: 315, h: 48 }, 'over-new', this.t('gameOver.retry'), () => this.startRun(), { icon: 'restart' });
-    this.uiButton({ x: x + 335, y: y + 437, w: 315, h: 48 }, 'over-menu', this.t('gameOver.mainMenu'), () => this.goToMenu(), { icon: 'menu' });
-
-    drawTargetGlyph(this.ctx, 1025, 315, 72, 'rgba(221,102,117,0.20)');
-    drawBulletGlyph(this.ctx, 1025, 315, { color: C.red, scale: 1.5, angle: -0.5 });
+    const primary = { x: panel.x + 236, y: panel.y + 414, w: panel.w - 472, h: 58 };
+    this.uiButton(primary, checkpoint ? 'over-continue' : 'over-retry',
+      checkpoint ? this.t('gameOver.continue') : this.t('gameOver.retry'),
+      checkpoint ? () => this.continueFromCheckpoint() : () => this.startRun(),
+      { primary: true, icon: 'bullet', meta: checkpoint ? `WAVE ${checkpoint.wave}` : null });
+    const gap = 18;
+    const w = (primary.w - gap) / 2;
+    this.uiButton({ x: primary.x, y: panel.y + 484, w, h: 40 }, 'over-new', this.t('gameOver.retry'), () => this.startRun(), { icon: 'restart' });
+    this.uiButton({ x: primary.x + w + gap, y: panel.y + 484, w, h: 40 }, 'over-menu', this.t('gameOver.mainMenu'), () => this.goToMenu(), { icon: 'menu' });
   }
 
   upgradeVisual(upgrade) {

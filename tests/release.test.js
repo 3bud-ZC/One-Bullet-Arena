@@ -9,11 +9,11 @@ import {
 } from '../src/release.js';
 
 test('release metadata exposes one canonical identity', () => {
-  assert.equal(RELEASE_VERSION, '3.4.0-expanding-world');
-  assert.equal(RELEASE_LABEL, 'v3.4.0-expanding-world');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.4.0-expanding-world');
+  assert.equal(RELEASE_VERSION, '3.5.0-production-art');
+  assert.equal(RELEASE_LABEL, 'v3.5.0-production-art');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.5.0-production-art');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
-  assert.equal(RELEASE_INFO.channel, 'expanding-world');
+  assert.equal(RELEASE_INFO.channel, 'production-art');
   assert.ok(Object.isFrozen(RELEASE_INFO));
 });
 
@@ -29,6 +29,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   const dashboardPolishSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const worldExpansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
   const unifiedUiSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
+  const productionArtSource = await readFile(new URL('../src/core/production-art-runtime.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 
   assert.equal(packageJson.version, RELEASE_VERSION);
@@ -42,6 +43,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(dashboardPolishSource, /OneBulletVisualOverhaulRuntime/);
   assert.match(worldExpansionSource, /OneBulletDashboardPolishRuntime/);
   assert.match(unifiedUiSource, /OneBulletWorldExpansionRuntime/);
+  assert.match(productionArtSource, /OneBulletUnifiedUiRuntime/);
   assert.match(workerSource, /importScripts\('\.\/src\/release-config\.js'\)/);
   assert.match(workerSource, /const CACHE_NAME = RELEASE\.cacheName/);
   assert.match(workerSource, /\.\/src\/core\/event-runtime\.js/);
@@ -54,6 +56,7 @@ test('package, runtime, and service worker consume canonical release metadata', 
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/unified-ui-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/production-art-runtime\.js/);
 });
 
 test('service worker keeps an explicit release handshake and network-first fallback', async () => {
@@ -65,7 +68,7 @@ test('service worker keeps an explicit release handshake and network-first fallb
   assert.match(mainSource, /updateViaCache: 'none'/);
   assert.match(mainSource, /registration\.update\(\)/);
   assert.match(mainSource, /controllerchange/);
-  assert.match(mainSource, /OneBulletUnifiedUiRuntime/);
+  assert.match(mainSource, /OneBulletProductionArtRuntime/);
   assert.match(mainSource, /requestGameFullscreen/);
   assert.match(mainSource, /__ONE_BULLET_CHECKPOINT__/);
 });

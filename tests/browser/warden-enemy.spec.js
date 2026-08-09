@@ -31,7 +31,7 @@ test('warden runtime boots beneath global UI and wave seven introduces the enemy
     game.startNextWave();
     return { menu, wave: game.getSnapshot() };
   });
-  expect(result.menu.releaseVersion).toBe('3.6.0-global-ui');
+  expect(result.menu.releaseVersion).toBe('3.6.1-ui-refinement');
   expect(result.menu.globalUiActive).toBe(true);
   expect(result.menu.wardenRuntimeVersion).toBe('3.1.0-a-warden');
   expect(result.menu.wardenEnemyActive).toBe(true);
@@ -58,7 +58,7 @@ test('a frontal bullet is blocked, reflected, and converted into a bank', async 
     return { blocked, healthBefore, healthAfter: warden.health, bulletVx: game.bullet.vx, snapshot: game.getSnapshot(), history: game.getGameEventHistory(64) };
   });
   expect(result.blocked).toBe(false);
-  expect(result.healthAfter).toBe(result.healthBefore);
+  expect(result.healthAfter).toBe(healthBefore);
   expect(result.bulletVx).toBeLessThan(0);
   expect(result.snapshot.wardenGuardStates[0].guardStrength).toBe(1);
   expect(result.snapshot.wardenGuardStates[0].guardBlocks).toBe(1);

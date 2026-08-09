@@ -5,99 +5,108 @@ Last updated: 2026-08-09
 ## Current development release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v3.4.0 — Expanding World**
+- Release candidate: **v3.5.0 — Production Art**
 - Production branch: `main`
-- Canonical release version: `3.4.0-expanding-world`
-- Canonical release label: `v3.4.0-expanding-world`
-- Release channel: `expanding-world`
-- Service Worker cache: `one-bullet-arena-v3.4.0-expanding-world`
-- Previous accepted release: **v3.3.0 — Cinematic Visual Overhaul**
-- v3.4 automated verification: **pending latest GitHub Actions result**
-- v3.4 manual gameplay/visual acceptance: **pending**
+- Canonical release version: `3.5.0-production-art`
+- Canonical release label: `v3.5.0-production-art`
+- Release channel: `production-art`
+- Service Worker cache: `one-bullet-arena-v3.5.0-production-art`
+- Previous gameplay foundation: **v3.4.0 — Expanding World**
+- Last fully accepted baseline: **v3.3.0 — Cinematic Visual Overhaul**
+- v3.5 automated verification: **pending latest GitHub Actions result**
+- v3.5 manual gameplay/visual acceptance: **pending**
 - Production publishing: **GitHub Pages deploys only after `npm run verify:all` succeeds**
 
-## v3.4 scope — Expanding World
+## v3.5 scope — Production Art
 
-This is a gameplay-and-presentation release, not a render-only patch. It intentionally changes world and collision geometry after the original arena progression.
+v3.5 is a presentation overhaul built on top of the v3.4 expanding-world gameplay foundation. It does not remove the checkpoint, camera, world-expansion, encounter-director, Warden, or combat-depth systems.
 
-### Fullscreen presentation
+### New production-art runtime
 
-- The browser shell now fills `100vw × 100dvh` instead of rendering the game as a centered 16:9 card.
-- First direct canvas interaction attempts Browser Fullscreen when permitted.
-- `Enter` / `Space` start gestures also request fullscreen when allowed.
-- `F` remains the explicit fullscreen toggle.
-- QA/browser-test mode does not force fullscreen.
+`src/core/production-art-runtime.js` is now the final runtime and extends `OneBulletUnifiedUiRuntime`.
 
-### Expanding arena and camera
+It owns the final presentation for:
 
-The arena now contains eight progression stages:
-
-1. Wave 1 — Central combat room.
-2. Wave 3 — Side wings.
-3. Wave 6 — Outer corridors.
-4. Wave 9 — Original full arena.
-5. Wave 13 — Outer sector.
-6. Wave 18 — Industrial ring.
-7. Wave 25 — Open matrix.
-8. Wave 35 — Final belt.
-
-The Wave 35 arena is more than twice the width and height of the original Wave 9 arena.
-
-`src/core/world-expansion-runtime.js` adds:
-
-- smooth player-follow camera;
-- directional camera lead;
-- stage-dependent zoom;
-- screen-to-world pointer conversion so aiming remains correct under the camera;
-- player-relative enemy spawning for large maps;
-- exploration distance/trail state;
-- late-sector minimap showing player, viewport, and explored route;
-- expanded-world floor/deck rendering;
-- a screen-space combat HUD that remains stable while the world camera moves.
-
-### Late-game encounter director
-
-The previous late-game pressure plateau has been replaced by a five-pattern encounter rotation from Wave 10 onward:
-
-- `rush` — fast Charger pressure;
-- `crossfire` — ranged Sniper pressure;
-- `swarm` — Splitter-heavy crowd pressure;
-- `siege` — Warden/Brute armored pressure;
-- `hunters` — mixed elite pressure.
-
-Additional changes:
-
-- active enemy cap increased from 14 to 18;
-- enemy count continues to grow after Wave 15 instead of effectively stopping;
-- late health, movement speed, and projectile speed continue scaling inside explicit hard caps;
-- encounter profiles apply different health/speed/projectile pressure multipliers;
-- dangerous enemy counts remain bounded per wave.
-
-### Unified visual language
-
-The runtime chain now unifies the major screens rather than mixing the old UI with the redesigned dashboard:
-
-- cinematic command/checkpoint menu;
+- Main Menu / checkpoint dashboard;
+- Run Intelligence / progression rail;
 - combat HUD;
-- upgrade selection;
-- pause overlay;
-- Game Over / checkpoint continuation;
-- wave/sector banners;
-- touch controls.
+- late-sector tactical minimap;
+- arena presentation pass;
+- Pause overlay;
+- Game Over overlay;
+- Upgrade Selection;
+- production typography, panels, buttons, states, and visual hierarchy.
 
-Arabic copy uses RTL rendering while English labels and numeric telemetry use LTR rendering where the new UI layer owns the text.
+Production-art contract:
+
+- runtime: `3.5.0-production-art`;
+- revision: `production-command-suite-v1`;
+- dashboard: production mission-control composition;
+- combat HUD: compact screen-space command HUD;
+- arena: extra sector framing/details without replacing world geometry;
+- overlays: one shared production visual language.
+
+### Main Menu redesign
+
+The old oversized dashboard composition is no longer the final renderer. The v3.5 menu uses:
+
+- compact left-aligned product identity;
+- explicit checkpoint/new-run status module;
+- one primary mission panel with clear current-wave hierarchy;
+- three telemetry tiles for upgrades, run score, and save state;
+- one dominant Continue/Start action;
+- independent secondary New Run and Delete Save actions;
+- Run Intelligence rail for Best Wave, High Score, Checkpoint, and world-expansion progress;
+- restrained keyboard hints instead of a large footer toolbar.
+
+### Combat presentation
+
+The production HUD keeps gameplay visible and reserves only three compact top modules:
+
+- bullet / recall state;
+- current wave / encounter / enemy telemetry;
+- health / shield / dash state.
+
+The tactical minimap remains available in expanded sectors and uses the same production visual system.
+
+### Fullscreen + expanding world retained from v3.4
+
+The v3.4 gameplay foundation remains active:
+
+- browser shell fills `100vw × 100dvh`;
+- direct interaction and `Enter` / `Space` can request Browser Fullscreen;
+- `F` remains the manual fullscreen toggle;
+- eight arena stages unlock at Waves 1, 3, 6, 9, 13, 18, 25, and 35;
+- camera follows the player with stage-dependent zoom;
+- pointer aiming is transformed from screen space to world space;
+- enemies spawn relative to the player in large sectors;
+- minimap tracks viewport, player, and exploration;
+- HUD/touch safe zones remain protected in world space.
+
+### Late-game encounter director retained
+
+From Wave 10 onward, the five encounter profiles remain active:
+
+- `rush`;
+- `crossfire`;
+- `swarm`;
+- `siege`;
+- `hunters`.
+
+The enemy cap remains 18 and late health/speed/projectile pressure continues scaling inside explicit safety caps.
 
 ## Active runtime chain
 
-The final boot chain is:
+The boot chain is now:
 
-`UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+`ProductionArt → UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
 Current contracts:
 
+- Production Art: `3.5.0-production-art` / `production-command-suite-v1`.
 - Unified UI: `3.4.0-unified-ui`.
 - World Expansion: `3.4.0-expanding-world`.
-- Dashboard: `3.3.6-dashboard-cinematic-command` / `cinematic-command-menu-v11`.
+- Dashboard foundation: `3.3.7-dashboard-command-deck` / `command-deck-v12`.
 - Visual Overhaul: `3.3.0-visual-overhaul`.
 - World2D: `3.2.0-true-2d`.
 - Warden: `3.1.0-a-warden`.
@@ -106,57 +115,48 @@ Current contracts:
 - Gameplay event schema: `4`.
 - Checkpoint schema: `1`.
 
-Existing checkpoint schema remains unchanged; saved runs are restored into the arena stage selected by their saved wave.
+Existing checkpoint data remains compatible.
 
-## Verification added for v3.4
+## v3.5 verification coverage
 
-The release gate now includes explicit checks for:
+The release gate now covers:
 
-- late-game enemy-count growth and safety caps;
-- five rotating encounter profiles;
-- eight arena stages and late-stage world dimensions;
-- progressive camera zoom and camera clamping;
-- camera/exploration/minimap runtime contracts;
-- fullscreen viewport CSS;
-- world-expansion and unified-UI Service Worker caching;
-- final runtime boot through `OneBulletUnifiedUiRuntime`;
-- Fresh Menu with no checkpoint;
-- Checkpoint Menu and restore flow;
-- Wave 35 expanded-world camera capture;
-- unified Upgrade Selection;
-- unified Pause overlay;
-- unified Game Over overlay;
-- retained Warden, combat-depth, checkpoint, True2D, and visual-overhaul behavior under the v3.4 runtime chain.
+- syntax checking of `production-art-runtime.js`;
+- production runtime boot from `src/main.js`;
+- Service Worker caching of production art;
+- canonical v3.5 release metadata;
+- production menu without a checkpoint;
+- production checkpoint continuation menu;
+- production Game Over flow;
+- restored checkpoint gameplay;
+- Wave 35 expanded-world camera under production art;
+- production dashboard, combat HUD, arena pass, and overlay snapshot contracts;
+- retained fullscreen, checkpoint, camera-safe-zone, Warden, encounter, and world-expansion behavior.
 
 ## Production workflow
 
 `.github/workflows/deploy-pages.yml` runs on every push to `main` and performs:
 
 1. dependency installation;
-2. Chromium, Firefox, and WebKit Playwright installation;
+2. Playwright browser installation;
 3. `npm run verify:all`;
 4. static-site assembly;
-5. release/runtime/fullscreen deployment-contract checks;
+5. production-art/release/fullscreen deployment-contract checks;
 6. GitHub Pages deployment.
 
-`concurrency: pages` with `cancel-in-progress: true` means only the newest `main` revision should be treated as the deployment candidate.
+Only the newest `main` revision should be treated as the deployment candidate.
 
 ## Acceptance gate
 
-Do **not** mark v3.4 accepted until all of the following are true:
+Do **not** mark v3.5 accepted until all of the following are true:
 
 - latest Verify workflow is green;
+- latest Browser Smoke workflow is green;
 - latest Deploy GitHub Pages workflow is green;
-- Fresh Menu loads without runtime errors;
-- checkpoint continuation still restores a real saved run;
-- Wave 13+ camera movement feels controlled rather than disorienting;
-- Wave 18+ visibly reveals space beyond one fixed screen;
-- Wave 25/35 minimap and camera remain readable;
-- late-wave encounters feel meaningfully different rather than only numerically harder;
-- Upgrade, Pause, Game Over, Dashboard, and combat HUD feel like the same product;
-- desktop fullscreen behavior works through direct interaction and `F`;
-- mobile landscape remains playable.
-
-## Previous accepted baseline
-
-v3.3.0 remains the last fully accepted baseline until the v3.4 acceptance gate above is closed. Its prior automated verification was green and its manual visual acceptance was completed before merge.
+- Fresh Menu renders without runtime errors;
+- checkpoint continuation restores the saved run;
+- Dashboard is manually accepted on desktop fullscreen;
+- combat HUD remains readable without covering the arena;
+- Pause, Game Over, Upgrade Selection, Dashboard, and combat HUD look like one product;
+- Waves 13/18/25/35 remain readable while the world expands and camera moves;
+- desktop fullscreen and mobile landscape remain playable.

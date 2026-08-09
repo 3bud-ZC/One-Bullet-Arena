@@ -90,3 +90,22 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify live Pages release
+        shell: bash
+        run: |
+          EXPECTED_VERSION=$(node -p "require('./package.json').version")
+          PAGE_URL='${{ steps.deployment.outputs.page_url }}'
+          TARGET="${PAGE_URL%/}/src/release-config.js?sha=${GITHUB_SHA}"
+          echo "Waiting for live Pages release $EXPECTED_VERSION at $TARGET"
+          for attempt in {1..18}; do
+            BODY=$(curl -fsSL -H 'Cache-Control: no-cache' "$TARGET" || true)
+            if grep -Fq "const version = '$EXPECTED_VERSION'" <<<"$BODY"; then
+              echo "Live Pages release verified: $EXPECTED_VERSION"
+              exit 0
+            fi
+            echo "Attempt $attempt/18: live site has not converged yet"
+            sleep 5
+          done
+          echo "Live Pages release mismatch after deployment."
+          curl -fsSL -H 'Cache-Control: no-cache' "$TARGET" || true
+          exit 1

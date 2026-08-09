@@ -46,12 +46,12 @@ test('renders the global UI menu fullscreen without runtime errors', async ({ pa
     return { snapshot: game.getSnapshot(), frame: { width: frame.width, height: frame.height }, viewport: { width: innerWidth, height: innerHeight } };
   });
   expect(result.snapshot.checkpointAvailable).toBe(false);
-  expect(result.snapshot.releaseVersion).toBe('3.6.0-global-ui');
-  expect(result.snapshot.globalUiRuntimeVersion).toBe('3.6.0-global-ui');
-  expect(result.snapshot.globalUiRevision).toBe('global-command-interface-v1');
+  expect(result.snapshot.releaseVersion).toBe('3.6.1-ui-refinement');
+  expect(result.snapshot.globalUiRuntimeVersion).toBe('3.6.1-ui-refinement');
+  expect(result.snapshot.globalUiRevision).toBe('production-refinement-v1');
   expect(result.snapshot.globalUiActive).toBe(true);
   expect(result.snapshot.localizationActive).toBe(true);
-  expect(result.snapshot.uiDensity).toBe('game-command-surface');
+  expect(result.snapshot.uiDensity).toBe('production-refined');
   expect(Math.abs(result.frame.width - result.viewport.width)).toBeLessThan(1);
   expect(Math.abs(result.frame.height - result.viewport.height)).toBeLessThan(1);
   expect(pageErrors).toEqual([]);

@@ -20,23 +20,18 @@ export const UI_TOKENS = Object.freeze({
     redDim: 'rgba(221, 102, 117, 0.13)',
     text: '#f1f5f7',
     textSoft: '#b6c4cc',
-    textMuted: '#6f8591',
+    textMuted: '#8197a2',
     line: 'rgba(130, 173, 193, 0.16)',
     lineStrong: 'rgba(130, 194, 220, 0.28)',
     black: '#000000',
   }),
   radius: Object.freeze({ small: 6, medium: 10, large: 16 }),
-  spacing: Object.freeze({ xs: 6, sm: 10, md: 16, lg: 24, xl: 32 }),
+  spacing: Object.freeze({
+    xxs: 4, xs: 8, sm: 12, md: 16, lg: 24, xl: 32, xxl: 48, hero: 64,
+  }),
   type: Object.freeze({
-    brand: 10,
-    title: 32,
-    hero: 74,
-    screen: 28,
-    action: 15,
-    value: 20,
-    body: 11,
-    label: 8,
-    telemetry: 7,
+    brand: 10, hero: 70, title: 32, screen: 27, cardTitle: 18,
+    action: 14, value: 18, body: 11, label: 9, telemetry: 8, combat: 10,
   }),
 });
 
@@ -152,39 +147,51 @@ export function drawSurface(ctx, rect, options = {}) {
 export function drawButton(ctx, rect, state = {}) {
   const color = UI_TOKENS.color;
   const hover = Math.max(0, Math.min(1, state.hover ?? 0));
+  const pressed = Boolean(state.pressed);
+  const focused = Boolean(state.focused);
+  const disabled = Boolean(state.disabled);
   const primary = Boolean(state.primary);
   const danger = Boolean(state.danger);
   const accent = danger ? color.red : primary ? color.amber : color.cyan;
+  const lift = disabled ? 0 : pressed ? 0 : hover * 1.25;
+  const r = { ...rect, y: rect.y - lift };
   const fill = danger
-    ? `rgba(37, 11, 17, ${0.72 + hover * 0.12})`
+    ? `rgba(37, 11, 17, ${0.68 + hover * 0.10})`
     : primary
-      ? `rgba(43, 32, 11, ${0.88 + hover * 0.08})`
-      : `rgba(7, 20, 29, ${0.82 + hover * 0.10})`;
+      ? `rgba(42, 31, 10, ${0.86 + hover * 0.08})`
+      : `rgba(7, 20, 29, ${0.78 + hover * 0.08})`;
+
   ctx.save();
-  if (primary && hover > 0.02) {
+  if (primary && !disabled && hover > 0.02) {
     ctx.shadowColor = color.amber;
-    ctx.shadowBlur = 8 * hover;
+    ctx.shadowBlur = 6 * hover;
   }
-  drawSurface(ctx, rect, {
+  drawSurface(ctx, r, {
     fill,
-    border: state.disabled ? color.line : `${accent}${primary ? '99' : '66'}`,
-    accent: state.disabled ? color.textMuted : accent,
+    border: disabled ? color.line : `${accent}${focused ? 'BB' : primary ? '88' : hover > 0.02 ? '77' : '44'}`,
+    accent: disabled ? color.textMuted : accent,
     cut: primary ? 12 : 9,
   });
   ctx.shadowBlur = 0;
-  if (primary) {
-    const sweep = rect.x + 18 + (rect.w - 36) * (state.sweep ?? 0);
-    const gradient = ctx.createLinearGradient(sweep - 80, 0, sweep + 80, 0);
+  if (focused) {
+    ctx.strokeStyle = `${accent}88`;
+    ctx.setLineDash([4, 5]);
+    angularPath(ctx, r.x + 4, r.y + 4, r.w - 8, r.h - 8, primary ? 9 : 7);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (primary && !disabled) {
+    const sweep = r.x + 18 + (r.w - 36) * (state.sweep ?? 0);
+    const gradient = ctx.createLinearGradient(sweep - 72, 0, sweep + 72, 0);
     gradient.addColorStop(0, 'rgba(255,224,154,0)');
-    gradient.addColorStop(0.5, 'rgba(255,224,154,0.08)');
+    gradient.addColorStop(0.5, `rgba(255,224,154,${0.035 + hover * 0.045})`);
     gradient.addColorStop(1, 'rgba(255,224,154,0)');
     ctx.fillStyle = gradient;
-    angularPath(ctx, rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2, 11);
+    angularPath(ctx, r.x + 1, r.y + 1, r.w - 2, r.h - 2, 11);
     ctx.fill();
   }
   ctx.restore();
 }
-
 export function drawGauge(ctx, x, y, width, value, accent, options = {}) {
   const safe = Math.max(0, Math.min(1, Number(value) || 0));
   const height = options.height ?? 4;
@@ -236,6 +243,95 @@ export function drawTargetGlyph(ctx, x, y, radius = 12, color = UI_TOKENS.color.
   ctx.moveTo(x, y + radius - 3);
   ctx.lineTo(x, y + radius + 5);
   ctx.stroke();
+  ctx.restore();
+}
+
+export function drawUiIcon(ctx, kind, x, y, options = {}) {
+  const color = options.color ?? UI_TOKENS.color.cyan;
+  const scale = options.scale ?? 1;
+  const alpha = options.alpha ?? 1;
+  const active = options.active ?? true;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const line = (...pts) => {
+    ctx.beginPath();
+    ctx.moveTo(pts[0], pts[1]);
+    for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+    ctx.stroke();
+  };
+  switch (kind) {
+    case 'bullet':
+      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(4, -4); ctx.lineTo(-8, -4);
+      ctx.lineTo(-11, 0); ctx.lineTo(-8, 4); ctx.lineTo(4, 4); ctx.closePath(); ctx.fill(); break;
+    case 'language':
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, 0, 4, 9, 0, 0, Math.PI * 2); ctx.stroke();
+      line(-8, 0, 8, 0); line(-6, -5, 6, -5); line(-6, 5, 6, 5); break;
+    case 'audio':
+      ctx.beginPath(); ctx.moveTo(-9, -3); ctx.lineTo(-4, -3); ctx.lineTo(2, -8);
+      ctx.lineTo(2, 8); ctx.lineTo(-4, 3); ctx.lineTo(-9, 3); ctx.closePath(); ctx.stroke();
+      if (active) { ctx.beginPath(); ctx.arc(2, 0, 7, -0.85, 0.85); ctx.stroke();
+        ctx.beginPath(); ctx.arc(2, 0, 11, -0.7, 0.7); ctx.stroke(); }
+      else { line(6, -6, 12, 6); line(12, -6, 6, 6); } break;
+    case 'fullscreen':
+      line(-9, -3, -9, -9, -3, -9); line(3, -9, 9, -9, 9, -3);
+      line(9, 3, 9, 9, 3, 9); line(-3, 9, -9, 9, -9, 3); break;
+    case 'restart':
+      ctx.beginPath(); ctx.arc(0, 0, 8, -2.45, 2.15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-7, -7); ctx.lineTo(-10, -1); ctx.lineTo(-3, -2); ctx.closePath(); ctx.fill(); break;
+    case 'menu':
+      line(-9, -6, 9, -6); line(-9, 0, 9, 0); line(-9, 6, 9, 6); break;
+    case 'health':
+      ctx.beginPath(); ctx.moveTo(0, 9); ctx.bezierCurveTo(-2, 5, -10, 0, -10, -5);
+      ctx.bezierCurveTo(-10, -10, -3, -11, 0, -6); ctx.bezierCurveTo(3, -11, 10, -10, 10, -5);
+      ctx.bezierCurveTo(10, 0, 2, 5, 0, 9); ctx.stroke(); break;
+    case 'shield':
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(9, -6); ctx.lineTo(7, 4);
+      ctx.quadraticCurveTo(4, 9, 0, 11); ctx.quadraticCurveTo(-4, 9, -7, 4);
+      ctx.lineTo(-9, -6); ctx.closePath(); ctx.stroke(); break;
+    case 'dash':
+      line(-11, -5, 1, -5); line(-8, 0, 6, 0); line(-11, 5, 1, 5);
+      ctx.beginPath(); ctx.moveTo(3, -8); ctx.lineTo(11, 0); ctx.lineTo(3, 8); ctx.stroke(); break;
+    case 'score':
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(3, -3); ctx.lineTo(10, -3);
+      ctx.lineTo(5, 2); ctx.lineTo(7, 9); ctx.lineTo(0, 5); ctx.lineTo(-7, 9);
+      ctx.lineTo(-5, 2); ctx.lineTo(-10, -3); ctx.lineTo(-3, -3); ctx.closePath(); ctx.stroke(); break;
+    case 'wave':
+      line(-11, 3, -7, -2, -3, 3, 1, -2, 5, 3, 9, -2); break;
+    case 'checkpoint':
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(9, 0); ctx.lineTo(0, 10);
+      ctx.lineTo(-9, 0); ctx.closePath(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill(); break;
+    case 'upgrade':
+      line(0, 10, 0, -7); line(-6, -1, 0, -8, 6, -1); line(-8, 10, 8, 10); break;
+    case 'sector':
+      ctx.strokeRect(-9, -9, 7, 7); ctx.strokeRect(2, -9, 7, 7);
+      ctx.strokeRect(-9, 2, 7, 7); ctx.strokeRect(2, 2, 7, 7); break;
+    case 'ricochet':
+      line(-10, 7, -1, -2, 5, 4, 11, -2);
+      ctx.beginPath(); ctx.moveTo(7, -4); ctx.lineTo(12, -3); ctx.lineTo(10, 2); ctx.fill(); break;
+    case 'recall':
+      ctx.beginPath(); ctx.arc(0, 0, 8, -1.9, 2.4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-8, -5); ctx.lineTo(-10, 1); ctx.lineTo(-4, -1); ctx.closePath(); ctx.fill(); break;
+    case 'movement':
+      line(-10, 0, 10, 0); line(-10, 0, -5, -5); line(-10, 0, -5, 5);
+      line(10, 0, 5, -5); line(10, 0, 5, 5); break;
+    case 'electric':
+      ctx.beginPath(); ctx.moveTo(3, -11); ctx.lineTo(-7, 2); ctx.lineTo(-1, 2);
+      ctx.lineTo(-4, 11); ctx.lineTo(8, -3); ctx.lineTo(2, -3); ctx.closePath(); ctx.fill(); break;
+    case 'second-chance':
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.stroke();
+      line(0, -6, 0, 3); ctx.beginPath(); ctx.arc(0, 6, 1.4, 0, Math.PI * 2); ctx.fill(); break;
+    default:
+      ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.stroke();
+  }
   ctx.restore();
 }
 

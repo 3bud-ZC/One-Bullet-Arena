@@ -1,4 +1,5 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
+import { i18n } from './i18n.js';
 
 export const UI_FONT = '"Segoe UI", Tahoma, Arial, sans-serif';
 
@@ -26,6 +27,56 @@ export const TOUCH_LAYOUT = Object.freeze({
   pause: Object.freeze({ x: WIDTH - 216, y: HEIGHT - 92, radius: 40 }),
 });
 
+function translateLegacyFeedbackLiteral(value) {
+  const raw = String(value);
+  if (!i18n.isRtl) return raw;
+
+  let match = raw.match(/^WAVE\s+(\d+)$/i);
+  if (match) return i18n.t('wave.incoming', { wave: match[1] });
+  match = raw.match(/^BANK ×(\d+)$/i);
+  if (match) return i18n.t('feedback.bank', { value: match[1] });
+  match = raw.match(/^BANK SHOT ×(\d+)$/i);
+  if (match) return i18n.t('feedback.bankShot', { value: match[1] });
+  match = raw.match(/^COMBO ×(\d+)$/i);
+  if (match) return i18n.t('feedback.combo', { value: match[1] });
+  match = raw.match(/^OVERDRIVE\s+([0-9.]+)s$/i);
+  if (match) return i18n.t('feedback.overdriveTimed', { value: match[1] });
+  match = raw.match(/^MOMENTUM\s+(\d+)%$/i);
+  if (match) return i18n.t('feedback.momentum', { value: match[1] });
+
+  const literals = {
+    ENGAGE: 'feedback.engage',
+    'LONG RECALL': 'feedback.longRecall',
+    'BULLET SECURED': 'feedback.bulletSecured',
+    'PRECISION SHOT': 'feedback.precisionShot',
+    '35% DAMAGE CORE': 'feedback.damageCore',
+    'PERFECT CATCH': 'feedback.perfectCatch',
+    'PRECISION SHOT READY': 'feedback.precisionReady',
+    'DAMAGE VECTOR CHARGED': 'feedback.damageVector',
+    OVERDRIVE: 'feedback.overdrive',
+    'PRECISION CORE UNLEASHED': 'feedback.overdriveCore',
+    'OVERDRIVE ENDED': 'feedback.overdriveEnded',
+    'REBUILD MOMENTUM': 'feedback.rebuildMomentum',
+    'PRECISION READY': 'feedback.precisionReadyShort',
+    'BUILD THE CHAIN': 'feedback.buildChain',
+    RELENTLESS: 'feedback.rank.relentless',
+    CHAINED: 'feedback.rank.chained',
+    'LOCKED IN': 'feedback.rank.locked',
+    STABLE: 'feedback.rank.stable',
+    'WARDEN FLANKED': 'feedback.wardenFlanked',
+    'GUARD BYPASSED': 'feedback.guardBypassed',
+    'WARDEN GUARD BROKEN': 'feedback.guardBroken',
+    'ATTACK FROM ANY ANGLE': 'feedback.attackAnyAngle',
+    'WARDEN BLOCK': 'feedback.wardenBlock',
+    'FLANK OR BREAK THE GUARD': 'feedback.flankOrBreak',
+    'FLANK ×1.2': 'feedback.flank',
+    'GUARD -2': 'feedback.guardMinus2',
+    BLOCKED: 'feedback.blocked',
+  };
+  const key = literals[raw];
+  return key ? i18n.t(key) : raw;
+}
+
 export function roundedRect(ctx, x, y, width, height, radius = 14) {
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(x, y, width, height, radius);
@@ -43,7 +94,6 @@ export function panel(
   glow = 8,
 ) {
   ctx.save();
-
   ctx.fillStyle = fill;
   ctx.strokeStyle = accent;
   ctx.lineWidth = 1.5;
@@ -85,13 +135,14 @@ export function label(
   weight = 700,
   align = 'center',
 ) {
+  const localized = translateLegacyFeedbackLiteral(text);
   ctx.save();
-  ctx.direction = 'rtl';
+  ctx.direction = i18n.dir;
   ctx.textAlign = align;
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px ${UI_FONT}`;
-  ctx.fillText(String(text), x, y);
+  ctx.fillText(localized, x, y);
   ctx.restore();
 }
 
@@ -111,8 +162,8 @@ export function wrapRtl(
   const lines = [];
   let line = '';
   ctx.save();
-  ctx.direction = 'rtl';
-  ctx.textAlign = 'right';
+  ctx.direction = i18n.dir;
+  ctx.textAlign = i18n.isRtl ? 'right' : 'left';
   ctx.fillStyle = color;
   ctx.font = `${weight} ${size}px ${UI_FONT}`;
   for (const word of words) {
@@ -196,39 +247,23 @@ export function formatRunTime(seconds) {
 export function upgradeEffectText(upgrade, currentStack = 0) {
   const current = Math.max(0, Math.trunc(Number(currentStack) || 0));
   const next = Math.min(upgrade.maxStacks, current + 1);
-  const pair = (before, after, suffix = '') => `الحالي ${before}${suffix}  •  بعد الاختيار ${after}${suffix}`;
+  const pair = (before, after, suffix = '') => `${i18n.t('upgrade.current')} ${before}${suffix}  •  ${i18n.t('upgrade.after')} ${after}${suffix}`;
+  const arrow = i18n.isRtl ? '←' : '→';
 
   switch (upgrade.id) {
-    case 'heavy-shot':
-      return pair((1 + current * 0.35).toFixed(2), (1 + next * 0.35).toFixed(2), '× ضرر');
-    case 'bullet-velocity':
-      return pair(current * 7, next * 7, '% سرعة');
-    case 'extended-ricochet':
-      return pair(4 + current * 2, 4 + next * 2, ' ارتدادات');
-    case 'hot-ricochet':
-      return pair(current * 24, next * 24, '% لكل ارتداد');
-    case 'shock-impact':
-      return pair(82 + current * 20, 82 + next * 20, ' مدى');
-    case 'magnetic-recall':
-      return pair(720 + current * 95, 720 + next * 95, ' سرعة عودة');
-    case 'recall-strike':
-      return pair(current * 30, next * 30, '% ضرر عودة');
-    case 'quick-dash':
-      return pair(
-        Math.max(0.36, 1.12 * Math.pow(0.86, current)).toFixed(2),
-        Math.max(0.36, 1.12 * Math.pow(0.86, next)).toFixed(2),
-        'ث انتظار',
-      );
-    case 'swift-steps':
-      return pair(current * 7, next * 7, '% حركة');
-    case 'vitality':
-      return pair(3 + current, 3 + next, ' قلوب');
-    case 'wave-shield':
-      return 'بعد الاختيار: درع ضربة واحدة في بداية كل موجة';
-    case 'second-chance':
-      return 'بعد الاختيار: نجاة واحدة من ضربة قاتلة في كل جولة';
-    default:
-      return `المستوى ${current} ← ${next}`;
+    case 'heavy-shot': return pair((1 + current * 0.35).toFixed(2), (1 + next * 0.35).toFixed(2), '×');
+    case 'bullet-velocity': return pair(current * 7, next * 7, '%');
+    case 'extended-ricochet': return `${4 + current * 2} ${arrow} ${4 + next * 2}`;
+    case 'hot-ricochet': return pair(current * 24, next * 24, '%');
+    case 'shock-impact': return `${82 + current * 20} ${arrow} ${82 + next * 20}`;
+    case 'magnetic-recall': return `${720 + current * 95} ${arrow} ${720 + next * 95}`;
+    case 'recall-strike': return pair(current * 30, next * 30, '%');
+    case 'quick-dash': return `${Math.max(0.36, 1.12 * Math.pow(0.86, current)).toFixed(2)}s ${arrow} ${Math.max(0.36, 1.12 * Math.pow(0.86, next)).toFixed(2)}s`;
+    case 'swift-steps': return pair(current * 7, next * 7, '%');
+    case 'vitality': return `${3 + current} ${arrow} ${3 + next}`;
+    case 'wave-shield': return i18n.t('upgrade.wave-shield.description');
+    case 'second-chance': return i18n.t('upgrade.second-chance.description');
+    default: return i18n.t('upgrade.level', { current, next });
   }
 }
 

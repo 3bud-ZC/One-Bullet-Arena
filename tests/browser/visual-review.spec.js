@@ -17,11 +17,11 @@ test('captures the v3.6 global UI release while preserving combat-depth systems'
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menuSnapshot.releaseVersion).toBe('3.6.0-global-ui');
+  expect(menuSnapshot.releaseVersion).toBe('3.6.1-ui-refinement');
   expect(menuSnapshot.releaseChannel).toBe('global-ui');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.6.0-global-ui');
-  expect(menuSnapshot.globalUiRuntimeVersion).toBe('3.6.0-global-ui');
-  expect(menuSnapshot.globalUiRevision).toBe('global-command-interface-v1');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.6.1-ui-refinement');
+  expect(menuSnapshot.globalUiRuntimeVersion).toBe('3.6.1-ui-refinement');
+  expect(menuSnapshot.globalUiRevision).toBe('production-refinement-v1');
   expect(menuSnapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(menuSnapshot.localizationActive).toBe(true);
   expect(menuSnapshot.bilingualUi).toBe(true);

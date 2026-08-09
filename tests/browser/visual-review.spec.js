@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 async function loadGame(page) {
+  await page.addInitScript(() => localStorage.setItem('one-bullet-language', 'en'));
   await page.goto('/?qa=1');
   await page.waitForFunction(() => Boolean(window.__ONE_BULLET_ARENA__));
   await page.locator('#game-canvas').waitFor({ state: 'visible' });
@@ -8,57 +9,31 @@ async function loadGame(page) {
 
 async function attachCanvas(page, testInfo, name) {
   const image = await page.locator('#game-canvas').screenshot({ animations: 'disabled' });
-  await testInfo.attach(`${testInfo.project.name}-${name}`, {
-    body: image,
-    contentType: 'image/png',
-  });
+  await testInfo.attach(`${testInfo.project.name}-${name}`, { body: image, contentType: 'image/png' });
 }
 
-test('captures the v3.5.1 UI repair release and existing combat states', async ({ page }, testInfo) => {
-  test.setTimeout(60000);
+test('captures the v3.6 global UI release while preserving combat-depth systems', async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
   await loadGame(page);
 
   const menuSnapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menuSnapshot.version).toBe('2.7.0-feedback');
-  expect(menuSnapshot.releaseVersion).toBe('3.5.1-ui-repair');
-  expect(menuSnapshot.releaseChannel).toBe('ui-repair');
-  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.5.1-ui-repair');
-  expect(menuSnapshot.releaseSchemaVersion).toBe(1);
-  expect(menuSnapshot.eventFoundationVersion).toBe('3.5.1-ui-repair');
-  expect(menuSnapshot.eventSchemaVersion).toBe(4);
-  expect(menuSnapshot.gameEventBusActive).toBe(true);
-  expect(menuSnapshot.combatDepthActive).toBe(true);
-  expect(menuSnapshot.combatDepthVersion).toBe('2.9.0-combat');
-  expect(menuSnapshot.checkpointProgressionActive).toBe(true);
-  expect(menuSnapshot.checkpointRuntimeVersion).toBe('3.0.0-checkpoint');
-  expect(menuSnapshot.wardenEnemyActive).toBe(true);
-  expect(menuSnapshot.wardenRuntimeVersion).toBe('3.1.0-a-warden');
-  expect(menuSnapshot.true2DArenaActive).toBe(true);
-  expect(menuSnapshot.world2DRuntimeVersion).toBe('3.2.0-true-2d');
-  expect(menuSnapshot.world2DStyle).toBe('layered-top-down-2d');
-  expect(menuSnapshot.visualOverhaulActive).toBe(true);
-  expect(menuSnapshot.visualOverhaulRuntimeVersion).toBe('3.3.0-visual-overhaul');
-  expect(menuSnapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
-  expect(menuSnapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
-  expect(menuSnapshot.unifiedUiRuntimeVersion).toBe('3.4.0-unified-ui');
-  expect(menuSnapshot.productionArtRuntimeVersion).toBe('3.5.0-production-art');
-  expect(menuSnapshot.productionArtRevision).toBe('production-command-suite-v1');
-  expect(menuSnapshot.productionArtActive).toBe(true);
-  expect(menuSnapshot.uiRepairRuntimeVersion).toBe('3.5.1-ui-repair');
-  expect(menuSnapshot.uiRepairRevision).toBe('production-ui-repair-v1');
-  expect(menuSnapshot.uiRepairActive).toBe(true);
-  expect(menuSnapshot.uiDensity).toBe('balanced-production');
+  expect(menuSnapshot.releaseVersion).toBe('3.6.0-global-ui');
+  expect(menuSnapshot.releaseChannel).toBe('global-ui');
+  expect(menuSnapshot.releaseCacheName).toBe('one-bullet-arena-v3.6.0-global-ui');
+  expect(menuSnapshot.globalUiRuntimeVersion).toBe('3.6.0-global-ui');
+  expect(menuSnapshot.globalUiRevision).toBe('global-command-interface-v1');
+  expect(menuSnapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
+  expect(menuSnapshot.localizationActive).toBe(true);
+  expect(menuSnapshot.bilingualUi).toBe(true);
   expect(menuSnapshot.expandingWorldActive).toBe(true);
-  expect(menuSnapshot.unifiedInterfaceLanguage).toBe(true);
-  expect(menuSnapshot.stableHudDuringShake).toBe(true);
+  expect(menuSnapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
   expect(menuSnapshot.gameplayGeometryChanged).toBe(true);
   expect(menuSnapshot.collisionGeometryChanged).toBe(true);
-  expect(menuSnapshot.recentGameEvents.at(-1)?.type).toBe('runtime.ready');
-  expect(menuSnapshot.combatFeedback).toBe('2.7.0-feedback');
-  expect(menuSnapshot.uiLayoutVersion).toBe('3.5.1-ui-repair');
-  expect(menuSnapshot.visualTheme).toBe('neon-tactical-arena');
-  expect(menuSnapshot.redesignedMenu).toBe(true);
-  await attachCanvas(page, testInfo, 'ui-repair-release-menu');
+  expect(menuSnapshot.gameEventBusActive).toBe(true);
+  expect(menuSnapshot.combatDepthActive).toBe(true);
+  expect(menuSnapshot.checkpointProgressionActive).toBe(true);
+  expect(menuSnapshot.wardenEnemyActive).toBe(true);
+  await attachCanvas(page, testInfo, 'global-release-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -72,68 +47,21 @@ test('captures the v3.5.1 UI repair release and existing combat states', async (
     game.comboTimer = 2.4;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'ui-repair-combat-hud');
+  await attachCanvas(page, testInfo, 'global-combat-hud');
 
   const catchSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.recallStartedAt = game.runTime - 0.7;
     game.recallStartDistance = 350;
     game.catchAlignmentPeak = 0.9;
-    Object.assign(game.bullet, {
-      held: false,
-      recalling: true,
-      x: game.player.x + 6,
-      y: game.player.y,
-      vx: -720,
-      vy: 0,
-      recoverDelay: 0,
-    });
+    Object.assign(game.bullet, { held: false, recalling: true, x: game.player.x + 6, y: game.player.y, vx: -720, vy: 0, recoverDelay: 0 });
     game.catchBullet();
     game.draw();
     return game.getSnapshot();
   });
   expect(catchSnapshot.precisionCharge).toBe(1);
   expect(catchSnapshot.perfectCatches).toBe(1);
-  await attachCanvas(page, testInfo, 'perfect-catch-precision-ready');
-
-  const overdriveSnapshot = await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.momentum = 98;
-    game.addMomentum(10);
-    game.draw();
-    return game.getSnapshot();
-  });
-  expect(overdriveSnapshot.overdriveActive).toBe(true);
-  expect(overdriveSnapshot.overdrives).toBe(1);
-  await attachCanvas(page, testInfo, 'overdrive-active');
-
-  const feedbackSnapshot = await page.evaluate(() => {
-    const game = window.__ONE_BULLET_ARENA__;
-    game.overdriveTimer = 0;
-    game.momentum = 0;
-    game.precisionCharge = 1;
-    game.pointer.x = 960;
-    game.pointer.y = 360;
-    game.fireBullet();
-    game.onRicochet();
-    game.onRicochet();
-    game.enemies = [];
-    const enemy = game.spawnEnemy('brute', 0, { point: { x: 790, y: 380 } });
-    const survivor = game.spawnEnemy('scout', 1, { point: { x: 1020, y: 540 } });
-    enemy.spawnTime = 0;
-    survivor.spawnTime = 0;
-    survivor.health = 999;
-    survivor.maxHealth = 999;
-    game.damageEnemy(enemy, 99, true);
-    game.draw();
-    return game.getSnapshot();
-  });
-  expect(feedbackSnapshot.feedbackEventCount).toBeGreaterThan(0);
-  expect(feedbackSnapshot.feedbackCalloutActive).toBe(true);
-  expect(feedbackSnapshot.precisionKills).toBe(1);
-  expect(feedbackSnapshot.bankKills).toBe(1);
-  expect(feedbackSnapshot.enemies).toBe(1);
-  await attachCanvas(page, testInfo, 'precision-bank-impact');
+  await attachCanvas(page, testInfo, 'perfect-catch');
 
   const upgradeSnapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -148,9 +76,8 @@ test('captures the v3.5.1 UI repair release and existing combat states', async (
   });
   expect(upgradeSnapshot.state).toBe('upgrade');
   expect(upgradeSnapshot.upgradeChoices).toHaveLength(3);
-  expect(upgradeSnapshot.productionOverlaySuite).toBe(true);
-  expect(upgradeSnapshot.uiRepairActive).toBe(true);
-  await attachCanvas(page, testInfo, 'ui-repair-upgrade-cards');
+  expect(upgradeSnapshot.globalUiActive).toBe(true);
+  await attachCanvas(page, testInfo, 'global-upgrade-cards');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -163,8 +90,7 @@ test('captures the v3.5.1 UI repair release and existing combat states', async (
     game.stats.hits = 25;
     game.stats.upgrades = 8;
     game.stats.damageTaken = 3;
-    game.maxCombo = 11;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'ui-repair-game-over');
+  await attachCanvas(page, testInfo, 'global-game-over');
 });

@@ -58,6 +58,7 @@ jobs:
           test -f _site/src/core/world-expansion-runtime.js
           test -f _site/src/core/unified-ui-runtime.js
           test -f _site/src/core/production-art-runtime.js
+          test -f _site/src/core/ui-repair-runtime.js
           test -f _site/src/game.js
           test -f _site/src/game-runtime.js
           test -f _site/src/input-controller.js
@@ -76,7 +77,8 @@ jobs:
           grep -q "core/world-expansion-runtime.js" _site/sw.js
           grep -q "core/unified-ui-runtime.js" _site/sw.js
           grep -q "core/production-art-runtime.js" _site/sw.js
-          grep -q "OneBulletProductionArtRuntime" _site/src/main.js
+          grep -q "core/ui-repair-runtime.js" _site/sw.js
+          grep -q "OneBulletUiRepairRuntime" _site/src/main.js
           grep -q "requestFullscreen" _site/src/main.js
           grep -q "width: 100vw" _site/game.css
           grep -q "height: 100dvh" _site/game.css

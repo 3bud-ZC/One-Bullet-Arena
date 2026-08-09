@@ -76,6 +76,81 @@ test('v3.8 owns native rAF rendering, 120 Hz fixed simulation, interpolation, an
   await expect(page.locator('[data-combat-announcer]')).toHaveCount(1);
 });
 
+test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz render schedules', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Deterministic gameplay schedule comparison runs once in Chromium.');
+  await loadGame(page);
+  const runs = await page.evaluate(async () => {
+    const { FixedStepClock } = await import('/src/performance/frame-pacer.js');
+    const game = window.__ONE_BULLET_ARENA__;
+
+    const runSchedule = (hz) => {
+      game.startRun();
+      game.banner = null;
+      game.tutorialStep = 3;
+      for (const enemy of game.enemies) enemy.spawnTime = 0;
+      game.keys.clear();
+      game.keys.add('d');
+      game.pointer.x = 1040;
+      game.pointer.y = 360;
+
+      const clock = new FixedStepClock({ simulationHz: 120, maxCatchUpSteps: 8, maxFrameDelta: 0.1 });
+      const durationSeconds = 1.5;
+      const frameMs = 1000 / hz;
+      const frameCount = Math.ceil(durationSeconds * hz);
+      let steps = 0;
+      clock.tick(0, () => {});
+      for (let frame = 1; frame <= frameCount; frame += 1) {
+        const timestamp = Math.min(durationSeconds * 1000, frame * frameMs);
+        clock.tick(timestamp, (dt) => {
+          game.update(dt);
+          steps += 1;
+        });
+      }
+      game.keys.clear();
+      const result = {
+        hz,
+        steps,
+        wave: game.wave,
+        score: game.score,
+        playerX: game.player.x,
+        playerY: game.player.y,
+        playerHealth: game.player.health,
+        dashCooldown: game.player.dashCooldown,
+        bulletHeld: game.bullet.held,
+        enemyCount: game.enemies.length,
+        firstEnemies: game.enemies.slice(0, 3).map((enemy) => ({
+          type: enemy.type,
+          x: enemy.x,
+          y: enemy.y,
+          health: enemy.health,
+        })),
+      };
+      game.goToMenu();
+      return result;
+    };
+
+    return [60, 120, 144, 165, 240].map(runSchedule);
+  });
+
+  const reference = runs.find((run) => run.hz === 120);
+  for (const run of runs) {
+    expect(Math.abs(run.steps - reference.steps)).toBeLessThanOrEqual(1);
+    expect(run.wave).toBe(reference.wave);
+    expect(run.score).toBe(reference.score);
+    expect(run.playerHealth).toBe(reference.playerHealth);
+    expect(run.bulletHeld).toBe(reference.bulletHeld);
+    expect(run.enemyCount).toBe(reference.enemyCount);
+    expect(Math.abs(run.playerX - reference.playerX)).toBeLessThan(3.5);
+    expect(Math.abs(run.playerY - reference.playerY)).toBeLessThan(3.5);
+    expect(run.firstEnemies.map((enemy) => enemy.type)).toEqual(reference.firstEnemies.map((enemy) => enemy.type));
+    for (let index = 0; index < run.firstEnemies.length; index += 1) {
+      expect(Math.abs(run.firstEnemies[index].x - reference.firstEnemies[index].x)).toBeLessThan(4);
+      expect(Math.abs(run.firstEnemies[index].y - reference.firstEnemies[index].y)).toBeLessThan(4);
+      expect(run.firstEnemies[index].health).toBe(reference.firstEnemies[index].health);
+    }
+  }
+});
+
 test('render quality preference persists and never changes gameplay population', async ({ page }) => {
   await loadGame(page);
   const result = await page.evaluate(() => {

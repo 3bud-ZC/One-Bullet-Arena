@@ -5,104 +5,103 @@ Last updated: 2026-08-09
 ## Current development release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release candidate: **v3.5.0 — Production Art**
+- Release candidate: **v3.5.1 — UI Repair**
 - Production branch: `main`
-- Canonical release version: `3.5.0-production-art`
-- Canonical release label: `v3.5.0-production-art`
-- Release channel: `production-art`
-- Service Worker cache: `one-bullet-arena-v3.5.0-production-art`
-- Previous gameplay foundation: **v3.4.0 — Expanding World**
-- Last fully accepted baseline: **v3.3.0 — Cinematic Visual Overhaul**
-- v3.5 automated verification: **pending latest GitHub Actions result**
-- v3.5 manual gameplay/visual acceptance: **pending**
+- Canonical release version: `3.5.1-ui-repair`
+- Canonical release label: `v3.5.1-ui-repair`
+- Release channel: `ui-repair`
+- Service Worker cache: `one-bullet-arena-v3.5.1-ui-repair`
+- Presentation foundation: **v3.5.0 — Production Art**
+- Gameplay foundation: **v3.4.0 — Expanding World**
+- Automated verification: **pending latest GitHub Actions result**
+- Manual visual acceptance: **pending**
 - Production publishing: **GitHub Pages deploys only after `npm run verify:all` succeeds**
 
-## v3.5 scope — Production Art
+## v3.5.1 scope — Focused UI Repair
 
-v3.5 is a presentation overhaul built on top of the v3.4 expanding-world gameplay foundation. It does not remove the checkpoint, camera, world-expansion, encounter-director, Warden, or combat-depth systems.
+v3.5.1 is a focused interface correction on top of the Production Art and Expanding World systems. It intentionally does not modify arena geometry, world expansion, camera behavior, checkpoints, encounter composition, enemy behavior, damage, movement, or progression.
 
-### New production-art runtime
+### UI Repair runtime
 
-`src/core/production-art-runtime.js` is now the final runtime and extends `OneBulletUnifiedUiRuntime`.
+`src/core/ui-repair-runtime.js` is now the final boot runtime and extends `OneBulletProductionArtRuntime`.
 
-It owns the final presentation for:
+It owns only these high-value UI surfaces:
 
 - Main Menu / checkpoint dashboard;
-- Run Intelligence / progression rail;
 - combat HUD;
-- late-sector tactical minimap;
-- arena presentation pass;
+- tactical minimap;
 - Pause overlay;
 - Game Over overlay;
-- Upgrade Selection;
-- production typography, panels, buttons, states, and visual hierarchy.
+- Upgrade Selection.
 
-Production-art contract:
+It does **not** override arena rendering or the simulation update loop.
 
-- runtime: `3.5.0-production-art`;
-- revision: `production-command-suite-v1`;
-- dashboard: production mission-control composition;
-- combat HUD: compact screen-space command HUD;
-- arena: extra sector framing/details without replacing world geometry;
-- overlays: one shared production visual language.
+UI Repair contract:
 
-### Main Menu redesign
+- runtime: `3.5.1-ui-repair`;
+- revision: `production-ui-repair-v1`;
+- density: `balanced-production`;
+- outer desktop margin target: 58px;
+- main/rail gap target: 20px;
+- dashboard grid: 780px main mission surface + 364px Run Intelligence rail;
+- compact three-module combat HUD;
+- reduced Pause and Game Over modal footprints;
+- equal-baseline Upgrade cards.
 
-The old oversized dashboard composition is no longer the final renderer. The v3.5 menu uses:
+### Dashboard corrections
+
+The repaired dashboard replaces the oversized and loosely aligned composition with:
 
 - compact left-aligned product identity;
-- explicit checkpoint/new-run status module;
-- one primary mission panel with clear current-wave hierarchy;
-- three telemetry tiles for upgrades, run score, and save state;
+- explicit checkpoint/new-run state at the top right;
+- one coherent mission surface;
+- a contained Current Wave hero block rather than a large empty panel;
+- three equal telemetry tiles for Upgrades, Run Score, and Save state;
 - one dominant Continue/Start action;
-- independent secondary New Run and Delete Save actions;
-- Run Intelligence rail for Best Wave, High Score, Checkpoint, and world-expansion progress;
-- restrained keyboard hints instead of a large footer toolbar.
+- New Run and Delete Save as balanced secondary actions;
+- wider Run Intelligence rows with stable label/value separation;
+- integrated World Progression showing the current sector and next expansion wave;
+- restrained keyboard hints instead of a large footer panel.
 
-### Combat presentation
+### Combat HUD corrections
 
-The production HUD keeps gameplay visible and reserves only three compact top modules:
+The repaired combat HUD reduces obstruction while keeping essential information visible:
 
-- bullet / recall state;
-- current wave / encounter / enemy telemetry;
-- health / shield / dash state.
+- bullet/recall module: 268×54;
+- wave/encounter module: 352×54;
+- health/shield/dash module: 268×54;
+- compact tactical minimap in late sectors;
+- stable screen-space placement while the world camera moves.
 
-The tactical minimap remains available in expanded sectors and uses the same production visual system.
+### Overlay corrections
 
-### Fullscreen + expanding world retained from v3.4
+- Pause: reduced to a 520×360 tactical modal with three metrics and two secondary actions.
+- Game Over: reduced to a 640×500 modal with four run metrics and explicit checkpoint state.
+- Upgrade Selection: three equal 344×420 cards with consistent title, description, effect, level, and selection baselines.
 
-The v3.4 gameplay foundation remains active:
+## Retained production/gameplay foundations
 
-- browser shell fills `100vw × 100dvh`;
-- direct interaction and `Enter` / `Space` can request Browser Fullscreen;
-- `F` remains the manual fullscreen toggle;
-- eight arena stages unlock at Waves 1, 3, 6, 9, 13, 18, 25, and 35;
-- camera follows the player with stage-dependent zoom;
-- pointer aiming is transformed from screen space to world space;
-- enemies spawn relative to the player in large sectors;
-- minimap tracks viewport, player, and exploration;
-- HUD/touch safe zones remain protected in world space.
+v3.5.0 Production Art remains below UI Repair and still owns the arena presentation layer. v3.4 Expanding World remains the gameplay foundation, including:
 
-### Late-game encounter director retained
-
-From Wave 10 onward, the five encounter profiles remain active:
-
-- `rush`;
-- `crossfire`;
-- `swarm`;
-- `siege`;
-- `hunters`.
-
-The enemy cap remains 18 and late health/speed/projectile pressure continues scaling inside explicit safety caps.
+- fullscreen `100vw × 100dvh` browser shell;
+- eight world-expansion stages at Waves 1, 3, 6, 9, 13, 18, 25, and 35;
+- player-follow camera and stage-dependent zoom;
+- screen-to-world pointer aiming;
+- player-relative spawning in large sectors;
+- exploration tracking;
+- five late-game encounter patterns: rush, crossfire, swarm, siege, hunters;
+- active enemy cap of 18;
+- camera-aware HUD/touch collision safe zones.
 
 ## Active runtime chain
 
 The boot chain is now:
 
-`ProductionArt → UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
+`UIRepair → ProductionArt → UnifiedUI → WorldExpansion → Dashboard → VisualOverhaul → World2D → Warden → Checkpoint → CombatDepth → EventFoundation → UI/Combat runtime`
 
 Current contracts:
 
+- UI Repair: `3.5.1-ui-repair` / `production-ui-repair-v1`.
 - Production Art: `3.5.0-production-art` / `production-command-suite-v1`.
 - Unified UI: `3.4.0-unified-ui`.
 - World Expansion: `3.4.0-expanding-world`.
@@ -117,21 +116,21 @@ Current contracts:
 
 Existing checkpoint data remains compatible.
 
-## v3.5 verification coverage
+## v3.5.1 verification coverage
 
 The release gate now covers:
 
-- syntax checking of `production-art-runtime.js`;
-- production runtime boot from `src/main.js`;
-- Service Worker caching of production art;
-- canonical v3.5 release metadata;
-- production menu without a checkpoint;
-- production checkpoint continuation menu;
-- production Game Over flow;
-- restored checkpoint gameplay;
-- Wave 35 expanded-world camera under production art;
-- production dashboard, combat HUD, arena pass, and overlay snapshot contracts;
-- retained fullscreen, checkpoint, camera-safe-zone, Warden, encounter, and world-expansion behavior.
+- syntax checking of `ui-repair-runtime.js`;
+- final runtime boot through `OneBulletUiRepairRuntime`;
+- Service Worker caching of both Production Art and UI Repair runtimes;
+- canonical `3.5.1-ui-repair` release/cache identity;
+- Fresh Menu without a checkpoint;
+- checkpoint dashboard and restore flow;
+- repaired Game Over flow;
+- repaired Upgrade Selection;
+- repaired compact combat HUD;
+- Wave 35 expanded-world camera under the repaired UI;
+- retained Production Art, fullscreen, checkpoint, Warden, camera-safe-zone, encounter, and world-expansion behavior.
 
 ## Production workflow
 
@@ -141,18 +140,19 @@ The release gate now covers:
 2. Playwright browser installation;
 3. `npm run verify:all`;
 4. static-site assembly;
-5. production-art/release/fullscreen deployment-contract checks;
+5. runtime/release/fullscreen deployment-contract checks including `ui-repair-runtime.js`;
 6. GitHub Pages deployment.
 
 Only the newest `main` revision should be treated as the deployment candidate.
 
 ## Acceptance gate
 
-Do **not** mark v3.5 accepted until all of the following are true:
+Do **not** mark v3.5.1 accepted until all of the following are true:
 
 - latest Verify workflow is green;
 - latest Browser Smoke workflow is green;
 - latest Deploy GitHub Pages workflow is green;
+- deployed footer reports `v3.5.1-ui-repair` rather than a stale v3.4/v3.5 cache;
 - Fresh Menu renders without runtime errors;
 - checkpoint continuation restores the saved run;
 - Dashboard is manually accepted on desktop fullscreen;

@@ -77,3 +77,18 @@ test('mobile landscape around 844x390 keeps global UI and touch controls on-scre
   await capture(page, testInfo, 'global-ui-844x390-mobile-ar');
   expect(pageErrors).toEqual([]);
 });
+
+test('portrait mobile presents the localized orientation screen instead of cropped controls', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-landscape', 'Orientation QA runs in the mobile browser project');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await load(page, 'ar');
+  const hint = page.locator('.orientation-hint');
+  await expect(hint).toBeVisible();
+  await expect(hint.locator('strong')).toHaveText('لف الهاتف للوضع الأفقي');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  const image = await page.screenshot({ fullPage: true, animations: 'disabled' });
+  await testInfo.attach(`${testInfo.project.name}-portrait-orientation-ar`, { body: image, contentType: 'image/png' });
+  expect(pageErrors).toEqual([]);
+});

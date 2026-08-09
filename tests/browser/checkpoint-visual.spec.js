@@ -10,10 +10,7 @@ async function loadGame(page) {
 
 async function attachCanvas(page, testInfo, name) {
   const image = await page.locator('#game-canvas').screenshot({ animations: 'disabled' });
-  await testInfo.attach(`${testInfo.project.name}-${name}`, {
-    body: image,
-    contentType: 'image/png',
-  });
+  await testInfo.attach(`${testInfo.project.name}-${name}`, { body: image, contentType: 'image/png' });
 }
 
 async function seedCheckpoint(page) {
@@ -29,8 +26,6 @@ async function seedCheckpoint(page) {
     game.player.maxHealth = 4;
     game.player.health = 3;
     game.player.shield = 1;
-    game.momentum = 64;
-    game.precisionCharge = 1;
     game.wave = 5;
     game.startNextWave();
     game.goToMenu();
@@ -38,10 +33,9 @@ async function seedCheckpoint(page) {
   });
 }
 
-test('renders the fresh UI repair menu fullscreen without runtime errors', async ({ page }, testInfo) => {
+test('renders the global UI menu fullscreen without runtime errors', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
-
   await loadGame(page);
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -49,44 +43,33 @@ test('renders the fresh UI repair menu fullscreen without runtime errors', async
     game.goToMenu();
     game.draw();
     const frame = document.querySelector('.game-frame').getBoundingClientRect();
-    return {
-      snapshot: game.getSnapshot(),
-      frame: { width: frame.width, height: frame.height },
-      viewport: { width: innerWidth, height: innerHeight },
-    };
+    return { snapshot: game.getSnapshot(), frame: { width: frame.width, height: frame.height }, viewport: { width: innerWidth, height: innerHeight } };
   });
-
   expect(result.snapshot.checkpointAvailable).toBe(false);
-  expect(result.snapshot.releaseVersion).toBe('3.5.1-ui-repair');
-  expect(result.snapshot.productionArtRuntimeVersion).toBe('3.5.0-production-art');
-  expect(result.snapshot.productionArtRevision).toBe('production-command-suite-v1');
-  expect(result.snapshot.productionArtActive).toBe(true);
-  expect(result.snapshot.uiRepairRuntimeVersion).toBe('3.5.1-ui-repair');
-  expect(result.snapshot.uiRepairRevision).toBe('production-ui-repair-v1');
-  expect(result.snapshot.uiRepairActive).toBe(true);
-  expect(result.snapshot.uiDensity).toBe('balanced-production');
+  expect(result.snapshot.releaseVersion).toBe('3.6.0-global-ui');
+  expect(result.snapshot.globalUiRuntimeVersion).toBe('3.6.0-global-ui');
+  expect(result.snapshot.globalUiRevision).toBe('global-command-interface-v1');
+  expect(result.snapshot.globalUiActive).toBe(true);
+  expect(result.snapshot.localizationActive).toBe(true);
+  expect(result.snapshot.uiDensity).toBe('game-command-surface');
   expect(Math.abs(result.frame.width - result.viewport.width)).toBeLessThan(1);
   expect(Math.abs(result.frame.height - result.viewport.height)).toBeLessThan(1);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'fresh-ui-repair-menu');
+  await attachCanvas(page, testInfo, 'fresh-global-menu');
 });
 
-test('captures repaired checkpoint menu, game-over choices, and restored wave', async ({ page }, testInfo) => {
+test('captures checkpoint menu, game-over choices, and restored wave under global UI', async ({ page }, testInfo) => {
   await loadGame(page);
   await seedCheckpoint(page);
-
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
-  expect(snapshot.productionArtActive).toBe(true);
-  expect(snapshot.uiRepairActive).toBe(true);
-  expect(snapshot.productionOverlaySuite).toBe(true);
+  expect(snapshot.globalUiActive).toBe(true);
   expect(snapshot.worldExpansionRuntimeVersion).toBe('3.4.0-expanding-world');
   expect(snapshot.expandingWorldActive).toBe(true);
-  expect(snapshot.productionCombatHud).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(true);
   expect(snapshot.collisionGeometryChanged).toBe(true);
-  await attachCanvas(page, testInfo, 'checkpoint-ui-repair-menu');
+  await attachCanvas(page, testInfo, 'checkpoint-global-menu');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -99,11 +82,9 @@ test('captures repaired checkpoint menu, game-over choices, and restored wave', 
     game.stats.hits = 30;
     game.stats.upgrades = 7;
     game.stats.damageTaken = 4;
-    game.maxCombo = 16;
-    game.runTime = 221;
     game.draw();
   });
-  await attachCanvas(page, testInfo, 'ui-repair-game-over');
+  await attachCanvas(page, testInfo, 'global-game-over');
 
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
@@ -115,16 +96,14 @@ test('captures repaired checkpoint menu, game-over choices, and restored wave', 
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(6);
   expect(snapshot.restoredFromCheckpoint).toBe(true);
-  expect(snapshot.productionArenaPass).toBe(true);
-  expect(snapshot.uiRepairActive).toBe(true);
-  await attachCanvas(page, testInfo, 'ui-repair-restored-wave');
+  expect(snapshot.globalUiActive).toBe(true);
+  await attachCanvas(page, testInfo, 'global-restored-wave');
 });
 
-test('late game opens the large world under repaired UI and moves the camera', async ({ page }, testInfo) => {
+test('late game opens the large world under global UI and moves the camera', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await loadGame(page);
-
   const snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.clearCheckpoint();
@@ -137,7 +116,6 @@ test('late game opens the large world under repaired UI and moves the camera', a
     game.draw();
     return game.getSnapshot();
   });
-
   expect(snapshot.state).toBe('playing');
   expect(snapshot.wave).toBe(35);
   expect(snapshot.arenaStage).toBe(7);
@@ -145,9 +123,7 @@ test('late game opens the large world under repaired UI and moves the camera', a
   expect(snapshot.cameraFollowActive).toBe(true);
   expect(snapshot.cameraZoom).toBeLessThan(0.9);
   expect(snapshot.encounterMode).not.toBe('foundation');
-  expect(snapshot.productionArtActive).toBe(true);
-  expect(snapshot.uiRepairActive).toBe(true);
-  expect(snapshot.productionCombatHud).toBe(true);
+  expect(snapshot.globalUiActive).toBe(true);
   expect(pageErrors).toEqual([]);
-  await attachCanvas(page, testInfo, 'wave-35-ui-repair-world');
+  await attachCanvas(page, testInfo, 'wave-35-global-world');
 });

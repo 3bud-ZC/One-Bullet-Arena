@@ -1,5 +1,44 @@
+import { i18n } from '../i18n.js';
+import { iconSvg } from './icons.js';
+
 function clamp01(value) {
   return Math.max(0, Math.min(1, Number(value) || 0));
+}
+
+function formatNumber(value) {
+  return i18n.number(Math.max(0, Math.trunc(Number(value) || 0)));
+}
+
+function setText(element, value) {
+  if (!element) return false;
+  const text = String(value ?? '');
+  if (element.textContent === text) return false;
+  element.textContent = text;
+  return true;
+}
+
+function setHidden(element, hidden) {
+  if (!element) return false;
+  const next = Boolean(hidden);
+  if (element.hidden === next) return false;
+  element.hidden = next;
+  return true;
+}
+
+function setPressed(element, pressed) {
+  if (!element) return false;
+  const next = Boolean(pressed);
+  const value = next ? 'true' : 'false';
+  let changed = false;
+  if (element.getAttribute('aria-pressed') !== value) {
+    element.setAttribute('aria-pressed', value);
+    changed = true;
+  }
+  if (element.classList.contains('is-active') !== next) {
+    element.classList.toggle('is-active', next);
+    changed = true;
+  }
+  return changed;
 }
 
 function setAttributeIfChanged(element, name, value) {
@@ -24,16 +63,21 @@ export function installDomPerformanceBridge(controller) {
   const toolbar = root.querySelector('[data-toolbar]');
   const settingsPopover = root.querySelector('[data-settings-popover]');
   const audioButton = root.querySelector('[data-action="audio"]');
+  const audioIconHost = audioButton?.querySelector('[data-icon-host="audio"]') || null;
   const progressionLine = root.querySelector('[data-progress-line]');
 
   const stats = {
     gaugeWrites: 0,
     minimapTrailRebuilds: 0,
     minimapMarkerWrites: 0,
+    hudSyncs: 0,
+    settingsSyncs: 0,
+    stateSyncs: 0,
   };
   let trailSignature = '';
   let cachedBoundsSignature = '';
   let projectedTrail = '';
+  let lastAudioIcon = '';
 
   controller.performanceElements = Object.freeze({
     gauges,
@@ -45,6 +89,7 @@ export function installDomPerformanceBridge(controller) {
     toolbar,
     settingsPopover,
     audioButton,
+    audioIconHost,
     progressionLine,
   });
 
@@ -61,7 +106,7 @@ export function installDomPerformanceBridge(controller) {
     const game = controller.game;
     const bounds = game.arenaStage?.bounds;
     const shouldShow = Boolean(bounds && (game.arenaStage?.id || 0) >= 4 && !game.touchMode);
-    if (minimap && minimap.hidden !== !shouldShow) minimap.hidden = !shouldShow;
+    setHidden(minimap, !shouldShow);
     if (!shouldShow) return;
 
     const width = Math.max(1, Number(bounds.w) || 1);
@@ -102,8 +147,85 @@ export function installDomPerformanceBridge(controller) {
       stats.minimapMarkerWrites += Number(setAttributeIfChanged(playerElement, 'cy', projectY(game.player?.y).toFixed(2)));
     }
     const sector = controller.bindings?.get?.('minimap-sector');
-    const sectorText = String((game.arenaStage?.id || 0) + 1).padStart(2, '0');
-    if (sector && sector.textContent !== sectorText) sector.textContent = sectorText;
+    setText(sector, String((game.arenaStage?.id || 0) + 1).padStart(2, '0'));
+  };
+
+  controller.syncHud = () => {
+    stats.hudSyncs += 1;
+    const game = controller.game;
+    const maxHealth = Math.max(1, Number(game.player?.maxHealth) || 1);
+    const health = Math.max(0, Number(game.player?.health) || 0);
+    const healthRatio = health / maxHealth;
+    const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, game.stack?.('quick-dash') || 0));
+    const dashRatio = 1 - (Number(game.player?.dashCooldown) || 0) / dashMax;
+    const recallMax = Math.max(1.15, 3.8 - (game.stack?.('magnetic-recall') || 0) * 0.38);
+    const recallRatio = game.bullet?.held ? 1 : 1 - (Number(game.bullet?.recallCooldown) || 0) / recallMax;
+    const bulletKey = game.bullet?.held
+      ? 'hud.bulletHeld'
+      : game.bullet?.recalling
+        ? 'hud.bulletReturning'
+        : 'hud.bulletField';
+
+    setText(controller.bindings.get('hud-bullet'), i18n.t(bulletKey));
+    setText(controller.bindings.get('hud-wave'), formatNumber(game.wave));
+    setText(controller.bindings.get('hud-encounter'), i18n.t(`encounter.${game.currentEncounter?.id || 'foundation'}`));
+    setText(controller.bindings.get('hud-enemies'), formatNumber(game.enemies?.length || 0));
+    setText(controller.bindings.get('hud-score'), formatNumber(game.score));
+    setText(controller.bindings.get('hud-sector'), formatNumber((game.arenaStage?.id || 0) + 1));
+    setText(controller.bindings.get('hud-health'), `${formatNumber(health)}/${formatNumber(maxHealth)}`);
+    setText(controller.bindings.get('hud-shield'), formatNumber(game.player?.shield || 0));
+    controller.setGauge('health', healthRatio);
+    controller.setGauge('dash', dashRatio);
+    controller.setGauge('recall', recallRatio);
+    setHidden(shieldIndicator, !(Number(game.player?.shield) > 0));
+    controller.syncMinimap();
+  };
+
+  controller.syncSettings = () => {
+    stats.settingsSyncs += 1;
+    setHidden(settingsPopover, !controller.settingsOpen);
+    const muted = Boolean(controller.game.audio?.settings?.muted);
+    const icon = muted ? 'audioOff' : 'audio';
+    if (audioIconHost && icon !== lastAudioIcon) {
+      audioIconHost.innerHTML = iconSvg(icon);
+      lastAudioIcon = icon;
+    }
+    setPressed(audioButton, !muted);
+    setText(controller.bindings.get('settings-audio'), i18n.t(muted ? 'menu.muted' : 'menu.soundOn'));
+    setText(controller.bindings.get('settings-language'), i18n.locale.toUpperCase());
+    const viewport = controller.viewport?.getSnapshot?.();
+    if (viewport) {
+      setText(
+        controller.bindings.get('settings-render'),
+        `${viewport.backingWidth}×${viewport.backingHeight} · DPR ${viewport.effectiveDpr.toFixed(2)}`,
+      );
+    }
+  };
+
+  controller.sync = (force = false) => {
+    stats.stateSyncs += 1;
+    if (controller.locale !== i18n.locale) controller.localize();
+    const state = controller.game.state;
+    root.dataset.state = state;
+    root.classList.toggle('is-touch', Boolean(controller.game.touchMode));
+    for (const [name, screen] of controller.screens) setHidden(screen, name !== state);
+    setHidden(toolbar, !['menu', 'paused'].includes(state));
+
+    if (controller.lastState !== state) {
+      controller.lastState = state;
+      controller.settingsOpen = false;
+      controller.syncSettings();
+    }
+
+    if (state === 'menu') controller.syncMenu();
+    else if (state === 'playing') controller.syncHud();
+    else if (state === 'paused') controller.syncPause();
+    else if (state === 'upgrade') controller.syncUpgrade(force);
+    else if (state === 'gameover') controller.syncGameOver();
+
+    // Settings are only visible/interactive in menu or pause. Avoid the old
+    // unconditional settings DOM work in the high-frequency gameplay path.
+    if (['menu', 'paused'].includes(state)) controller.syncSettings();
   };
 
   return Object.freeze({
@@ -113,6 +235,10 @@ export function installDomPerformanceBridge(controller) {
         minimapTrailRebuilds: stats.minimapTrailRebuilds,
         minimapMarkerWrites: stats.minimapMarkerWrites,
         gaugeWrites: stats.gaugeWrites,
+        hudSyncs: stats.hudSyncs,
+        settingsSyncs: stats.settingsSyncs,
+        stateSyncs: stats.stateSyncs,
+        gameplayQueryFreeSync: true,
       };
     },
   });

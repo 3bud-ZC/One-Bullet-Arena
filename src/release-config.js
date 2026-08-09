@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.6.0-global-ui';
+  const version = '3.6.1-ui-refinement';
   const release = Object.freeze({
     version,
     label: `v${version}`,

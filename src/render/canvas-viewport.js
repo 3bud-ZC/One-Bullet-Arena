@@ -91,7 +91,10 @@ export class CanvasViewport {
       || Math.round(nextPixelBudget) !== Math.round(this.maxBackingPixels);
     this.maxDpr = nextMaxDpr;
     this.maxBackingPixels = nextPixelBudget;
-    if (changed && resize) this.resize(true);
+    // A profile can be recorded during combat with resize:false, then applied
+    // later in a safe state. Force the backing-store reconciliation whenever
+    // resize:true is requested, even if the numeric profile was already staged.
+    if (resize) this.resize(true);
     return changed;
   }
 

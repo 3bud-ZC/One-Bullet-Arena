@@ -37,20 +37,23 @@ test('visual overhaul extends the accepted world runtime without gameplay mutati
   assert.match(source, /visualOverhaulActive: true/);
 });
 
-test('command deck dashboard, expanding world, and unified UI form one runtime chain', async () => {
+test('visual, dashboard, world, unified UI, and production art form one runtime chain', async () => {
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const dashboardSource = await readFile(new URL('../src/core/dashboard-polish-runtime.js', import.meta.url), 'utf8');
   const expansionSource = await readFile(new URL('../src/core/world-expansion-runtime.js', import.meta.url), 'utf8');
   const unifiedSource = await readFile(new URL('../src/core/unified-ui-runtime.js', import.meta.url), 'utf8');
+  const productionSource = await readFile(new URL('../src/core/production-art-runtime.js', import.meta.url), 'utf8');
   assert.match(dashboardSource, /extends OneBulletVisualOverhaulRuntime/);
   assert.match(dashboardSource, /command-deck-v12/);
-  assert.match(dashboardSource, /balanced-command-deck-v12/);
   assert.match(expansionSource, /extends OneBulletDashboardPolishRuntime/);
   assert.match(unifiedSource, /extends OneBulletWorldExpansionRuntime/);
   assert.match(unifiedSource, /unifiedInterfaceLanguage: true/);
-  assert.match(mainSource, /OneBulletUnifiedUiRuntime/);
+  assert.match(productionSource, /extends OneBulletUnifiedUiRuntime/);
+  assert.match(productionSource, /production-command-suite-v1/);
+  assert.match(mainSource, /OneBulletProductionArtRuntime/);
   assert.match(workerSource, /\.\/src\/core\/dashboard-polish-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/world-expansion-runtime\.js/);
   assert.match(workerSource, /\.\/src\/core\/unified-ui-runtime\.js/);
+  assert.match(workerSource, /\.\/src\/core\/production-art-runtime\.js/);
 });

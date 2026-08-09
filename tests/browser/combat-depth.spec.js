@@ -9,8 +9,9 @@ async function loadGame(page) {
 test('boots the combat depth runtime and exposes skill diagnostics', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.5.0-production-art');
+  expect(snapshot.releaseVersion).toBe('3.5.1-ui-repair');
   expect(snapshot.productionArtActive).toBe(true);
+  expect(snapshot.uiRepairActive).toBe(true);
   expect(snapshot.combatDepthVersion).toBe('2.9.0-combat');
   expect(snapshot.combatDepthActive).toBe(true);
   expect(snapshot.perfectCatchEnabled).toBe(true);

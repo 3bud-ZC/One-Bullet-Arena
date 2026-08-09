@@ -58,9 +58,11 @@ test('command deck remains a compatible foundation under production art', async 
   assert.match(dashboard, /balanced-command-deck-v12/);
 });
 
-test('main boots production art while preserving fullscreen entry', async () => {
+test('main boots UI repair over production art while preserving fullscreen entry', async () => {
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
-  assert.match(main, /OneBulletProductionArtRuntime/);
+  const repair = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
+  assert.match(main, /OneBulletUiRepairRuntime/);
+  assert.match(repair, /extends OneBulletProductionArtRuntime/);
   assert.match(main, /requestFullscreen/);
   assert.match(main, /navigationUI: 'hide'/);
   assert.match(main, /const key = event\.key\.toLowerCase\(\)/);

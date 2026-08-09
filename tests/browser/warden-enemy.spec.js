@@ -32,7 +32,8 @@ test('warden runtime boots and wave seven introduces the new enemy', async ({ pa
     return { menu, wave: game.getSnapshot() };
   });
 
-  expect(result.menu.releaseVersion).toBe('3.4.0-expanding-world');
+  expect(result.menu.releaseVersion).toBe('3.5.0-production-art');
+  expect(result.menu.productionArtActive).toBe(true);
   expect(result.menu.wardenRuntimeVersion).toBe('3.1.0-a-warden');
   expect(result.menu.wardenEnemyActive).toBe(true);
   expect(result.menu.true2DArenaActive).toBe(true);

@@ -101,6 +101,17 @@ test('frame pacing timing resets preserve telemetry while excluding background g
   assert.equal(pacer.snapshot().sampleCount, 0);
 });
 
+test('frame pacing diagnostics retain severe visible stalls instead of hiding them', () => {
+  const pacer = new FramePacer({ windowSize: 120, longFrameMs: 25 });
+  pacer.sample(0, 0);
+  pacer.sample(1500, 8);
+  const snapshot = pacer.snapshot();
+  assert.equal(snapshot.sampleCount, 1);
+  assert.equal(snapshot.p95FrameMs, 1500);
+  assert.equal(snapshot.longFrameCount, 1);
+  assert.equal(snapshot.simulationStepsPerFrame, 8);
+});
+
 test('render quality preference persists independently from gameplay state', () => {
   const storage = memoryStorage();
   assert.equal(loadQualityMode(storage), 'AUTO');

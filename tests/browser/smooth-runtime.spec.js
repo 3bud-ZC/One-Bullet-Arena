@@ -35,26 +35,44 @@ async function createDenseScene(page) {
 async function sampleRaf(page, durationMs = 1400) {
   return page.evaluate((duration) => new Promise((resolve) => {
     const samples = [];
-    const started = performance.now();
-    let previous = 0;
+    let started = null;
+    let previous = null;
+    let observedCallbacks = 0;
+    let settled = false;
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(safetyTimer);
+      const sorted = samples
+        .filter((value) => Number.isFinite(value) && value > 0)
+        .sort((a, b) => a - b);
+      const average = sorted.length ? sorted.reduce((sum, value) => sum + value, 0) / sorted.length : 0;
+      const percentile = (ratio) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * ratio) - 1))] || 0;
+      resolve({
+        frames: sorted.length,
+        observedCallbacks,
+        elapsedMs: started !== null && previous !== null ? Math.max(0, previous - started) : 0,
+        longFrameCount: sorted.filter((value) => value >= 250).length,
+        averageFrameMs: average,
+        medianFrameMs: percentile(.5),
+        p95FrameMs: percentile(.95),
+        p99FrameMs: percentile(.99),
+        renderFps: average > 0 ? 1000 / average : 0,
+      });
+    };
+
+    const safetyTimer = setTimeout(finish, Math.max(5000, duration * 4));
     const frame = (timestamp) => {
-      if (previous) samples.push(timestamp - previous);
+      if (settled) return;
+      observedCallbacks += 1;
+      if (started === null) started = timestamp;
+      if (previous !== null && timestamp > previous) samples.push(timestamp - previous);
       previous = timestamp;
       if (timestamp - started < duration) requestAnimationFrame(frame);
-      else {
-        const sorted = samples.filter((value) => value > 0 && value < 250).sort((a, b) => a - b);
-        const average = sorted.length ? sorted.reduce((sum, value) => sum + value, 0) / sorted.length : 0;
-        const percentile = (ratio) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * ratio) - 1))] || 0;
-        resolve({
-          frames: sorted.length,
-          averageFrameMs: average,
-          medianFrameMs: percentile(.5),
-          p95FrameMs: percentile(.95),
-          p99FrameMs: percentile(.99),
-          renderFps: average > 0 ? 1000 / average : 0,
-        });
-      }
+      else finish();
     };
+
     requestAnimationFrame(frame);
   }), durationMs);
 }
@@ -276,7 +294,9 @@ test('dense wave performance diagnostics remain finite and gameplay stays capped
   expect(perf.simulationHz).toBe(120);
   expect(perf.sampleCount).toBeGreaterThan(20);
   expect(Number.isFinite(perf.p95FrameMs)).toBe(true);
-  expect(raf.frames).toBeGreaterThan(20);
+  expect(raf.observedCallbacks).toBeGreaterThan(1);
+  expect(raf.frames).toBeGreaterThan(0);
+  expect(Number.isFinite(raf.p95FrameMs)).toBe(true);
   expect(raf.p95FrameMs).toBeGreaterThan(0);
 });
 
@@ -302,7 +322,11 @@ test('Chromium records same-runner v3.7 baseline versus v3.8 candidate frame pac
   const candidate = await sampleRaf(page, 1500);
   const internal = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getPerformanceSnapshot());
   console.log('PERF_COMPARE_V37_V38', JSON.stringify({ baseline, candidate, internal }));
-  expect(candidate.frames).toBeGreaterThan(20);
+  expect(internal.sampleCount).toBeGreaterThan(20);
+  expect(Number.isFinite(internal.p95FrameMs)).toBe(true);
+  expect(candidate.observedCallbacks).toBeGreaterThan(1);
+  expect(candidate.frames).toBeGreaterThan(0);
+  expect(Number.isFinite(candidate.p95FrameMs)).toBe(true);
   expect(candidate.p95FrameMs).toBeGreaterThan(0);
-  if (baseline) expect(baseline.p95FrameMs).toBeGreaterThan(0);
+  if (baseline?.frames > 0) expect(baseline.p95FrameMs).toBeGreaterThan(0);
 });

@@ -117,7 +117,12 @@ export class FramePacer {
     if (!Number.isFinite(now)) return;
     if (this.lastTimestamp !== null) {
       const delta = Math.max(0, now - this.lastTimestamp);
-      if (delta > 0 && delta < 1000) {
+      // Background/suspended intervals are excluded explicitly through
+      // resetTiming() on visibility changes. Any positive gap that reaches this
+      // visible render path is therefore real telemetry, including severe
+      // long frames; silently dropping >=1s gaps can hide the exact hitch the
+      // diagnostics are intended to surface.
+      if (delta > 0) {
         if (this.samples.length < this.windowSize) {
           this.samples.push(delta);
         } else {

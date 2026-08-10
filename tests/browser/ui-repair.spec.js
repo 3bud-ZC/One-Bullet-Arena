@@ -39,6 +39,7 @@ test('v3.8 canonical presentation preserves DOM + HiDPI architecture and adds sm
   expect(snapshot.logicalCanvasHeight).toBe(720);
   await expect(page.locator('.dashboard-screen')).toBeVisible();
   await expect(page.locator('.progression-svg')).toBeVisible();
+  await page.locator('[data-action="settings"]').click();
   await expect(page.locator('[data-quality-control]')).toBeVisible();
 
   await page.locator('[data-action="locale-ar"]').click();

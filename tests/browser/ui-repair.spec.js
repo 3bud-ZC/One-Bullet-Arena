@@ -64,6 +64,7 @@ test('Pause, Upgrade Selection, and Game Over remain DOM surfaces rather than Ca
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.resume();
+    game.wave = 5;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;

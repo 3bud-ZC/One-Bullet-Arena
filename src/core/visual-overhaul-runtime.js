@@ -144,7 +144,7 @@ export class OneBulletVisualOverhaulRuntime extends OneBulletWorld2DRuntime {
     ctx.lineWidth = 3;
     ctx.strokeStyle = `${palette.primary}${alphaHex(0.72)}`;
     ctx.shadowColor = palette.primary;
-    ctx.shadowBlur = 13;
+    ctx.shadowBlur = 0;
     const points = [
       [bounds.x, bounds.y, 1, 1],
       [bounds.x + bounds.w, bounds.y, -1, 1],
@@ -229,35 +229,6 @@ export class OneBulletVisualOverhaulRuntime extends OneBulletWorld2DRuntime {
 
   drawEnemies() {
     super.drawEnemies();
-    const ctx = this.ctx;
-    const palette = this.palette();
-
-    ctx.save();
-    for (const enemy of this.enemies) {
-      if (enemy.spawnTime > 0) continue;
-      const healthRatio = clamp((Number(enemy.health) || 0) / Math.max(1, Number(enemy.maxHealth) || 1), 0, 1);
-      const radius = enemy.radius + 8;
-      const danger = enemy.type === 'warden' || enemy.type === 'charger' || enemy.type === 'sniper';
-
-      ctx.globalAlpha = danger ? 0.48 : 0.26;
-      ctx.strokeStyle = danger ? palette.danger : (enemy.color || palette.danger);
-      ctx.lineWidth = danger ? 2 : 1;
-      ctx.setLineDash(danger ? [4, 5] : []);
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * healthRatio);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      if (enemy.hitFlash > 0) {
-        ctx.globalAlpha = clamp(enemy.hitFlash * 1.5, 0, 0.5);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 4, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
   }
 
   drawEnemyShots() {
@@ -279,29 +250,26 @@ export class OneBulletVisualOverhaulRuntime extends OneBulletWorld2DRuntime {
     super.drawPlayer();
     const ctx = this.ctx;
     const palette = this.palette();
-    const dashReady = (this.player.dashCooldown || 0) <= 0;
-    const pulse = this.reducedMotion ? 0 : Math.sin(this.elapsed * 5.4) * 2;
+    const dashPulse = clamp(Number(this.dashVisual) || 0, 0, 1);
 
-    ctx.save();
-    ctx.globalAlpha = dashReady ? 0.5 : 0.22;
-    ctx.strokeStyle = palette.primary;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 7]);
-    ctx.lineDashOffset = this.reducedMotion ? 0 : -this.elapsed * 15;
-    ctx.beginPath();
-    ctx.arc(this.player.x, this.player.y, 29 + pulse, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    if (this.player.shield > 0) {
-      ctx.globalAlpha = 0.75;
-      ctx.strokeStyle = '#69aaff';
-      ctx.lineWidth = 3;
+    if (dashPulse > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = 0.12 + dashPulse * 0.24;
+      ctx.strokeStyle = palette.primary;
+      ctx.lineWidth = 1.5 + dashPulse * 0.8;
+      ctx.lineCap = 'round';
+      const direction = this.player.dashDirection || { x: 1, y: 0 };
+      const normal = { x: -direction.y, y: direction.x };
+      const tail = 30 + dashPulse * 18;
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 34, -Math.PI * 0.15, Math.PI * 1.15);
+      ctx.moveTo(this.player.x - direction.x * 15 + normal.x * 9, this.player.y - direction.y * 15 + normal.y * 9);
+      ctx.lineTo(this.player.x - direction.x * tail + normal.x * 13, this.player.y - direction.y * tail + normal.y * 13);
+      ctx.moveTo(this.player.x - direction.x * 15 - normal.x * 9, this.player.y - direction.y * 15 - normal.y * 9);
+      ctx.lineTo(this.player.x - direction.x * tail - normal.x * 13, this.player.y - direction.y * tail - normal.y * 13);
       ctx.stroke();
+      ctx.restore();
     }
-    ctx.restore();
+
   }
 
   drawBullet() {
@@ -328,7 +296,7 @@ export class OneBulletVisualOverhaulRuntime extends OneBulletWorld2DRuntime {
     if (!this.bullet.held) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = 0.42;
+      ctx.globalAlpha = 0.2;
       ctx.fillStyle = palette.warm;
       ctx.beginPath();
       ctx.arc(this.bullet.x, this.bullet.y, 4.5, 0, Math.PI * 2);

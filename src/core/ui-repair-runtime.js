@@ -619,15 +619,13 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     super.onRicochet();
     this.ricochetVisual = 1;
     this.lastRicochetPoint = { x: this.bullet.x, y: this.bullet.y, life: 0.16 };
-    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 3.2);
-    this.createRing(this.bullet.x, this.bullet.y, '#ffe66d', 34);
+    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.8);
   }
 
   catchBullet() {
     super.catchBullet();
-    this.catchVisual = 1;
-    this.createRing(this.player.x, this.player.y, '#ffe66d', 42);
-    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 2.4);
+    this.catchVisual = 0.45;
+    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.7);
   }
 
   damagePlayer(sourceX, sourceY) {
@@ -710,15 +708,6 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   drawPlayer() {
     const ctx = this.ctx;
     const dash = clamp01(this.dashVisual);
-    const catchPulse = clamp01(this.catchVisual);
-    ctx.save();
-    ctx.globalAlpha = 0.2 + Math.min(0.25, (this.visualMotion || 0) * 0.12);
-    ctx.strokeStyle = '#8ce5fb';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(this.player.x, this.player.y, 26 + catchPulse * 12, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
 
     if (dash > 0.01) {
       const direction = this.player.dashDirection || { x: 1, y: 0 };
@@ -738,6 +727,33 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   drawBullet() {
     super.drawBullet();
+    if (!this.bullet?.held && !this.bullet?.recalling) {
+      const ctx = this.ctx;
+      const dx = this.bullet.x - this.player.x;
+      const dy = this.bullet.y - this.player.y;
+      const length = Math.hypot(dx, dy);
+      if (length > 250) {
+        const direction = normalize(dx, dy);
+        const x = this.player.x + direction.x * 58;
+        const y = this.player.y + direction.y * 58;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.atan2(direction.y, direction.x));
+        ctx.globalAlpha = 0.72;
+        ctx.fillStyle = '#f4cf78';
+        ctx.strokeStyle = 'rgba(255,255,255,0.72)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.lineTo(-8, -7);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-8, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
     if (this.bullet?.recalling && !this.bullet?.held) {
       const ctx = this.ctx;
       const dx = this.player.x - this.bullet.x;
@@ -765,37 +781,6 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   }
 
   drawEnemies() {
-    const ctx = this.ctx;
-    ctx.save();
-    for (const enemy of this.enemies || []) {
-      if (enemy.spawnTime > 0) {
-        const progress = 1 - clamp01(enemy.spawnTime / 0.55);
-        ctx.globalAlpha = 0.12 + progress * 0.28;
-        ctx.strokeStyle = enemy.color;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 18 - progress * 8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
-        ctx.stroke();
-      }
-      if (enemy.type === 'charger' && enemy.chargeTelegraph > 0) {
-        const progress = 1 - clamp01(enemy.chargeTelegraph / 0.62);
-        ctx.globalAlpha = 0.48;
-        ctx.strokeStyle = '#ff526a';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
-        ctx.stroke();
-      } else if (enemy.type === 'sniper' && enemy.shotTelegraph > 0) {
-        const progress = 1 - clamp01(enemy.shotTelegraph / 0.5);
-        ctx.globalAlpha = 0.5;
-        ctx.strokeStyle = '#ff526a';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 13, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
     super.drawEnemies();
   }
 

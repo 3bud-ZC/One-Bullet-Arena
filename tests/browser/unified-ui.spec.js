@@ -36,6 +36,7 @@ test('upgrade selection renders the unified cards without page errors', async ({
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
+    game.wave = 5;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.update(1);

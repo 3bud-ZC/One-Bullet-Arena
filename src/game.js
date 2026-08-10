@@ -198,6 +198,7 @@ export class OneBulletGame {
     this.previousUpgradeChoices = [];
     this.secondChanceUsed = false;
     this.dashRequested = false;
+    this.dashImpactCooldown = 0;
     this.banner = null;
     this.shake = 0;
     this.flash = 0;
@@ -263,7 +264,7 @@ export class OneBulletGame {
     this.enemies = [];
     this.enemyShots = [];
     this.waveClearTimer = 0;
-    this.player.shield = Math.max(this.player.shield, this.stack('wave-shield') > 0 ? 1 : 0);
+    this.player.shield = Math.max(this.player.shield, this.stack('wave-shield'));
     clampCircleToBounds(this.player, this.arenaStage.bounds);
     resolveCircleAgainstRects(this.player, this.arenaStage.obstacles);
     this.resetBulletToPlayer();
@@ -273,7 +274,7 @@ export class OneBulletGame {
     const expanded = this.arenaStage.id > previousStageId;
     this.banner = {
       title: `الموجة ${this.wave}`,
-      subtitle: expanded ? `${this.arenaStage.name} — مساحة جديدة اتفتحت` : 'اهزم كل الأعداء',
+      subtitle: expanded ? `${this.arenaStage.name} — مساحة جديدة اتفتحت` : 'استمر واضغط عليهم',
       time: expanded ? 2.2 : 1.45,
     };
     if (expanded) this.createRing(WIDTH / 2, HEIGHT / 2, COLORS.player, 220);
@@ -304,6 +305,9 @@ export class OneBulletGame {
       chargeTelegraph: 0,
       chargeRemaining: 0,
       chargeDirection: { x: 0, y: 0 },
+      physicsVx: 0,
+      physicsVy: 0,
+      staggerTime: 0,
       phase: index * 0.77,
       spawnTime: 0.55,
       hitFlash: 0,
@@ -360,7 +364,7 @@ export class OneBulletGame {
       recalling: false,
       recoverDelay: 0,
       bounceCount: 0,
-      bouncesRemaining: 4 + this.stack('extended-ricochet') * 2,
+      bouncesRemaining: 4 + this.stack('extended-ricochet') * 3,
       trail: [],
     });
     this.bullet.hitEnemyIds.clear();
@@ -370,7 +374,7 @@ export class OneBulletGame {
     if (this.state !== 'playing' || !this.bullet.held) return false;
     const direction = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
     if (!direction.x && !direction.y) return false;
-    const speed = BASE_BULLET_SPEED * (1 + this.stack('bullet-velocity') * 0.07);
+    const speed = BASE_BULLET_SPEED * (1 + this.stack('bullet-velocity') * 0.12);
     Object.assign(this.bullet, {
       x: this.player.x + direction.x * 30,
       y: this.player.y + direction.y * 30,
@@ -380,7 +384,7 @@ export class OneBulletGame {
       recalling: false,
       recoverDelay: 0.2,
       bounceCount: 0,
-      bouncesRemaining: 4 + this.stack('extended-ricochet') * 2,
+      bouncesRemaining: 4 + this.stack('extended-ricochet') * 3,
       trail: [],
     });
     this.bullet.hitEnemyIds.clear();
@@ -395,7 +399,7 @@ export class OneBulletGame {
     if (this.state !== 'playing' || this.bullet.held || this.bullet.recalling || this.bullet.recallCooldown > 0) return false;
     this.bullet.recalling = true;
     this.bullet.hitEnemyIds.clear();
-    this.bullet.recallCooldown = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    this.bullet.recallCooldown = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     this.audio.play('recover');
     return true;
   }
@@ -452,7 +456,10 @@ export class OneBulletGame {
 
     if (this.enemies.length === 0) {
       this.waveClearTimer += dt;
-      if (this.waveClearTimer >= 0.7 && this.bullet.held) this.openUpgradeSelection();
+      if (this.waveClearTimer >= 0.7 && this.bullet.held) {
+        if (this.shouldOfferUpgrade()) this.openUpgradeSelection();
+        else this.startNextWave();
+      }
     } else {
       this.waveClearTimer = 0;
     }
@@ -460,11 +467,12 @@ export class OneBulletGame {
 
   updatePlayer(dt) {
     let direction = this.movementDirection();
-    let speed = BASE_PLAYER_SPEED * (1 + this.stack('swift-steps') * 0.07);
+    let speed = BASE_PLAYER_SPEED * (1 + this.stack('swift-steps') * 0.11);
     if (this.player.dashRemaining > 0) {
       this.player.dashRemaining -= dt;
       direction = this.player.dashDirection;
       speed = DASH_SPEED;
+      if (this.stack('dash-impact') > 0) this.applyDashImpact();
       if (Math.random() > 0.42) this.createParticle(this.player.x, this.player.y, COLORS.player, 75);
     }
     this.player.x += direction.x * speed * dt;
@@ -486,7 +494,7 @@ export class OneBulletGame {
     this.bullet.trail.length = Math.min(16, this.bullet.trail.length);
     if (this.bullet.recalling) {
       const direction = normalize(this.player.x - this.bullet.x, this.player.y - this.bullet.y);
-      const speed = 720 + this.stack('magnetic-recall') * 95;
+      const speed = 720 + this.stack('magnetic-recall') * 150;
       this.bullet.vx = direction.x * speed;
       this.bullet.vy = direction.y * speed;
     }
@@ -512,8 +520,9 @@ export class OneBulletGame {
       if (enemy.spawnTime > 0 || this.bullet.hitEnemyIds.has(enemy.id) || !circleOverlap(this.bullet, enemy)) continue;
       this.bullet.hitEnemyIds.add(enemy.id);
       this.damageEnemy(enemy, this.currentBulletDamage(), true);
-      this.bullet.vx *= 0.91;
-      this.bullet.vy *= 0.91;
+      const retention = Math.min(0.985, 0.91 + this.stack('phase-round') * 0.018);
+      this.bullet.vx *= retention;
+      this.bullet.vy *= retention;
     }
   }
 
@@ -564,7 +573,7 @@ export class OneBulletGame {
     this.bullet.bouncesRemaining -= 1;
     this.bullet.hitEnemyIds.clear();
     this.audio.play('ricochet');
-    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 6, 115);
+    this.createBurst(this.bullet.x, this.bullet.y, COLORS.bullet, 2, 72);
     if (this.bullet.bouncesRemaining <= 0) {
       const speed = Math.hypot(this.bullet.vx, this.bullet.vy);
       if (speed > 260) {
@@ -576,16 +585,19 @@ export class OneBulletGame {
   }
 
   currentBulletDamage() {
-    let damage = 1 + this.stack('heavy-shot') * 0.35;
-    damage += this.bullet.bounceCount * this.stack('hot-ricochet') * 0.24;
-    if (this.bullet.recalling) damage *= 1 + this.stack('recall-strike') * 0.3;
+    let damage = 1 + this.stack('heavy-shot') * 0.55;
+    damage += this.bullet.bounceCount * this.stack('hot-ricochet') * 0.38;
+    damage += this.stack('phase-round') * 0.1;
+    if (this.bullet.recalling) damage *= 1 + this.stack('recall-strike') * 0.5;
     return damage;
   }
 
   catchBullet() {
+    const wasReturning = this.bullet.recalling;
+    const recallDistance = Math.hypot(this.bullet.x - this.player.x, this.bullet.y - this.player.y);
+    if (wasReturning) this.applyCatchImpulse(recallDistance);
     this.resetBulletToPlayer();
     this.audio.play('recover');
-    this.createBurst(this.player.x, this.player.y, COLORS.bullet, 12, 150);
   }
 
   damageEnemy(enemy, damage, fromBullet = false) {
@@ -594,20 +606,20 @@ export class OneBulletGame {
     enemy.hitFlash = 0.14;
     if (fromBullet) this.stats.hits += 1;
     this.audio.play(enemy.health <= 0 ? 'kill' : 'hit');
-    this.createBurst(enemy.x, enemy.y, enemy.color, enemy.health <= 0 ? 17 : 8, enemy.health <= 0 ? 270 : 150);
+    this.createBurst(enemy.x, enemy.y, enemy.color, enemy.health <= 0 ? 5 : 2, enemy.health <= 0 ? 145 : 90);
     this.addFloatingText(enemy.x, enemy.y - enemy.radius - 12, `-${formatDamage(damage)}`, COLORS.text);
     if (fromBullet && this.stack('shock-impact') > 0) this.applyShock(enemy);
     if (enemy.health <= 0) this.killEnemy(enemy);
   }
 
   applyShock(origin) {
-    const radius = 82 + this.stack('shock-impact') * 20;
-    const damage = 0.18 + this.stack('shock-impact') * 0.2;
-    this.createRing(origin.x, origin.y, COLORS.electric, radius);
+    const radius = 96 + this.stack('shock-impact') * 32;
+    const damage = 0.28 + this.stack('shock-impact') * 0.35;
     for (const enemy of [...this.enemies]) {
       if (enemy.id === origin.id || distance(enemy, origin) > radius) continue;
       enemy.health -= damage;
       enemy.hitFlash = 0.12;
+      this.pushEnemy(enemy, origin, 42 + this.stack('shock-impact') * 12);
       if (enemy.health <= 0) this.killEnemy(enemy);
     }
   }
@@ -636,11 +648,89 @@ export class OneBulletGame {
     }
   }
 
+  shouldOfferUpgrade() {
+    return this.wave > 0 && this.wave % 5 === 0;
+  }
+
+  pushEnemy(enemy, origin, strength, stagger = 0.1) {
+    if (!enemy || !this.enemies.includes(enemy)) return;
+    const direction = normalize(enemy.x - origin.x, enemy.y - origin.y);
+    const fallback = direction.x || direction.y ? direction : normalize(enemy.x - this.player.x || 1, enemy.y - this.player.y);
+    enemy.physicsVx = (enemy.physicsVx || 0) + fallback.x * strength;
+    enemy.physicsVy = (enemy.physicsVy || 0) + fallback.y * strength;
+    enemy.staggerTime = Math.max(enemy.staggerTime || 0, stagger);
+  }
+
+  applyCatchImpulse(recallDistance = 0) {
+    const stacks = this.stack('kinetic-catch');
+    const radius = Math.min(210, 90 + recallDistance * 0.13 + stacks * 24);
+    const strength = Math.min(310, 95 + recallDistance * 0.16 + stacks * 38);
+    for (const enemy of [...this.enemies]) {
+      const gap = distance(enemy, this.player);
+      if (gap > radius + enemy.radius) continue;
+      const falloff = Math.max(0.25, 1 - gap / Math.max(1, radius + enemy.radius));
+      this.pushEnemy(enemy, this.player, strength * falloff, 0.12 + falloff * 0.2);
+      enemy.attackCooldown = Math.max(enemy.attackCooldown || 0, 0.18 + falloff * 0.18);
+    }
+  }
+
+  applyDashImpact() {
+    if (this.dashImpactCooldown > this.elapsed) return;
+    this.dashImpactCooldown = this.elapsed + 0.12;
+    const stacks = this.stack('dash-impact');
+    const radius = 48 + stacks * 16;
+    const damage = 0.25 + stacks * 0.28;
+    for (const enemy of [...this.enemies]) {
+      if (enemy.spawnTime > 0 || distance(enemy, this.player) > radius + enemy.radius) continue;
+      enemy.health -= damage;
+      enemy.hitFlash = 0.12;
+      this.pushEnemy(enemy, this.player, 125 + stacks * 28, 0.16);
+      this.constrainCombatCircle(enemy);
+      if (enemy.health <= 0) this.killEnemy(enemy);
+    }
+  }
+
+  steerEnemy(enemy, desired, dt, speedScale = 1) {
+    const direction = normalize(desired.x, desired.y);
+    if (!direction.x && !direction.y) return;
+    const speed = enemy.speed * speedScale * dt;
+    const canMove = (dx, dy) => !this.arenaStage.obstacles.some((rect) => circleRectOverlap({
+      x: enemy.x + dx,
+      y: enemy.y + dy,
+      radius: enemy.radius,
+    }, rect));
+    const moveX = direction.x * speed;
+    const moveY = direction.y * speed;
+    if (canMove(moveX, moveY)) {
+      enemy.x += moveX;
+      enemy.y += moveY;
+      return;
+    }
+
+    const side = enemy.id % 2 === 0 ? 1 : -1;
+    const strafe = { x: -direction.y * side, y: direction.x * side };
+    if (canMove(strafe.x * speed, strafe.y * speed)) {
+      enemy.x += strafe.x * speed;
+      enemy.y += strafe.y * speed;
+      return;
+    }
+    if (canMove(moveX, 0)) enemy.x += moveX;
+    if (canMove(0, moveY)) enemy.y += moveY;
+  }
+
   updateEnemies(dt) {
     const scale = enemyScaleForWave(this.wave);
     for (const enemy of [...this.enemies]) {
       enemy.spawnTime = Math.max(0, enemy.spawnTime - dt);
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+      enemy.staggerTime = Math.max(0, (enemy.staggerTime || 0) - dt);
+      if (Math.abs(enemy.physicsVx || 0) > 0.1 || Math.abs(enemy.physicsVy || 0) > 0.1) {
+        enemy.x += (enemy.physicsVx || 0) * dt;
+        enemy.y += (enemy.physicsVy || 0) * dt;
+        const damping = Math.pow(0.035, dt);
+        enemy.physicsVx *= damping;
+        enemy.physicsVy *= damping;
+      }
       enemy.attackCooldown -= dt;
       enemy.phase += dt * 2;
       const toPlayer = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
@@ -648,9 +738,14 @@ export class OneBulletGame {
       if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
       else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
       else {
-        const orbit = enemy.type === 'scout' ? Math.sin(enemy.phase) * 0.18 : 0;
-        enemy.x += (toPlayer.x - toPlayer.y * orbit) * enemy.speed * dt;
-        enemy.y += (toPlayer.y + toPlayer.x * orbit) * enemy.speed * dt;
+        const currentDistance = distance(enemy, this.player);
+        const orbit = enemy.type === 'scout' ? 0.36 + Math.sin(enemy.phase) * 0.18 : enemy.type === 'brute' ? 0.12 : 0.22;
+        const pressure = enemy.type === 'scout' && currentDistance < 185 ? -0.22 : 1;
+        const control = enemy.staggerTime > 0 ? 0.35 : 1;
+        this.steerEnemy(enemy, {
+          x: toPlayer.x * pressure - toPlayer.y * orbit,
+          y: toPlayer.y * pressure + toPlayer.x * orbit,
+        }, dt, control);
       }
       this.constrainCombatCircle(enemy);
       if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);
@@ -671,29 +766,36 @@ export class OneBulletGame {
     const currentDistance = distance(enemy, this.player);
     const desired = currentDistance < 270 ? -1 : currentDistance > 440 ? 1 : 0;
     const strafe = { x: -toPlayer.y, y: toPlayer.x };
-    enemy.x += (toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
-    enemy.y += (toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
+    this.steerEnemy(enemy, {
+      x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42,
+      y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42,
+    }, dt);
     if (enemy.attackCooldown <= 0) enemy.shotTelegraph = 0.42;
   }
 
   updateCharger(enemy, toPlayer, dt) {
     if (enemy.chargeRemaining > 0) {
       enemy.chargeRemaining -= dt;
-      enemy.x += enemy.chargeDirection.x * 500 * dt;
-      enemy.y += enemy.chargeDirection.y * 500 * dt;
+      enemy.x += enemy.chargeDirection.x * 620 * dt;
+      enemy.y += enemy.chargeDirection.y * 620 * dt;
       return;
     }
     if (enemy.chargeTelegraph > 0) {
       enemy.chargeTelegraph -= dt;
       if (enemy.chargeTelegraph <= 0) {
-        enemy.chargeDirection = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
-        enemy.chargeRemaining = 0.32;
+        enemy.chargeRemaining = 0.42;
       }
       return;
     }
-    enemy.x += toPlayer.x * enemy.speed * dt;
-    enemy.y += toPlayer.y * enemy.speed * dt;
+    const currentDistance = distance(enemy, this.player);
+    const strafe = { x: -toPlayer.y, y: toPlayer.x };
+    const desired = currentDistance < 210 ? -0.18 : 1;
+    this.steerEnemy(enemy, {
+      x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.28,
+      y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.28,
+    }, dt, 1.08);
     if (enemy.attackCooldown <= 0) {
+      enemy.chargeDirection = { ...toPlayer };
       enemy.chargeTelegraph = 0.58;
       enemy.attackCooldown = Math.max(1.8, 3.1 - this.wave * 0.03);
     }
@@ -745,7 +847,6 @@ export class OneBulletGame {
       this.player.shield -= 1;
       this.player.invulnerability = 0.55;
       this.audio.play('shield');
-      this.createRing(this.player.x, this.player.y, COLORS.electric, 62);
       this.addFloatingText(this.player.x, this.player.y - 38, 'تم صد الضربة', COLORS.electric);
       return;
     }
@@ -765,9 +866,8 @@ export class OneBulletGame {
     if (this.stack('second-chance') > 0 && !this.secondChanceUsed) {
       this.secondChanceUsed = true;
       this.player.health = 1;
-      this.player.shield = 1;
+      this.player.shield = Math.max(this.player.shield, 2);
       this.addFloatingText(this.player.x, this.player.y - 52, 'فرصة أخيرة', COLORS.success);
-      this.createRing(this.player.x, this.player.y, COLORS.success, 92);
       return;
     }
     this.finishRun();
@@ -805,9 +905,10 @@ export class OneBulletGame {
     this.upgradeStacks[upgrade.id] = this.stack(upgrade.id) + 1;
     if (upgrade.id === 'vitality') {
       this.player.maxHealth += 1;
-      this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
+      this.player.health = Math.min(this.player.maxHealth, this.player.health + 2);
     }
-    if (upgrade.id === 'wave-shield') this.player.shield = Math.max(1, this.player.shield);
+    if (upgrade.id === 'field-medic') this.player.health = Math.min(this.player.maxHealth, this.player.health + 2 + this.stack('field-medic'));
+    if (upgrade.id === 'wave-shield') this.player.shield = Math.max(this.stack('wave-shield'), this.player.shield);
     this.stats.upgrades += 1;
     this.upgradeChoices = [];
     this.setState('playing');
@@ -953,7 +1054,7 @@ export class OneBulletGame {
     ctx.save();
     ctx.strokeStyle = `rgba(98, 243, 255, ${pulse})`;
     ctx.shadowColor = COLORS.player;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 0;
     ctx.lineWidth = 4;
     ctx.strokeRect(bounds.x, bounds.y, bounds.w, bounds.h);
     ctx.restore();
@@ -966,7 +1067,7 @@ export class OneBulletGame {
     ctx.strokeStyle = '#465482';
     ctx.lineWidth = 3;
     ctx.shadowColor = '#465482';
-    ctx.shadowBlur = 7;
+    ctx.shadowBlur = 0;
     roundedRect(ctx, obstacle.x, obstacle.y, obstacle.w, obstacle.h, 9);
     ctx.fill();
     ctx.stroke();
@@ -976,17 +1077,10 @@ export class OneBulletGame {
   drawPlayer() {
     if (this.player.invulnerability > 0 && Math.floor(this.elapsed * 18) % 2 === 0) return;
     const ctx = this.ctx;
-    if (this.player.shield > 0) {
-      ctx.strokeStyle = COLORS.electric;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, this.player.radius + 10 + Math.sin(this.elapsed * 7) * 2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
     ctx.save();
     ctx.fillStyle = COLORS.player;
     ctx.shadowColor = COLORS.player;
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(this.player.x, this.player.y, this.player.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -1023,7 +1117,7 @@ export class OneBulletGame {
     ctx.save();
     ctx.fillStyle = COLORS.bullet;
     ctx.shadowColor = COLORS.bullet;
-    ctx.shadowBlur = 24;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(this.bullet.x, this.bullet.y, this.bullet.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -1041,7 +1135,7 @@ export class OneBulletGame {
       ctx.rotate(enemy.phase * 0.24);
       ctx.fillStyle = color;
       ctx.shadowColor = color;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 0;
       if (enemy.type === 'scout') polygon(ctx, 4, enemy.radius, Math.PI / 4);
       else if (enemy.type === 'brute') {
         ctx.fillRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
@@ -1062,7 +1156,11 @@ export class OneBulletGame {
         ctx.strokeStyle = COLORS.danger;
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 10 + Math.sin(this.elapsed * 20) * 4, 0, Math.PI * 2);
+        const direction = enemy.chargeDirection?.x || enemy.chargeDirection?.y
+          ? enemy.chargeDirection
+          : normalize(this.player.x - enemy.x, this.player.y - enemy.y);
+        ctx.moveTo(enemy.x, enemy.y);
+        ctx.lineTo(enemy.x + direction.x * 180, enemy.y + direction.y * 180);
         ctx.stroke();
       }
       if (enemy.type === 'sniper' && enemy.shotTelegraph > 0) {
@@ -1085,7 +1183,7 @@ export class OneBulletGame {
       ctx.save();
       ctx.fillStyle = '#ffd0dc';
       ctx.shadowColor = '#ffd0dc';
-      ctx.shadowBlur = 13;
+      ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -1337,7 +1435,7 @@ function panel(ctx, x, y, width, height, accent = COLORS.border, fill = COLORS.p
   ctx.strokeStyle = accent;
   ctx.lineWidth = 2;
   ctx.shadowColor = accent;
-  ctx.shadowBlur = glow;
+  ctx.shadowBlur = 0;
   roundedRect(ctx, x, y, width, height, 15);
   ctx.fill();
   ctx.shadowBlur = 0;

@@ -178,7 +178,7 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       'right',
       'ltr',
     );
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     const recallRatio = this.bullet.held ? 1 : 1 - this.bullet.recallCooldown / recallMax;
     this.drawHudBar(left.x + 67, left.y + 61, left.w - 84, 4, recallRatio, bulletColor);
 

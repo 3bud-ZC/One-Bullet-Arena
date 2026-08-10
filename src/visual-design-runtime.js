@@ -218,7 +218,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.save();
     ctx.strokeStyle = `rgba(98, 243, 255, ${clamp(pulse, 0.35, 1)})`;
     ctx.shadowColor = UI_COLORS.player;
-    ctx.shadowBlur = 20 + this.arenaExpansionPulse * 25;
+    ctx.shadowBlur = 0;
     ctx.lineWidth = 4;
     roundedRect(ctx, bounds.x, bounds.y, bounds.w, bounds.h, 8);
     ctx.stroke();
@@ -259,7 +259,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.strokeStyle = '#53699f';
     ctx.lineWidth = 2.5;
     ctx.shadowColor = '#405a96';
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 0;
     roundedRect(ctx, obstacle.x, obstacle.y, obstacle.w, obstacle.h, 10);
     ctx.fill();
     ctx.stroke();
@@ -292,7 +292,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     if (dashGlow) {
       const trail = ctx.createLinearGradient(-90, 0, 12, 0);
       trail.addColorStop(0, 'rgba(98,243,255,0)');
-      trail.addColorStop(1, 'rgba(98,243,255,0.48)');
+      trail.addColorStop(1, 'rgba(98,243,255,0.22)');
       ctx.fillStyle = trail;
       ctx.beginPath();
       ctx.moveTo(-90, -9);
@@ -304,60 +304,65 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     }
 
     ctx.scale(pulse, pulse);
-    ctx.shadowColor = UI_COLORS.player;
-    ctx.shadowBlur = 28 + dashGlow * 16;
-    ctx.fillStyle = '#0c2036';
+    ctx.fillStyle = '#071728';
     ctx.strokeStyle = UI_COLORS.player;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.2;
 
     ctx.beginPath();
-    ctx.moveTo(25, 0);
-    ctx.lineTo(5, -16);
-    ctx.lineTo(-17, -11);
-    ctx.lineTo(-22, 0);
-    ctx.lineTo(-17, 11);
-    ctx.lineTo(5, 16);
+    ctx.moveTo(31, 0);
+    ctx.lineTo(13, -17);
+    ctx.lineTo(-11, -19);
+    ctx.lineTo(-25, -9);
+    ctx.lineTo(-20, 0);
+    ctx.lineTo(-25, 9);
+    ctx.lineTo(-11, 19);
+    ctx.lineTo(13, 17);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.shadowBlur = 16;
+    ctx.fillStyle = 'rgba(98,243,255,0.16)';
+    ctx.beginPath();
+    ctx.moveTo(10, -12);
+    ctx.lineTo(-8, -10);
+    ctx.lineTo(-17, -3);
+    ctx.lineTo(3, -3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(10, 12);
+    ctx.lineTo(-8, 10);
+    ctx.lineTo(-17, 3);
+    ctx.lineTo(3, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-13, -13);
+    ctx.lineTo(12, 0);
+    ctx.lineTo(-13, 13);
+    ctx.stroke();
+
     ctx.fillStyle = UI_COLORS.player;
     ctx.beginPath();
-    ctx.arc(1, 0, 8, 0, Math.PI * 2);
+    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#f4feff';
     ctx.beginPath();
-    ctx.arc(4, 0, 3, 0, Math.PI * 2);
+    ctx.arc(2.5, 0, 3.2, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = UI_COLORS.bullet;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.4;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(16, 0);
-    ctx.lineTo(29, 0);
+    ctx.moveTo(19, 0);
+    ctx.lineTo(33, 0);
     ctx.stroke();
     ctx.restore();
-
-    if (this.player.shield > 0) {
-      ctx.save();
-      ctx.strokeStyle = UI_COLORS.electric;
-      ctx.lineWidth = 3;
-      ctx.shadowColor = UI_COLORS.electric;
-      ctx.shadowBlur = 14;
-      ctx.setLineDash([8, 6]);
-      ctx.beginPath();
-      ctx.arc(
-        this.player.x,
-        this.player.y,
-        this.player.radius + 13 + Math.sin(this.elapsed * 8) * 2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-      ctx.restore();
-    }
   }
 
   drawBullet() {
@@ -403,7 +408,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.translate(this.bullet.x, this.bullet.y);
     ctx.rotate(this.elapsed * 5.5);
     ctx.shadowColor = accent;
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = 0;
     ctx.fillStyle = accent;
     polygon(ctx, 6, this.bullet.radius * 1.22 * pulse, Math.PI / 6);
 
@@ -413,23 +418,23 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     polygon(ctx, 6, Math.max(3, this.bullet.radius * 0.53), Math.PI / 6);
     ctx.stroke();
 
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = accent;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, 17 + Math.sin(this.elapsed * 10) * 2, 0, Math.PI * 2);
-    ctx.stroke();
     ctx.restore();
 
     if (this.muzzleFlash > 0) {
       ctx.save();
       ctx.globalAlpha = Math.min(1, this.muzzleFlash * 7);
       ctx.strokeStyle = UI_COLORS.bullet;
-      ctx.shadowColor = UI_COLORS.bullet;
-      ctx.shadowBlur = 18;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      const direction = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
+      const normal = { x: -direction.y, y: direction.x };
+      const originX = this.player.x + direction.x * 24;
+      const originY = this.player.y + direction.y * 24;
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 30 + (0.16 - this.muzzleFlash) * 140, 0, Math.PI * 2);
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX + direction.x * 35 + normal.x * 7, originY + direction.y * 35 + normal.y * 7);
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX + direction.x * 35 - normal.x * 7, originY + direction.y * 35 - normal.y * 7);
       ctx.stroke();
       ctx.restore();
     }
@@ -455,7 +460,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.scale(spawnScale, spawnScale);
     ctx.rotate(enemy.type === 'charger' ? 0 : enemy.phase * 0.18);
     ctx.shadowColor = hit ? UI_COLORS.text : style.core;
-    ctx.shadowBlur = hit ? 28 : 18;
+    ctx.shadowBlur = 0;
     ctx.fillStyle = hit ? UI_COLORS.text : '#10172d';
     ctx.strokeStyle = hit ? UI_COLORS.text : style.core;
     ctx.lineWidth = enemy.mini ? 2 : 3;
@@ -504,7 +509,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     }
 
     ctx.globalAlpha = 1;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 0;
     ctx.fillStyle = style.core;
     ctx.beginPath();
     ctx.arc(0, 0, Math.max(4, radius * 0.28), 0, Math.PI * 2);
@@ -528,19 +533,6 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
 
   drawEnemyTelegraph(enemy) {
     const ctx = this.ctx;
-    const style = ENEMY_STYLE[enemy.type] || ENEMY_STYLE.scout;
-
-    if (enemy.spawnTime > 0) {
-      ctx.save();
-      ctx.globalAlpha = clamp(enemy.spawnTime * 1.3, 0, 0.62);
-      ctx.strokeStyle = style.core;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 7]);
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius + 18 + enemy.spawnTime * 24, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
 
     if (enemy.type === 'charger' && enemy.chargeTelegraph > 0) {
       const direction = enemy.chargeDirection?.x || enemy.chargeDirection?.y
@@ -550,17 +542,13 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
       ctx.save();
       ctx.strokeStyle = UI_COLORS.danger;
       ctx.shadowColor = UI_COLORS.danger;
-      ctx.shadowBlur = 9 + urgency * 12;
+      ctx.shadowBlur = 0;
       ctx.lineWidth = 3 + urgency * 2;
       ctx.setLineDash([14, 10]);
       ctx.lineDashOffset = -this.elapsed * 60;
       ctx.beginPath();
       ctx.moveTo(enemy.x, enemy.y);
       ctx.lineTo(enemy.x + direction.x * 220, enemy.y + direction.y * 220);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius + 12 + urgency * 8, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
@@ -573,7 +561,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
       ctx.save();
       ctx.strokeStyle = `rgba(255, 82, 106, ${0.42 + urgency * 0.5})`;
       ctx.shadowColor = UI_COLORS.danger;
-      ctx.shadowBlur = 6 + urgency * 14;
+      ctx.shadowBlur = 0;
       ctx.lineWidth = 1.5 + urgency * 2;
       ctx.setLineDash([10, 8]);
       ctx.lineDashOffset = -this.elapsed * 42;
@@ -608,7 +596,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
 
       ctx.fillStyle = '#ffd1dc';
       ctx.shadowColor = UI_COLORS.danger;
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -619,7 +607,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
   drawHud() {
     const ctx = this.ctx;
     const bulletState = bulletPresentationState(this.bullet);
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
     const healthRatio = this.player.maxHealth > 0 ? this.player.health / this.player.maxHealth : 0;
 
@@ -676,7 +664,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.8;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 9;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(x, y, 16, 0, Math.PI * 2);
     ctx.fill();
@@ -774,7 +762,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     const bulletY = Math.sin(this.elapsed * 0.72) * 142;
     ctx.fillStyle = UI_COLORS.bullet;
     ctx.shadowColor = UI_COLORS.bullet;
-    ctx.shadowBlur = 22;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(bulletX, bulletY, 6, 0, Math.PI * 2);
     ctx.fill();
@@ -890,7 +878,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(x, y, 24, 0, Math.PI * 2);
     ctx.fill();
@@ -1011,7 +999,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.strokeStyle = UI_COLORS.player;
     ctx.lineWidth = 2.5;
     ctx.shadowColor = UI_COLORS.player;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(origin.x, origin.y, origin.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -1034,7 +1022,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     knob.addColorStop(1, 'rgba(39,151,181,0.74)');
     ctx.fillStyle = knob;
     ctx.shadowColor = UI_COLORS.player;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(knobX, knobY, 24, 0, Math.PI * 2);
     ctx.fill();
@@ -1079,7 +1067,7 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;
     ctx.shadowColor = color;
-    ctx.shadowBlur = hovered ? 18 : 10;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();

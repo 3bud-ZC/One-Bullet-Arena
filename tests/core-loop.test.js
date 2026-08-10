@@ -79,10 +79,10 @@ test('enemy scaling keeps growing while staying inside hard safety caps', () => 
 });
 
 test('all upgrade stacks have a real effect boundary', () => {
-  assert.equal(UPGRADES.length, 12);
-  assert.equal(UPGRADES.find((upgrade) => upgrade.id === 'wave-shield').maxStacks, 1);
+  assert.equal(UPGRADES.length, 16);
+  assert.equal(UPGRADES.find((upgrade) => upgrade.id === 'wave-shield').maxStacks, 3);
   const stacks = normalizedStacks({ 'heavy-shot': 999, vitality: -4, 'quick-dash': '2' });
-  assert.equal(stacks['heavy-shot'], 10);
+  assert.equal(stacks['heavy-shot'], 8);
   assert.equal(stacks.vitality, 0);
   assert.equal(stacks['quick-dash'], 2);
 });
@@ -114,14 +114,14 @@ test('upgrade choices are unique and avoid the previous cards', () => {
 test('arena now keeps opening into explorable late-game sectors', () => {
   assert.equal(ARENA_STAGE_COUNT, 8);
   assert.deepEqual(
-    [1, 3, 6, 9, 13, 18, 25, 35, 99].map((wave) => arenaStageForWave(wave).id),
+    [1, 5, 10, 15, 20, 25, 30, 35, 99].map((wave) => arenaStageForWave(wave).id),
     [0, 1, 2, 3, 4, 5, 6, 7, 7],
   );
-  const stage9 = arenaStageForWave(9);
+  const stage5 = arenaStageForWave(5);
   const stage35 = arenaStageForWave(35);
-  assert.ok(stage35.bounds.w > stage9.bounds.w * 2);
-  assert.ok(stage35.bounds.h > stage9.bounds.h * 2);
-  for (const wave of [1, 3, 6, 9, 13, 18, 25, 35]) {
+  assert.ok(stage35.bounds.w > stage5.bounds.w * 2);
+  assert.ok(stage35.bounds.h > stage5.bounds.h * 2);
+  for (const wave of [1, 5, 10, 15, 20, 25, 30, 35]) {
     const stage = arenaStageForWave(wave);
     assert.equal('objective' in stage, false);
     assert.equal('targets' in stage, false);

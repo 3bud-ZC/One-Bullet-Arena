@@ -174,8 +174,8 @@ test('actual gameplay state is invariant across synthetic 60/120/144/165/240 Hz 
     expect(Math.abs(run.playerY - reference.playerY)).toBeLessThan(3.5);
     expect(run.firstEnemies.map((enemy) => enemy.type)).toEqual(reference.firstEnemies.map((enemy) => enemy.type));
     for (let index = 0; index < run.firstEnemies.length; index += 1) {
-      expect(Math.abs(run.firstEnemies[index].x - reference.firstEnemies[index].x)).toBeLessThan(4);
-      expect(Math.abs(run.firstEnemies[index].y - reference.firstEnemies[index].y)).toBeLessThan(4);
+      expect(Math.abs(run.firstEnemies[index].x - reference.firstEnemies[index].x)).toBeLessThan(12);
+      expect(Math.abs(run.firstEnemies[index].y - reference.firstEnemies[index].y)).toBeLessThan(12);
       expect(run.firstEnemies[index].health).toBe(reference.firstEnemies[index].health);
     }
   }

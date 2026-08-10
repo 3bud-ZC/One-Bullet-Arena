@@ -2,6 +2,7 @@ import {
   circleOverlap,
   circleRectOverlap,
   clamp,
+  distance,
   normalize,
   pointInsideBounds,
 } from './arena.js';
@@ -112,9 +113,13 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
       else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
       else {
-        const orbit = enemy.type === 'scout' ? Math.sin(enemy.phase) * 0.18 : 0;
-        enemy.x += (toPlayer.x - toPlayer.y * orbit) * enemy.speed * dt;
-        enemy.y += (toPlayer.y + toPlayer.x * orbit) * enemy.speed * dt;
+        const currentDistance = distance(enemy, this.player);
+        const orbit = enemy.type === 'scout' ? 0.36 + Math.sin(enemy.phase) * 0.18 : enemy.type === 'brute' ? 0.12 : 0.22;
+        const pressure = enemy.type === 'scout' && currentDistance < 185 ? -0.22 : 1;
+        this.steerEnemy(enemy, {
+          x: toPlayer.x * pressure - toPlayer.y * orbit,
+          y: toPlayer.y * pressure + toPlayer.x * orbit,
+        }, dt);
       }
       this.constrainCombatCircle(enemy);
       if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);

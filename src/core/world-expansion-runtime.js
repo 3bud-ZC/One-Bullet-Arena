@@ -409,7 +409,7 @@ export class OneBulletWorldExpansionRuntime extends OneBulletDashboardPolishRunt
     const bulletTitle = this.bullet.held ? 'الطلقة جاهزة' : this.bullet.recalling ? 'الطلقة عائدة' : 'الطلقة في الميدان';
     drawText(ctx, bulletTitle, left.x + 18, left.y + 28, 12, bulletColor, 900, 'left');
     drawText(ctx, this.bullet.held ? 'FIRE' : this.bullet.recalling ? 'RETURNING' : 'Q  RECALL', left.x + 18, left.y + 47, 7.5, HUD.muted, 900, 'left', 'ltr');
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     const recallRatio = this.bullet.held ? 1 : 1 - this.bullet.recallCooldown / recallMax;
     this.drawBar(left.x + 18, left.y + 57, left.w - 36, 4, recallRatio, bulletColor);
 

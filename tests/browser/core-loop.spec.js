@@ -34,7 +34,7 @@ test('boots only the polished modular single-path runtime', async ({ page }) => 
   expect(snapshot.puzzleObjectivesPresent).toBe(false);
 });
 
-test('one action starts wave one and clearing it requires one upgrade', async ({ page }) => {
+test('one action starts wave one, and only wave five offers an upgrade', async ({ page }) => {
   await loadGame(page);
   await page.keyboard.press('Enter');
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
@@ -49,6 +49,18 @@ test('one action starts wave one and clearing it requires one upgrade', async ({
     game.update(1);
     return game.getSnapshot();
   });
+  expect(snapshot.state).toBe('playing');
+  expect(snapshot.wave).toBe(2);
+  expect(snapshot.upgradeChoices).toHaveLength(0);
+
+  snapshot = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.wave = 5;
+    game.enemies = [];
+    game.resetBulletToPlayer();
+    game.update(1);
+    return game.getSnapshot();
+  });
   expect(snapshot.state).toBe('upgrade');
   expect(snapshot.upgradeChoices).toHaveLength(3);
 
@@ -58,7 +70,7 @@ test('one action starts wave one and clearing it requires one upgrade', async ({
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('playing');
-  expect(snapshot.wave).toBe(2);
+  expect(snapshot.wave).toBe(6);
   expect(snapshot.upgrades).toBe(1);
 });
 
@@ -84,6 +96,46 @@ test('the bullet recalls automatically after the final enemy dies', async ({ pag
   expect(snapshot.bulletHeld).toBe(false);
   expect(snapshot.bulletRecalling).toBe(true);
   expect(snapshot.bulletStatus).toBe('RETURNING');
+});
+
+test('catching a returning bullet applies a clean physics impulse to nearby enemies', async ({ page }) => {
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.enemies = [];
+    game.particles = [];
+    if (Array.isArray(game.feedbackEvents)) game.feedbackEvents = [];
+    game.player.x = 640;
+    game.player.y = 360;
+    game.upgradeStacks['kinetic-catch'] = 2;
+    const enemy = game.spawnEnemy('scout', 0, { point: { x: 735, y: 360 } });
+    delete enemy.attackCooldown;
+    Object.assign(game.bullet, {
+      held: false,
+      recalling: true,
+      x: game.player.x + 18,
+      y: game.player.y,
+      vx: -720,
+      vy: 0,
+      recoverDelay: 0,
+    });
+    game.catchBullet();
+    return {
+      speed: Math.hypot(enemy.physicsVx || 0, enemy.physicsVy || 0),
+      staggerTime: enemy.staggerTime || 0,
+      attackCooldown: enemy.attackCooldown,
+      particleCount: game.particles.length,
+      bulletHeld: game.bullet.held,
+    };
+  });
+
+  expect(result.speed).toBeGreaterThan(1);
+  expect(result.staggerTime).toBeGreaterThan(0);
+  expect(Number.isFinite(result.attackCooldown)).toBe(true);
+  expect(result.attackCooldown).toBeGreaterThan(0);
+  expect(result.particleCount).toBe(0);
+  expect(result.bulletHeld).toBe(true);
 });
 
 test('bullet hits activate layered impact feedback and final kills show wave clear', async ({ page }) => {
@@ -178,13 +230,13 @@ test('sniper and charger telegraphs lock their direction before execution', asyn
   expect(result.chargerRemaining).toBeGreaterThan(0);
 });
 
-test('the same arena expands at waves 3, 6, and 9', async ({ page }) => {
+test('the same arena expands every five waves', async ({ page }) => {
   await loadGame(page);
   const stages = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
     const result = [game.getSnapshot().arenaStage];
-    for (const target of [3, 6, 9]) {
+    for (const target of [5, 10, 15]) {
       game.wave = target - 1;
       game.startNextWave();
       result.push(game.getSnapshot().arenaStage);

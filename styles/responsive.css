@@ -2,11 +2,13 @@
   .dashboard { width: min(1120px, calc(100vw - 42px)); }
   .dashboard-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr); }
   .brand-bar { padding-inline-end: 500px; }
+  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.4fr); }
   .utility-button__label,
   .language-control__label { display: none; }
   .utility-button { width: 38px; padding: 0; justify-content: center; }
   .language-control { padding-inline: 5px; }
   .run-actions { grid-template-columns: 1fr minmax(205px, 0.62fr); }
+  html[dir="rtl"] .run-actions { grid-template-columns: minmax(205px, 0.62fr) 1fr; }
   .progression-label span { font-size: 0.63rem; }
 }
 
@@ -51,6 +53,7 @@
   .language-segment { min-width: 29px; height: 26px; padding: 0 5px; font-size: 0.62rem; }
   .settings-popover { top: 39px; width: 210px; padding: 10px; }
   .dashboard-grid { grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.85fr); gap: 7px; }
+  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(250px, 0.85fr) minmax(0, 1.45fr); }
   .run-hero,
   .run-snapshot { min-height: 0; height: 100%; }
   .run-hero { padding: 12px 13px; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 6px; }
@@ -70,6 +73,7 @@
   .run-stat-strip .metric__icon { font-size: 0.75rem; }
   .run-stat-strip .metric__value { font-size: 0.66rem; }
   .run-actions { grid-template-columns: 1fr auto; gap: 6px; }
+  html[dir="rtl"] .run-actions { grid-template-columns: auto 1fr; }
   .button { min-height: 34px; padding: 6px 9px; border-radius: 8px; font-size: 0.68rem; }
   .button--primary { min-height: 41px; padding-inline: 11px 9px; }
   .button__content strong { font-size: 0.74rem; }
@@ -151,6 +155,7 @@
 @media (max-width: 680px) and (orientation: landscape) {
   .brand-bar { padding-inline-end: 260px; }
   .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(200px, 0.8fr); }
+  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.2fr); }
   .snapshot-metrics .metric__label { display: none; }
 }
 

@@ -354,7 +354,7 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
     this.ctx.strokeStyle = accent;
     this.ctx.lineWidth = 1.3;
     this.ctx.shadowColor = accent;
-    this.ctx.shadowBlur = active ? 16 : 7;
+    this.ctx.shadowBlur = 0;
     roundedRect(this.ctx, x, y, width, 28, 8);
     this.ctx.fill();
     this.ctx.stroke();
@@ -368,38 +368,6 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
   drawPlayer() {
     super.drawPlayer();
     if (this.state !== 'playing') return;
-    const ctx = this.ctx;
-
-    if (this.bullet.recalling && this.recallStartedAt !== null) {
-      const color = this.catchAlignmentPeak >= 0.42 || this.player.dashRemaining > 0
-        ? UI_COLORS.success
-        : UI_COLORS.electric;
-      ctx.save();
-      ctx.globalAlpha = 0.28 + this.catchWindowRatio * 0.6;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2 + this.catchWindowRatio * 3;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 14;
-      ctx.setLineDash([7, 5]);
-      ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 31 + this.catchWindowRatio * 12, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    if (this.precisionCharge > 0 || this.overdriveTimer > 0) {
-      const color = this.overdriveTimer > 0 ? UI_COLORS.violet : UI_COLORS.success;
-      ctx.save();
-      ctx.globalAlpha = 0.55 + Math.sin(this.elapsed * 8) * 0.2;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 35 + Math.sin(this.elapsed * 5) * 3, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
   }
 
   drawBullet() {
@@ -410,7 +378,7 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 0;
     ctx.lineWidth = 2.2;
     ctx.globalAlpha = 0.52 + Math.sin(this.elapsed * 13) * 0.18;
     ctx.beginPath();
@@ -429,13 +397,16 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
       ctx.save();
       ctx.globalAlpha = ratio;
       ctx.strokeStyle = event.color;
-      ctx.shadowColor = event.color;
-      ctx.shadowBlur = event.type === 'overdrive' ? 28 : 18;
-      ctx.lineWidth = event.type === 'overdrive' ? 6 : 3;
-      const rings = event.type === 'overdrive' ? 3 : 2;
-      for (let index = 0; index < rings; index += 1) {
+      ctx.lineCap = 'round';
+      ctx.lineWidth = event.type === 'overdrive' ? 4 : 2.5;
+      const rays = event.type === 'overdrive' ? 8 : 4;
+      const inner = 18 + age * 16;
+      const outer = event.type === 'overdrive' ? 72 + age * 58 : 42 + age * 30;
+      for (let index = 0; index < rays; index += 1) {
+        const angle = (Math.PI * 2 * index) / rays + age * 0.35;
         ctx.beginPath();
-        ctx.arc(event.x, event.y, 24 + index * 20 + age * (event.type === 'overdrive' ? 180 : 70), 0, Math.PI * 2);
+        ctx.moveTo(event.x + Math.cos(angle) * inner, event.y + Math.sin(angle) * inner);
+        ctx.lineTo(event.x + Math.cos(angle) * outer, event.y + Math.sin(angle) * outer);
         ctx.stroke();
       }
       ctx.restore();

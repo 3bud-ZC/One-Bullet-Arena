@@ -6,12 +6,12 @@ import { UI_COLORS, label, progressBar, roundedRect } from './ui-renderer.js';
 export const COMBAT_FEEDBACK_VERSION = '2.7.0-feedback';
 
 const IMPACT_PROFILES = Object.freeze({
-  scout: Object.freeze({ sparks: 7, radius: 32, shake: 2.8, color: '#ff6b7f' }),
-  brute: Object.freeze({ sparks: 13, radius: 54, shake: 5.8, color: '#ffab4f' }),
-  sniper: Object.freeze({ sparks: 10, radius: 44, shake: 4.2, color: '#b887ff' }),
-  charger: Object.freeze({ sparks: 12, radius: 50, shake: 5.1, color: '#5df2a6' }),
-  warden: Object.freeze({ sparks: 15, radius: 60, shake: 6.2, color: '#67ddff' }),
-  splitter: Object.freeze({ sparks: 12, radius: 52, shake: 4.8, color: '#ff7fd3' }),
+  scout: Object.freeze({ sparks: 4, radius: 24, shake: 1.6, color: '#ff6b7f' }),
+  brute: Object.freeze({ sparks: 7, radius: 38, shake: 3.2, color: '#ffab4f' }),
+  sniper: Object.freeze({ sparks: 5, radius: 32, shake: 2.4, color: '#b887ff' }),
+  charger: Object.freeze({ sparks: 6, radius: 36, shake: 2.8, color: '#5df2a6' }),
+  warden: Object.freeze({ sparks: 8, radius: 44, shake: 3.8, color: '#67ddff' }),
+  splitter: Object.freeze({ sparks: 6, radius: 36, shake: 2.7, color: '#ff7fd3' }),
 });
 
 export function combatFeedbackProfile(enemyType = 'scout', lethal = false) {
@@ -41,8 +41,8 @@ function makeImpactEvent({ x, y, color, radius, direction, lethal, sparks }) {
   for (let index = 0; index < sparks; index += 1) {
     const spread = (index / Math.max(1, sparks - 1) - 0.5) * Math.PI * 1.24;
     const angle = baseAngle + Math.PI + spread;
-    const length = radius * (0.45 + ((index * 37) % 11) / 15);
-    rays.push({ angle, length, width: index % 3 === 0 ? 3 : 1.5 });
+    const length = radius * (0.38 + ((index * 37) % 11) / 20);
+    rays.push({ angle, length, width: index % 3 === 0 ? 2.2 : 1.2 });
   }
   return {
     type: 'impact',
@@ -162,18 +162,9 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
     super.catchBullet();
     if (!wasReturning) return;
 
-    this.recallCatchPulse = 1;
-    this.feedbackEvents.push({
-      type: 'catch',
-      x: this.player.x,
-      y: this.player.y,
-      color: UI_COLORS.electric,
-      distance: distanceTravelled,
-      life: 0.5,
-      maxLife: 0.5,
-    });
+    this.recallCatchPulse = 0.35;
     if (distanceTravelled >= 320) {
-      this.setFeedbackCallout('LONG RECALL', 'BULLET SECURED', UI_COLORS.electric, 0.92);
+      this.setFeedbackCallout('LONG RECALL', 'BULLET SECURED', UI_COLORS.electric, 0.72);
     }
   }
 
@@ -297,7 +288,7 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
       ctx.strokeStyle = UI_COLORS.player;
       ctx.lineWidth = 2;
       ctx.shadowColor = UI_COLORS.player;
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(echo.x, echo.y, echo.radius * (1.2 + (1 - ratio) * 0.5), 0, Math.PI * 2);
       ctx.stroke();
@@ -320,7 +311,7 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
     ctx.save();
     ctx.fillStyle = UI_COLORS.electric;
     ctx.shadowColor = UI_COLORS.electric;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 0;
     for (let index = 0; index < packets; index += 1) {
       const progress = (index / packets + this.elapsed * 1.8) % 1;
       const x = this.bullet.x + direction.x * length * progress;
@@ -349,7 +340,7 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
       if (event.type === 'impact') {
         ctx.strokeStyle = event.color;
         ctx.shadowColor = event.color;
-        ctx.shadowBlur = event.lethal ? 18 : 10;
+        ctx.shadowBlur = 0;
         ctx.lineCap = 'round';
         for (const ray of event.rays) {
           const start = event.radius * 0.12 + age * event.radius * 0.16;
@@ -360,17 +351,13 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
           ctx.lineTo(event.x + Math.cos(ray.angle) * end, event.y + Math.sin(ray.angle) * end);
           ctx.stroke();
         }
-        ctx.lineWidth = event.lethal ? 4 : 2.5;
-        ctx.beginPath();
-        ctx.arc(event.x, event.y, event.radius * (0.25 + age * 0.9), 0, Math.PI * 2);
-        ctx.stroke();
       } else if (event.type === 'muzzle') {
         const angle = Math.atan2(event.direction.y, event.direction.x);
         ctx.translate(event.x, event.y);
         ctx.rotate(angle);
         ctx.fillStyle = event.color;
         ctx.shadowColor = event.color;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.moveTo(4 + age * 10, 0);
         ctx.lineTo(-5, -12 * ratio);
@@ -381,18 +368,24 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
       } else if (event.type === 'recall-start' || event.type === 'catch') {
         ctx.strokeStyle = event.color;
         ctx.shadowColor = event.color;
-        ctx.shadowBlur = 16;
-        ctx.lineWidth = 3 * ratio;
-        for (let ring = 0; ring < 2; ring += 1) {
-          ctx.beginPath();
-          ctx.arc(event.x, event.y, 12 + ring * 11 + age * 58, 0, Math.PI * 2);
-          ctx.stroke();
-        }
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2 * ratio;
+        ctx.lineCap = 'round';
+        const span = 12 + age * 16;
+        const inset = 4 + age * 8;
+        ctx.beginPath();
+        ctx.moveTo(event.x - span, event.y - inset);
+        ctx.lineTo(event.x - inset, event.y);
+        ctx.lineTo(event.x - span, event.y + inset);
+        ctx.moveTo(event.x + span, event.y - inset);
+        ctx.lineTo(event.x + inset, event.y);
+        ctx.lineTo(event.x + span, event.y + inset);
+        ctx.stroke();
       } else if (event.type === 'ricochet') {
         const angle = Math.atan2(event.direction.y, event.direction.x);
         ctx.strokeStyle = event.color;
         ctx.shadowColor = event.color;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 2.5;
         for (let index = -1; index <= 1; index += 1) {
           const rayAngle = angle + Math.PI + index * 0.46;
@@ -407,7 +400,7 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
       } else if (event.type === 'shield-hit' || event.type === 'player-hit') {
         ctx.strokeStyle = event.color;
         ctx.shadowColor = event.color;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = (event.type === 'shield-hit' ? 4 : 6) * ratio;
         ctx.beginPath();
         const start = Math.atan2(event.direction.y, event.direction.x) - 0.9;
@@ -466,7 +459,7 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
     ctx.strokeStyle = callout.color;
     ctx.lineWidth = 2;
     ctx.shadowColor = callout.color;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = 0;
     roundedRect(ctx, x, y, width, height, 10);
     ctx.fill();
     ctx.stroke();
@@ -491,26 +484,11 @@ export class OneBulletCombatFeedbackRuntime extends OneBulletVisualDesignRuntime
       ctx.globalAlpha = this.wavePulse * 0.18;
       ctx.strokeStyle = UI_COLORS.player;
       ctx.shadowColor = UI_COLORS.player;
-      ctx.shadowBlur = 24;
+      ctx.shadowBlur = 0;
       ctx.lineWidth = 10 * this.wavePulse;
       ctx.beginPath();
       ctx.arc(WIDTH / 2, HEIGHT / 2, Math.max(24, radius), 0, Math.PI * 2);
       ctx.stroke();
-    }
-
-    if (this.recallCatchPulse > 0) {
-      const glow = ctx.createRadialGradient(
-        this.player.x,
-        this.player.y,
-        12,
-        this.player.x,
-        this.player.y,
-        180,
-      );
-      glow.addColorStop(0, `rgba(88,166,255,${this.recallCatchPulse * 0.2})`);
-      glow.addColorStop(1, 'rgba(88,166,255,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
     }
 
     if (this.damagePulse > 0) {

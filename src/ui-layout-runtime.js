@@ -46,7 +46,7 @@ export class OneBulletUiLayoutRuntime extends OneBulletCombatFeedbackRuntime {
   drawHud() {
     const layout = compactHudLayout(WIDTH);
     const bulletState = bulletPresentationState(this.bullet);
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
     const healthRatio = this.player.maxHealth > 0 ? this.player.health / this.player.maxHealth : 0;
     const recallRatio = 1 - this.bullet.recallCooldown / recallMax;

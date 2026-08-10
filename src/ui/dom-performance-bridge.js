@@ -173,7 +173,7 @@ export function installDomPerformanceBridge(controller) {
     const healthRatio = health / maxHealth;
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, game.stack?.('quick-dash') || 0));
     const dashRatio = 1 - (Number(game.player?.dashCooldown) || 0) / dashMax;
-    const recallMax = Math.max(1.15, 3.8 - (game.stack?.('magnetic-recall') || 0) * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - (game.stack?.('magnetic-recall') || 0) * 0.52);
     const recallRatio = game.bullet?.held ? 1 : 1 - (Number(game.bullet?.recallCooldown) || 0) / recallMax;
     const bulletKey = game.bullet?.held
       ? 'hud.bulletHeld'
@@ -234,6 +234,7 @@ export function installDomPerformanceBridge(controller) {
       controller.lastState = state;
       controller.settingsOpen = false;
       root.dataset.state = state;
+      document.body.dataset.gameState = state;
       for (const [name, screen] of controller.screens) setHidden(screen, name !== state);
       setHidden(toolbar, !['menu', 'paused'].includes(state));
       stats.stateTransitions += 1;

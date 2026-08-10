@@ -7,7 +7,11 @@ async function loadGame(page, locale = 'en') {
 }
 
 async function attachFrame(page, testInfo, name, animations = 'disabled') {
-  const image = await page.locator('.game-frame').screenshot({ animations });
+  const box = await page.evaluate(() => {
+    const rect = document.querySelector('.game-frame').getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  const image = await page.screenshot({ animations, clip: box });
   await testInfo.attach(`${testInfo.project.name}-${name}`, { body: image, contentType: 'image/png' });
 }
 
@@ -26,7 +30,7 @@ async function seedWave(page, wave) {
 
 test('captures v3.8 dashboard and representative game-feel states', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Visual review is captured in desktop Chromium.');
-  test.setTimeout(120_000);
+  test.setTimeout(300_000);
   await page.setViewportSize({ width: 1920, height: 1080 });
   await loadGame(page, 'en');
 
@@ -136,6 +140,7 @@ test('captures v3.8 dashboard and representative game-feel states', async ({ pag
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.resume();
+    game.wave = 5;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 1;

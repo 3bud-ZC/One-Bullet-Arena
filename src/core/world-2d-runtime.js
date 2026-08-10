@@ -340,7 +340,6 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
     const ctx = this.ctx;
     const centerX = bounds.x + bounds.w / 2;
     const centerY = bounds.y + bounds.h / 2;
-    const pulse = 0.55 + Math.sin(this.elapsed * 2.2) * 0.12;
 
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -352,16 +351,6 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
     ctx.fill();
     ctx.stroke();
 
-    ctx.rotate(this.elapsed * 0.055);
-    ctx.strokeStyle = `${accent.primary}${Math.round(clamp(pulse, 0, 1) * 255).toString(16).padStart(2, '0')}`;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([13, 10]);
-    ctx.beginPath();
-    ctx.arc(0, 0, 58, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.rotate(-this.elapsed * 0.11);
     ctx.globalAlpha = 0.34;
     ctx.strokeStyle = accent.warm;
     ctx.lineWidth = 2;
@@ -404,15 +393,19 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
       ctx.restore();
     }
 
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = 0.15;
     ctx.strokeStyle = accent.secondary;
     ctx.lineWidth = 1.5;
-    const ringCount = stage + 2;
-    for (let index = 0; index < ringCount; index += 1) {
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 128 + index * 42, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(centerX - Math.min(220, bounds.w * 0.22), centerY);
+    ctx.lineTo(centerX - 88, centerY);
+    ctx.moveTo(centerX + 88, centerY);
+    ctx.lineTo(centerX + Math.min(220, bounds.w * 0.22), centerY);
+    ctx.moveTo(centerX, centerY - Math.min(160, bounds.h * 0.2));
+    ctx.lineTo(centerX, centerY - 88);
+    ctx.moveTo(centerX, centerY + 88);
+    ctx.lineTo(centerX, centerY + Math.min(160, bounds.h * 0.2));
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -545,38 +538,10 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
   }
 
   drawEnemies() {
-    const ctx = this.ctx;
-    ctx.save();
-    for (const enemy of this.enemies) {
-      const shadowWidth = enemy.radius * (enemy.type === 'charger' ? 2.15 : 1.82);
-      const shadowHeight = enemy.radius * 0.72;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
-      ctx.beginPath();
-      ctx.ellipse(enemy.x + 5, enemy.y + enemy.radius * 0.72, shadowWidth, shadowHeight, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.globalAlpha = enemy.spawnTime > 0 ? 0.24 : 0.12;
-      ctx.strokeStyle = enemy.color || UI_COLORS.danger;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(enemy.x, enemy.y + enemy.radius * 0.42, enemy.radius * 1.2, enemy.radius * 0.52, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-    ctx.restore();
     super.drawEnemies();
   }
 
   drawEnemyShots() {
-    const ctx = this.ctx;
-    ctx.save();
-    for (const shot of this.enemyShots) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-      ctx.beginPath();
-      ctx.ellipse(shot.x + 4, shot.y + 7, Math.max(4, shot.radius * 1.25), Math.max(2, shot.radius * 0.5), 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
     super.drawEnemyShots();
   }
 
@@ -584,7 +549,7 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
     const ctx = this.ctx;
     ctx.save();
     for (const echo of this.playerEchoes) {
-      const alpha = clamp(echo.life / echo.maxLife, 0, 1) * 0.18;
+      const alpha = clamp(echo.life / echo.maxLife, 0, 1) * 0.1;
       ctx.save();
       ctx.translate(echo.x, echo.y);
       ctx.rotate(echo.angle);
@@ -600,18 +565,6 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
       ctx.restore();
     }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.beginPath();
-    ctx.ellipse(
-      this.player.x + 5,
-      this.player.y + 15,
-      27 + this.visualMotion * 3,
-      9 - this.visualMotion * 1.5,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
     ctx.restore();
 
     const motionScale = clamp(this.visualMotion, 0, 1);
@@ -625,9 +578,9 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
 
     if (this.state === 'playing' && motionScale > 0.08) {
       ctx.save();
-      ctx.globalAlpha = 0.18 + motionScale * 0.18;
+      ctx.globalAlpha = 0.08 + motionScale * 0.12;
       ctx.strokeStyle = UI_COLORS.player;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.4;
       const backX = this.player.x - this.visualDirection.x * (24 + motionScale * 16);
       const backY = this.player.y - this.visualDirection.y * (24 + motionScale * 16);
       ctx.beginPath();

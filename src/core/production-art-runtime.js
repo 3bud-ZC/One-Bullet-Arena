@@ -26,7 +26,7 @@ const ART = Object.freeze({
   line: 'rgba(91, 180, 214, 0.22)',
 });
 
-const STAGE_WAVES = Object.freeze([1, 3, 6, 9, 13, 18, 25, 35]);
+const STAGE_WAVES = Object.freeze([1, 5, 10, 15, 20, 25, 30, 35]);
 
 function path(ctx, x, y, w, h, cut = 12) {
   const c = Math.max(2, Math.min(cut, Math.min(w, h) / 3));
@@ -385,7 +385,7 @@ export class OneBulletProductionArtRuntime extends OneBulletUnifiedUiRuntime {
 
     text(ctx, this.bullet.held ? 'الطلقة جاهزة' : this.bullet.recalling ? 'الطلقة عائدة' : 'الطلقة في الميدان', left.x + 18, left.y + 25, 10.5, bulletColor, 900, 'left');
     text(ctx, this.bullet.held ? 'READY TO FIRE' : this.bullet.recalling ? 'RETURNING' : 'Q  RECALL', left.x + 18, left.y + 42, 6.8, ART.muted, 900, 'left', 'ltr');
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     this.drawHudBar(left.x + 18, left.y + 51, left.w - 36, 4, this.bullet.held ? 1 : 1 - this.bullet.recallCooldown / recallMax, bulletColor);
 
     text(ctx, `WAVE ${String(this.wave).padStart(2, '0')}`, center.x + center.w / 2, center.y + 27, 16, ART.white, 900, 'center', 'ltr');

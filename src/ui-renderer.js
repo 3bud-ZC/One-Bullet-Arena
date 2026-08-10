@@ -251,18 +251,22 @@ export function upgradeEffectText(upgrade, currentStack = 0) {
   const arrow = i18n.isRtl ? '←' : '→';
 
   switch (upgrade.id) {
-    case 'heavy-shot': return pair((1 + current * 0.35).toFixed(2), (1 + next * 0.35).toFixed(2), '×');
-    case 'bullet-velocity': return pair(current * 7, next * 7, '%');
-    case 'extended-ricochet': return `${4 + current * 2} ${arrow} ${4 + next * 2}`;
-    case 'hot-ricochet': return pair(current * 24, next * 24, '%');
-    case 'shock-impact': return `${82 + current * 20} ${arrow} ${82 + next * 20}`;
-    case 'magnetic-recall': return `${720 + current * 95} ${arrow} ${720 + next * 95}`;
-    case 'recall-strike': return pair(current * 30, next * 30, '%');
+    case 'heavy-shot': return pair((1 + current * 0.55).toFixed(2), (1 + next * 0.55).toFixed(2), '×');
+    case 'bullet-velocity': return pair(current * 12, next * 12, '%');
+    case 'extended-ricochet': return `${4 + current * 3} ${arrow} ${4 + next * 3}`;
+    case 'hot-ricochet': return pair(current * 38, next * 38, '%');
+    case 'shock-impact': return `${96 + current * 32} ${arrow} ${96 + next * 32}`;
+    case 'magnetic-recall': return `${720 + current * 150} ${arrow} ${720 + next * 150}`;
+    case 'recall-strike': return pair(current * 50, next * 50, '%');
     case 'quick-dash': return `${Math.max(0.36, 1.12 * Math.pow(0.86, current)).toFixed(2)}s ${arrow} ${Math.max(0.36, 1.12 * Math.pow(0.86, next)).toFixed(2)}s`;
-    case 'swift-steps': return pair(current * 7, next * 7, '%');
+    case 'swift-steps': return pair(current * 11, next * 11, '%');
     case 'vitality': return `${3 + current} ${arrow} ${3 + next}`;
     case 'wave-shield': return i18n.t('upgrade.wave-shield.description');
     case 'second-chance': return i18n.t('upgrade.second-chance.description');
+    case 'phase-round': return pair(current * 10, next * 10, '%');
+    case 'kinetic-catch': return `${90 + current * 24} ${arrow} ${90 + next * 24}`;
+    case 'field-medic': return `${2 + current} ${arrow} ${2 + next}`;
+    case 'dash-impact': return `${48 + current * 16} ${arrow} ${48 + next * 16}`;
     default: return i18n.t('upgrade.level', { current, next });
   }
 }

@@ -13,18 +13,22 @@ export const ENEMY_TYPES = Object.freeze({
 });
 
 export const UPGRADES = Object.freeze([
-  Object.freeze({ id: 'heavy-shot', name: 'طلقة ثقيلة', tag: 'ضرر', description: 'يزيد ضرر الطلقة بنسبة 35%.', maxStacks: 10 }),
-  Object.freeze({ id: 'bullet-velocity', name: 'سرعة الطلقة', tag: 'طلقة', description: 'يزيد سرعة الطلقة عند الإطلاق بنسبة 7%.', maxStacks: 8 }),
-  Object.freeze({ id: 'extended-ricochet', name: 'ارتداد ممتد', tag: 'ارتداد', description: 'يضيف ارتدادين قبل أن تبدأ الطلقة في فقدان سرعتها.', maxStacks: 7 }),
-  Object.freeze({ id: 'hot-ricochet', name: 'ارتداد ساخن', tag: 'ضرر', description: 'كل ارتداد يزيد ضرر الطلقة الحالية.', maxStacks: 7 }),
-  Object.freeze({ id: 'shock-impact', name: 'صدمة كهربائية', tag: 'منطقة', description: 'إصابة العدو تضر الأعداء القريبين منه.', maxStacks: 6 }),
-  Object.freeze({ id: 'magnetic-recall', name: 'استدعاء مغناطيسي', tag: 'استعادة', description: 'يسرّع رجوع الطلقة ويقلل وقت انتظار الاستدعاء.', maxStacks: 7 }),
-  Object.freeze({ id: 'recall-strike', name: 'ضربة العودة', tag: 'استعادة', description: 'الطلقة أثناء رجوعها تسبب ضررًا إضافيًا.', maxStacks: 6 }),
-  Object.freeze({ id: 'quick-dash', name: 'اندفاع أسرع', tag: 'حركة', description: 'يقلل وقت انتظار الاندفاع.', maxStacks: 7 }),
-  Object.freeze({ id: 'swift-steps', name: 'خطوات خاطفة', tag: 'حركة', description: 'يزيد سرعة حركة اللاعب بنسبة 7%.', maxStacks: 7 }),
-  Object.freeze({ id: 'vitality', name: 'قلب إضافي', tag: 'صحة', description: 'يزيد الحد الأقصى للصحة ويعالج قلبًا واحدًا.', maxStacks: 4 }),
-  Object.freeze({ id: 'wave-shield', name: 'درع الموجة', tag: 'دفاع', description: 'ابدأ كل موجة بدرع يمتص ضربة واحدة.', maxStacks: 1 }),
+  Object.freeze({ id: 'heavy-shot', name: 'طلقة ثقيلة', tag: 'ضرر', description: 'يزيد ضرر الطلقة بنسبة 55%.', maxStacks: 8 }),
+  Object.freeze({ id: 'bullet-velocity', name: 'سرعة الطلقة', tag: 'طلقة', description: 'يزيد سرعة الطلقة عند الإطلاق بنسبة 12%.', maxStacks: 7 }),
+  Object.freeze({ id: 'extended-ricochet', name: 'ارتداد ممتد', tag: 'ارتداد', description: 'يضيف ثلاثة ارتدادات قبل أن تبدأ الطلقة في فقدان سرعتها.', maxStacks: 6 }),
+  Object.freeze({ id: 'hot-ricochet', name: 'ارتداد ساخن', tag: 'ضرر', description: 'كل ارتداد يزيد ضرر الطلقة الحالية بقوة أكبر.', maxStacks: 6 }),
+  Object.freeze({ id: 'shock-impact', name: 'صدمة كهربائية', tag: 'منطقة', description: 'إصابة العدو تضر الأعداء القريبين بمدى وضرر أعلى.', maxStacks: 5 }),
+  Object.freeze({ id: 'magnetic-recall', name: 'استدعاء مغناطيسي', tag: 'استعادة', description: 'يسرّع رجوع الطلقة بقوة ويقلل وقت انتظار الاستدعاء.', maxStacks: 6 }),
+  Object.freeze({ id: 'recall-strike', name: 'ضربة العودة', tag: 'استعادة', description: 'الطلقة أثناء رجوعها تسبب ضررًا إضافيًا كبيرًا.', maxStacks: 5 }),
+  Object.freeze({ id: 'quick-dash', name: 'اندفاع أسرع', tag: 'حركة', description: 'يقلل وقت انتظار الاندفاع بوضوح.', maxStacks: 6 }),
+  Object.freeze({ id: 'swift-steps', name: 'خطوات خاطفة', tag: 'حركة', description: 'يزيد سرعة حركة اللاعب بنسبة 11%.', maxStacks: 6 }),
+  Object.freeze({ id: 'vitality', name: 'قلب إضافي', tag: 'صحة', description: 'يزيد الحد الأقصى للصحة ويعالج قلبين.', maxStacks: 4 }),
+  Object.freeze({ id: 'wave-shield', name: 'درع الموجة', tag: 'دفاع', description: 'ابدأ كل موجة بدرع أقوى يمتص عدة ضربات.', maxStacks: 3 }),
   Object.freeze({ id: 'second-chance', name: 'فرصة أخيرة', tag: 'نجاة', description: 'تنجو مرة واحدة من ضربة قاتلة بقلب واحد.', maxStacks: 1 }),
+  Object.freeze({ id: 'phase-round', name: 'طلقة نافذة', tag: 'اختراق', description: 'تقلل فقدان سرعة الطلقة بعد الإصابة وتساعدها على عبور تجمعات الأعداء.', maxStacks: 4 }),
+  Object.freeze({ id: 'kinetic-catch', name: 'التقاط حركي', tag: 'فيزياء', description: 'استلام الطلقة الراجعة يدفع الأعداء القريبين ويعطل ضغطهم لحظة قصيرة.', maxStacks: 4 }),
+  Object.freeze({ id: 'field-medic', name: 'ترميم ميداني', tag: 'استشفاء', description: 'بعد كل مكافأة قدرة، تستعيد صحة إضافية وتدخل الموجات الصعبة بثبات أعلى.', maxStacks: 3 }),
+  Object.freeze({ id: 'dash-impact', name: 'صدمة اندفاع', tag: 'حركة', description: 'الاندفاع يصنع موجة دفع قصيرة تضر الأعداء القريبين.', maxStacks: 4 }),
 ]);
 
 const ENCOUNTER_PROFILES = Object.freeze([

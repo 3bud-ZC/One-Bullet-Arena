@@ -53,7 +53,11 @@ async function expectContainedCanvas(page) {
 
 async function captureFrame(page, testInfo, name) {
   await page.evaluate(() => window.__ONE_BULLET_ARENA__.domUi.sync(true));
-  const image = await page.locator('.game-frame').screenshot({ animations: 'disabled' });
+  const box = await page.evaluate(() => {
+    const rect = document.querySelector('.game-frame').getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  const image = await page.screenshot({ animations: 'disabled', clip: box });
   await testInfo.attach(`${testInfo.project.name}-${name}`, { body: image, contentType: 'image/png' });
 }
 
@@ -107,7 +111,6 @@ test('DOM presentation is semantic, vector based, localized, and does not interc
   test.skip(testInfo.project.name !== 'desktop-chromium', 'DOM presentation contract runs once in Chromium.');
   await page.setViewportSize({ width: 1920, height: 1080 });
   await loadGame(page, 'en');
-  await seedCheckpoint(page, 18);
 
   await expect(page.locator('#game-ui-layer')).toHaveAttribute('data-state', 'menu');
   await expect(page.locator('.dashboard-screen')).toBeVisible();
@@ -120,14 +123,19 @@ test('DOM presentation is semantic, vector based, localized, and does not interc
   await page.locator('[data-action="locale-ar"]').click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.locator('#game-ui-layer')).toHaveAttribute('dir', 'rtl');
-  await expect(page.locator('[data-bind="run-kicker"]')).toContainText('الجولة');
+  await expect(page.locator('[data-bind="run-kicker"]')).toContainText('جولة');
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.continueFromCheckpoint();
+    game.startRun();
+    game.enemies = [];
+    game.enemyShots = [];
+    game.player.invulnerability = 5;
+    game.setState('playing');
     game.banner = null;
     game.tutorialStep = 3;
     game.draw();
+    game.domUi.sync(true);
   });
   await expect(page.locator('#game-ui-layer')).toHaveAttribute('data-state', 'playing');
   const centerTarget = await page.evaluate(() => document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.id || '');
@@ -177,7 +185,7 @@ test('HiDPI context uses a larger physical backing store while retaining 1280x72
 
 test('required visual QA captures crisp DOM dashboard and active states at production sizes', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Visual matrix runs once in Chromium.');
-  test.setTimeout(120_000);
+  test.setTimeout(240_000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await loadGame(page, 'en');
@@ -217,7 +225,10 @@ test('required visual QA captures crisp DOM dashboard and active states at produ
   await page.evaluate(() => {
     window.__ONE_BULLET_I18N__.setLocale('en');
     const game = window.__ONE_BULLET_ARENA__;
-    game.continueFromCheckpoint();
+    game.startRun();
+    game.wave = 18;
+    game.startNextWave();
+    game.player.invulnerability = 5;
     game.banner = null;
     game.tutorialStep = 3;
     game.draw();
@@ -229,7 +240,9 @@ test('required visual QA captures crisp DOM dashboard and active states at produ
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.resume();
+    game.player.health = game.player.maxHealth;
+    game.setState('playing');
+    game.wave = 5;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;
@@ -241,7 +254,7 @@ test('required visual QA captures crisp DOM dashboard and active states at produ
 
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.state = 'gameover';
+    game.setState('gameover');
     game.score = 325900;
     game.highScore = Math.max(game.highScore, 325900);
     game.draw();

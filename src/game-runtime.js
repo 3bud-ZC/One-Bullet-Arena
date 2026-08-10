@@ -155,7 +155,10 @@ export class OneBulletRuntime extends OneBulletGame {
         this.waveClearRecallStarted = true;
         this.announce('تم إنهاء الموجة. الطلقة تعود تلقائيًا.');
       }
-      if (this.waveClearTimer >= 0.7 && this.bullet.held) this.openUpgradeSelection();
+      if (this.waveClearTimer >= 0.7 && this.bullet.held) {
+        if (this.shouldOfferUpgrade()) this.openUpgradeSelection();
+        else this.startNextWave();
+      }
     } else {
       this.waveClearTimer = 0;
       this.waveClearRecallStarted = false;
@@ -178,8 +181,11 @@ export class OneBulletRuntime extends OneBulletGame {
     const currentDistance = distance(enemy, this.player);
     const desired = currentDistance < 270 ? -1 : currentDistance > 440 ? 1 : 0;
     const strafe = { x: -toPlayer.y, y: toPlayer.x };
-    enemy.x += (toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
-    enemy.y += (toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42) * enemy.speed * dt;
+    const control = enemy.staggerTime > 0 ? 0.35 : 1;
+    this.steerEnemy(enemy, {
+      x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42,
+      y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42,
+    }, dt, control);
 
     if (enemy.attackCooldown <= 0) {
       enemy.shotDirection = { ...toPlayer };
@@ -190,19 +196,25 @@ export class OneBulletRuntime extends OneBulletGame {
   updateCharger(enemy, toPlayer, dt) {
     if (enemy.chargeRemaining > 0) {
       enemy.chargeRemaining -= dt;
-      enemy.x += enemy.chargeDirection.x * 500 * dt;
-      enemy.y += enemy.chargeDirection.y * 500 * dt;
+      enemy.x += enemy.chargeDirection.x * 620 * dt;
+      enemy.y += enemy.chargeDirection.y * 620 * dt;
       return;
     }
 
     if (enemy.chargeTelegraph > 0) {
       enemy.chargeTelegraph -= dt;
-      if (enemy.chargeTelegraph <= 0) enemy.chargeRemaining = 0.32;
+      if (enemy.chargeTelegraph <= 0) enemy.chargeRemaining = 0.42;
       return;
     }
 
-    enemy.x += toPlayer.x * enemy.speed * dt;
-    enemy.y += toPlayer.y * enemy.speed * dt;
+    const currentDistance = distance(enemy, this.player);
+    const strafe = { x: -toPlayer.y, y: toPlayer.x };
+    const desired = currentDistance < 210 ? -0.18 : 1;
+    const control = enemy.staggerTime > 0 ? 0.35 : 1.08;
+    this.steerEnemy(enemy, {
+      x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.28,
+      y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.28,
+    }, dt, control);
     if (enemy.attackCooldown <= 0) {
       enemy.chargeDirection = { ...toPlayer };
       enemy.chargeTelegraph = 0.62;
@@ -221,7 +233,7 @@ export class OneBulletRuntime extends OneBulletGame {
       ctx.rotate(enemy.phase * 0.24);
       ctx.fillStyle = color;
       ctx.shadowColor = color;
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 0;
       if (enemy.type === 'scout') polygon(ctx, 4, enemy.radius, Math.PI / 4);
       else if (enemy.type === 'brute') {
         ctx.fillRect(-enemy.radius, -enemy.radius, enemy.radius * 2, enemy.radius * 2);
@@ -250,11 +262,8 @@ export class OneBulletRuntime extends OneBulletGame {
           : normalize(this.player.x - enemy.x, this.player.y - enemy.y);
         ctx.save();
         ctx.strokeStyle = UI_COLORS.danger;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius + 10 + Math.sin(this.elapsed * 20) * 4, 0, Math.PI * 2);
-        ctx.stroke();
         ctx.globalAlpha = 0.65;
+        ctx.lineWidth = 4;
         ctx.setLineDash([10, 8]);
         ctx.beginPath();
         ctx.moveTo(enemy.x, enemy.y);
@@ -293,7 +302,7 @@ export class OneBulletRuntime extends OneBulletGame {
         ? 'الطلقة عائدة إليك'
         : 'استدعِ الطلقة';
     label(ctx, bulletTitle, leftX + 318, 46, 18, this.bullet.held ? UI_COLORS.bullet : UI_COLORS.text, 900, 'right');
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     progressBar(ctx, leftX + 22, 61, 296, 8, 1 - this.bullet.recallCooldown / recallMax, UI_COLORS.electric);
     label(ctx, this.bullet.held ? 'انقر للإطلاق' : 'Q للاستدعاء', leftX + 318, 91, 13, UI_COLORS.muted, 600, 'right');
 

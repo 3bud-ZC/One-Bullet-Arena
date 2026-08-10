@@ -174,7 +174,7 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
     ctx.strokeStyle = bodyColor;
     ctx.lineWidth = 3;
     ctx.shadowColor = bodyColor;
-    ctx.shadowBlur = enemy.hitFlash > 0 ? 28 : 17;
+    ctx.shadowBlur = 0;
     polygon(ctx, 6, radius + 2, Math.PI / 6);
     ctx.fill();
     ctx.stroke();
@@ -187,7 +187,7 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
 
     ctx.fillStyle = active ? '#d8fbff' : '#ffb2bf';
     ctx.shadowColor = shieldColor;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(0, 0, Math.max(5, radius * 0.27), 0, Math.PI * 2);
     ctx.fill();
@@ -195,7 +195,7 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
     ctx.strokeStyle = shieldColor;
     ctx.lineWidth = active ? 6 : 3;
     ctx.shadowColor = shieldColor;
-    ctx.shadowBlur = active ? 22 : 8;
+    ctx.shadowBlur = 0;
     if (!active) ctx.setLineDash([7, 7]);
     ctx.beginPath();
     ctx.arc(0, 0, radius + 11, -0.78, 0.78);
@@ -241,25 +241,17 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
     const pulse = 0.35 + (Math.sin(this.elapsed * 8 + enemy.id) + 1) * 0.16;
 
     ctx.save();
-    if (enemy.spawnTime > 0) {
-      ctx.globalAlpha = clamp(enemy.spawnTime * 1.4, 0, 0.7);
-      ctx.strokeStyle = UI_COLORS.electric;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([8, 7]);
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius + 20 + enemy.spawnTime * 25, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
     if (active && enemy.guardFlash > 0) {
       ctx.globalAlpha = clamp(enemy.guardFlash, 0, 1);
       ctx.strokeStyle = UI_COLORS.electric;
-      ctx.shadowColor = UI_COLORS.electric;
-      ctx.shadowBlur = 18;
       ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      const reach = enemy.radius + 20 + (1 - enemy.guardFlash) * 12;
       ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius + 18 + (1 - enemy.guardFlash) * 24, 0, Math.PI * 2);
+      ctx.moveTo(enemy.x - reach, enemy.y - 18);
+      ctx.lineTo(enemy.x - reach, enemy.y + 18);
+      ctx.moveTo(enemy.x + reach, enemy.y - 18);
+      ctx.lineTo(enemy.x + reach, enemy.y + 18);
       ctx.stroke();
     }
 
@@ -267,11 +259,13 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
       ctx.globalAlpha = 0.65 + pulse;
       ctx.strokeStyle = UI_COLORS.danger;
       ctx.lineWidth = 2;
-      ctx.setLineDash([6, 6]);
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius + 14, 0, Math.PI * 2);
+      ctx.moveTo(enemy.x - enemy.radius - 12, enemy.y - 10);
+      ctx.lineTo(enemy.x - enemy.radius - 12, enemy.y + 10);
+      ctx.moveTo(enemy.x + enemy.radius + 12, enemy.y - 10);
+      ctx.lineTo(enemy.x + enemy.radius + 12, enemy.y + 10);
       ctx.stroke();
-      ctx.setLineDash([]);
       label(ctx, `${enemy.guardBrokenTimer.toFixed(1)}s`, enemy.x, enemy.y - enemy.radius - 17, 9, UI_COLORS.danger, 900);
     }
     ctx.restore();

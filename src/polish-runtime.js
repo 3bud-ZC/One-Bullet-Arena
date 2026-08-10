@@ -1,5 +1,5 @@
 import { OneBulletRuntime } from './game-runtime.js';
-import { ARENA_STAGE_COUNT, clamp, pointInsideRect } from './arena.js';
+import { ARENA_STAGE_COUNT, clamp, normalize, pointInsideRect } from './arena.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
 import {
   TOUCH_LAYOUT,
@@ -81,16 +81,15 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
     const wasReturning = this.bullet.recalling;
     super.catchBullet();
     if (wasReturning) {
-      this.recallPulse = 0.65;
-      this.shake = Math.max(this.shake, this.reducedMotion ? 1 : 3.5);
-      this.createRing(this.player.x, this.player.y, UI_COLORS.electric, 74);
+      this.recallPulse = 0.28;
+      this.shake = Math.max(this.shake, this.reducedMotion ? 0 : 1.2);
     }
   }
 
   onRicochet() {
     super.onRicochet();
     this.impactFlash = Math.max(this.impactFlash, 0.045);
-    this.shake = Math.max(this.shake, this.reducedMotion ? 0 : 2.2);
+    this.shake = Math.max(this.shake, this.reducedMotion ? 0 : 0.9);
   }
 
   damageEnemy(enemy, damage, fromBullet = false) {
@@ -115,20 +114,15 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
     super.killEnemy(enemy);
 
     const profiles = {
-      scout: { count: 10, speed: 190, ring: 42 },
-      brute: { count: 24, speed: 300, ring: 88 },
-      sniper: { count: 16, speed: 235, ring: 66 },
-      charger: { count: 20, speed: 285, ring: 72 },
-      splitter: { count: 22, speed: 250, ring: 82 },
+      scout: { count: 3, speed: 120 },
+      brute: { count: 5, speed: 150 },
+      sniper: { count: 4, speed: 135 },
+      charger: { count: 4, speed: 145 },
+      splitter: { count: 5, speed: 140 },
     };
     const profile = profiles[snapshot.type] || profiles.scout;
-    this.createBurst(snapshot.x, snapshot.y, snapshot.color, snapshot.mini ? 7 : profile.count, profile.speed);
-    if (!snapshot.mini) this.createRing(snapshot.x, snapshot.y, snapshot.color, profile.ring);
-
-    if (snapshot.type === 'brute') this.createRing(snapshot.x, snapshot.y, UI_COLORS.danger, 112);
-    if (snapshot.type === 'sniper') this.createBurst(snapshot.x, snapshot.y, UI_COLORS.text, 8, 330);
-    if (snapshot.type === 'charger') this.createRing(snapshot.x, snapshot.y, UI_COLORS.success, 104);
-    if (snapshot.type === 'splitter') this.createRing(snapshot.x, snapshot.y, '#ff79d1', 118);
+    this.createBurst(snapshot.x, snapshot.y, snapshot.color, snapshot.mini ? 2 : profile.count, profile.speed);
+    if (snapshot.type === 'sniper') this.createBurst(snapshot.x, snapshot.y, UI_COLORS.text, 2, 150);
 
     if (this.enemies.length === 0) {
       this.clearBannerTimer = 1.15;
@@ -201,7 +195,7 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
     const pulse = 1 + Math.sin(this.elapsed * 16) * 0.12;
     ctx.fillStyle = this.bullet.recalling ? UI_COLORS.electric : UI_COLORS.bullet;
     ctx.shadowColor = ctx.fillStyle;
-    ctx.shadowBlur = 28;
+    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(this.bullet.x, this.bullet.y, this.bullet.radius * pulse, 0, Math.PI * 2);
     ctx.fill();
@@ -214,9 +208,17 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
     if (this.muzzleFlash > 0) {
       ctx.globalAlpha = Math.min(1, this.muzzleFlash * 7);
       ctx.strokeStyle = UI_COLORS.bullet;
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      const direction = normalize(this.pointer.x - this.player.x, this.pointer.y - this.player.y);
+      const normal = { x: -direction.y, y: direction.x };
+      const originX = this.player.x + direction.x * 24;
+      const originY = this.player.y + direction.y * 24;
       ctx.beginPath();
-      ctx.arc(this.player.x, this.player.y, 28 + (0.16 - this.muzzleFlash) * 130, 0, Math.PI * 2);
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX + direction.x * 36 + normal.x * 8, originY + direction.y * 36 + normal.y * 8);
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(originX + direction.x * 36 - normal.x * 8, originY + direction.y * 36 - normal.y * 8);
       ctx.stroke();
     }
     ctx.restore();
@@ -225,7 +227,7 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
   drawHud() {
     const ctx = this.ctx;
     const bulletState = bulletPresentationState(this.bullet);
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
     const healthRatio = this.player.maxHealth > 0 ? this.player.health / this.player.maxHealth : 0;
 
@@ -366,7 +368,7 @@ export class OneBulletPolishRuntime extends OneBulletRuntime {
     ctx.restore();
 
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, this.stack('quick-dash')));
-    const recallMax = Math.max(1.15, 3.8 - this.stack('magnetic-recall') * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - this.stack('magnetic-recall') * 0.52);
     drawTouchAction(this, TOUCH_LAYOUT.dash, 'DASH', UI_COLORS.player, 1 - this.player.dashCooldown / dashMax, () => { this.dashRequested = true; });
     drawTouchAction(this, TOUCH_LAYOUT.recall, this.bullet.held ? 'READY' : 'RECALL', UI_COLORS.electric, 1 - this.bullet.recallCooldown / recallMax, () => this.recallBullet());
     drawTouchAction(this, TOUCH_LAYOUT.pause, 'PAUSE', UI_COLORS.muted, 1, () => this.pause());

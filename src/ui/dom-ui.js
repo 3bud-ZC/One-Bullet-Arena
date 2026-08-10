@@ -2,7 +2,26 @@ import { i18n } from '../i18n.js';
 import { RELEASE_VERSION } from '../release.js';
 import { iconSvg } from './icons.js';
 
-const STAGE_WAVES = Object.freeze([1, 3, 6, 9, 13, 18, 25, 35]);
+const STAGE_WAVES = Object.freeze([1, 5, 10, 15, 20, 25, 30, 35]);
+
+const UPGRADE_ICONS = Object.freeze({
+  'heavy-shot': 'target',
+  'bullet-velocity': 'bullet',
+  'extended-ricochet': 'wave',
+  'hot-ricochet': 'wave',
+  'shock-impact': 'wave',
+  'magnetic-recall': 'checkpoint',
+  'recall-strike': 'newRun',
+  'quick-dash': 'dash',
+  'swift-steps': 'dash',
+  vitality: 'health',
+  'wave-shield': 'shield',
+  'second-chance': 'shield',
+  'phase-round': 'target',
+  'kinetic-catch': 'checkpoint',
+  'field-medic': 'health',
+  'dash-impact': 'dash',
+});
 
 function stageIndexForWave(wave) {
   const safe = Math.max(1, Math.trunc(Number(wave) || 1));
@@ -36,6 +55,10 @@ function setPressed(element, pressed) {
   if (!element) return;
   element.setAttribute('aria-pressed', pressed ? 'true' : 'false');
   element.classList.toggle('is-active', Boolean(pressed));
+}
+
+function upgradeIconName(id) {
+  return UPGRADE_ICONS[id] || 'upgrade';
 }
 
 function metricTemplate(icon, labelKey, bind) {
@@ -507,6 +530,7 @@ export class DomUiController {
     if (this.locale !== i18n.locale) this.localize();
     const state = this.game.state;
     this.root.dataset.state = state;
+    document.body.dataset.gameState = state;
     this.root.classList.toggle('is-touch', Boolean(this.game.touchMode));
     for (const [name, screen] of this.screens) setHidden(screen, name !== state);
 
@@ -590,9 +614,8 @@ export class DomUiController {
   syncProgression(force = false) {
     const source = this.menuSource();
     const current = stageIndexForWave(source.wave);
-    const rtl = i18n.isRtl;
-    const start = rtl ? 660 : 40;
-    const end = rtl ? 40 : 660;
+    const start = 40;
+    const end = 660;
     const currentX = start + (end - start) * (current / (STAGE_WAVES.length - 1));
     const line = this.root.querySelector('[data-progress-line]');
     if (line) line.setAttribute('d', `M${start} 24H${currentX.toFixed(2)}`);
@@ -606,7 +629,7 @@ export class DomUiController {
       node?.classList.toggle('is-current', index === current);
       label?.classList.toggle('is-complete', index < current);
       label?.classList.toggle('is-current', index === current);
-      if (label) label.style.gridColumn = String((rtl ? STAGE_WAVES.length - index : index + 1));
+      if (label) label.style.gridColumn = String(index + 1);
     }
 
     const next = current >= STAGE_WAVES.length - 1
@@ -623,7 +646,7 @@ export class DomUiController {
     const healthRatio = health / maxHealth;
     const dashMax = Math.max(0.36, 1.12 * Math.pow(0.86, game.stack?.('quick-dash') || 0));
     const dashRatio = 1 - (Number(game.player?.dashCooldown) || 0) / dashMax;
-    const recallMax = Math.max(1.15, 3.8 - (game.stack?.('magnetic-recall') || 0) * 0.38);
+    const recallMax = Math.max(0.75, 3.8 - (game.stack?.('magnetic-recall') || 0) * 0.52);
     const recallRatio = game.bullet?.held ? 1 : 1 - (Number(game.bullet?.recallCooldown) || 0) / recallMax;
     const bulletKey = game.bullet?.held
       ? 'hud.bulletHeld'
@@ -719,12 +742,12 @@ export class DomUiController {
       const next = Math.min(upgrade.maxStacks, current + 1);
       const atMax = current >= upgrade.maxStacks;
       return `
-        <button class="upgrade-card surface" type="button" data-action="upgrade-${index}" data-interactive ${atMax ? 'disabled' : ''}>
+        <button class="upgrade-card surface upgrade-card--${upgrade.id}" type="button" data-action="upgrade-${index}" data-interactive ${atMax ? 'disabled' : ''}>
           <div class="upgrade-card__top">
             <span class="upgrade-card__index" dir="ltr">${String(index + 1).padStart(2, '0')}</span>
             <span class="upgrade-card__tag">${i18n.t(`upgrade.${upgrade.id}.tag`)}</span>
           </div>
-          <span class="upgrade-card__icon">${iconSvg('upgrade')}</span>
+          <span class="upgrade-card__icon">${iconSvg(upgradeIconName(upgrade.id))}</span>
           <h3>${i18n.t(`upgrade.${upgrade.id}.name`)}</h3>
           <p>${i18n.t(`upgrade.${upgrade.id}.description`)}</p>
           <div class="upgrade-card__footer">

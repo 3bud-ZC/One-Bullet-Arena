@@ -14,8 +14,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 1,
     name: 'فتح الجناحين',
-    startsAtWave: 3,
-    bounds: Object.freeze({ x: 120, y: 155, w: 1040, h: 410 }),
+    startsAtWave: 5,
+    bounds: Object.freeze({ x: 70, y: 130, w: 1140, h: 460 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 372, y: 252, w: 48, h: 216 }),
       Object.freeze({ x: 860, y: 252, w: 48, h: 216 }),
@@ -26,8 +26,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 2,
     name: 'فتح الممرات',
-    startsAtWave: 6,
-    bounds: Object.freeze({ x: 120, y: 65, w: 1040, h: 590 }),
+    startsAtWave: 10,
+    bounds: Object.freeze({ x: 20, y: 40, w: 1240, h: 640 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 372, y: 252, w: 48, h: 216 }),
       Object.freeze({ x: 860, y: 252, w: 48, h: 216 }),
@@ -40,8 +40,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 3,
     name: 'الساحة الكاملة',
-    startsAtWave: 9,
-    bounds: Object.freeze({ x: 24, y: 24, w: 1232, h: 672 }),
+    startsAtWave: 15,
+    bounds: Object.freeze({ x: -80, y: -40, w: 1440, h: 800 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
       Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
@@ -54,8 +54,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 4,
     name: 'القطاع الخارجي',
-    startsAtWave: 13,
-    bounds: Object.freeze({ x: -130, y: -70, w: 1540, h: 860 }),
+    startsAtWave: 20,
+    bounds: Object.freeze({ x: -240, y: -130, w: 1760, h: 980 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
       Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
@@ -72,8 +72,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 5,
     name: 'الحلقة الصناعية',
-    startsAtWave: 18,
-    bounds: Object.freeze({ x: -300, y: -170, w: 1880, h: 1060 }),
+    startsAtWave: 25,
+    bounds: Object.freeze({ x: -420, y: -230, w: 2120, h: 1180 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
       Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
@@ -92,8 +92,8 @@ const ARENA_STAGES = Object.freeze([
   Object.freeze({
     id: 6,
     name: 'المصفوفة المفتوحة',
-    startsAtWave: 25,
-    bounds: Object.freeze({ x: -480, y: -270, w: 2240, h: 1260 }),
+    startsAtWave: 30,
+    bounds: Object.freeze({ x: -620, y: -340, w: 2520, h: 1420 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
       Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
@@ -115,7 +115,7 @@ const ARENA_STAGES = Object.freeze([
     id: 7,
     name: 'الحزام النهائي',
     startsAtWave: 35,
-    bounds: Object.freeze({ x: -650, y: -365, w: 2580, h: 1450 }),
+    bounds: Object.freeze({ x: -820, y: -455, w: 2920, h: 1640 }),
     obstacles: Object.freeze([
       Object.freeze({ x: 292, y: 184, w: 54, h: 186 }),
       Object.freeze({ x: 934, y: 350, w: 54, h: 186 }),
@@ -160,7 +160,7 @@ export function arenaStageForWave(wave) {
 }
 
 export function isArenaUnlockWave(wave) {
-  return [3, 6, 9, 13, 18, 25, 35].includes(Math.max(1, Math.trunc(Number(wave) || 1)));
+  return [5, 10, 15, 20, 25, 30, 35].includes(Math.max(1, Math.trunc(Number(wave) || 1)));
 }
 
 export function hudSafeZones() {

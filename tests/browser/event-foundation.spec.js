@@ -73,6 +73,7 @@ test('wave clear and upgrade choice emit once before the next wave continues', a
   const result = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.startRun();
+    game.wave = 5;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;
@@ -92,7 +93,7 @@ test('wave clear and upgrade choice emit once before the next wave continues', a
   expect(result.offered.filter((event) => event.type === 'upgrade.offered')).toHaveLength(1);
   const selected = result.finalHistory.find((event) => event.type === 'upgrade.selected');
   expect(selected?.payload.upgradeId).toBe(result.selectedId);
-  expect(result.snapshot.wave).toBe(2);
+  expect(result.snapshot.wave).toBe(6);
   expect(result.snapshot.upgrades).toBe(1);
   expect(result.finalHistory.filter((event) => event.type === 'wave.started')).toHaveLength(2);
 });

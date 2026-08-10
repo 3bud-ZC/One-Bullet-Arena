@@ -84,6 +84,23 @@ test('frame pacing diagnostics keep a bounded ring buffer under long high-refres
   assert.equal(pacer.snapshot().sampleCount, 120);
 });
 
+test('frame pacing timing resets preserve telemetry while excluding background gaps', () => {
+  const pacer = new FramePacer({ windowSize: 120 });
+  for (let frame = 0; frame <= 60; frame += 1) pacer.sample(frame * (1000 / 60), frame % 2);
+  const before = pacer.snapshot();
+  assert.equal(before.sampleCount, 60);
+  pacer.reset(20_000);
+  const afterReset = pacer.snapshot();
+  assert.equal(afterReset.sampleCount, 60);
+  pacer.sample(20_016.67, 2);
+  const resumed = pacer.snapshot();
+  assert.equal(resumed.sampleCount, 61);
+  assert.ok(resumed.p99FrameMs < 25, 'background gap must not enter the frame-time window');
+  assert.ok(resumed.timingResetCount >= 1);
+  pacer.clear();
+  assert.equal(pacer.snapshot().sampleCount, 0);
+});
+
 test('render quality preference persists independently from gameplay state', () => {
   const storage = memoryStorage();
   assert.equal(loadQualityMode(storage), 'AUTO');

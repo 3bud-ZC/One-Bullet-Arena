@@ -70,14 +70,18 @@ export function installDomPerformanceBridge(controller) {
     gaugeWrites: 0,
     minimapTrailRebuilds: 0,
     minimapMarkerWrites: 0,
+    minimapSyncs: 0,
+    minimapSkips: 0,
     hudSyncs: 0,
     settingsSyncs: 0,
     stateSyncs: 0,
+    stateTransitions: 0,
   };
   let trailSignature = '';
   let cachedBoundsSignature = '';
   let projectedTrail = '';
   let lastAudioIcon = '';
+  let lastMinimapSyncMs = -Infinity;
 
   controller.performanceElements = Object.freeze({
     gauges,
@@ -102,12 +106,21 @@ export function installDomPerformanceBridge(controller) {
     stats.gaugeWrites += 1;
   };
 
-  controller.syncMinimap = () => {
+  controller.syncMinimap = (force = false, timeMs = globalThis.performance?.now?.() || 0) => {
     const game = controller.game;
     const bounds = game.arenaStage?.bounds;
     const shouldShow = Boolean(bounds && (game.arenaStage?.id || 0) >= 4 && !game.touchMode);
     setHidden(minimap, !shouldShow);
     if (!shouldShow) return;
+
+    const minimapHz = Math.max(5, Number(game.activeQualityProfile?.minimapHz) || 24);
+    const interval = 1000 / minimapHz;
+    if (!force && timeMs - lastMinimapSyncMs < interval) {
+      stats.minimapSkips += 1;
+      return;
+    }
+    lastMinimapSyncMs = timeMs;
+    stats.minimapSyncs += 1;
 
     const width = Math.max(1, Number(bounds.w) || 1);
     const height = Math.max(1, Number(bounds.h) || 1);
@@ -150,7 +163,7 @@ export function installDomPerformanceBridge(controller) {
     setText(sector, String((game.arenaStage?.id || 0) + 1).padStart(2, '0'));
   };
 
-  controller.syncHud = () => {
+  controller.syncHud = (force = false, timeMs = globalThis.performance?.now?.() || 0) => {
     stats.hudSyncs += 1;
     const game = controller.game;
     const maxHealth = Math.max(1, Number(game.player?.maxHealth) || 1);
@@ -178,7 +191,7 @@ export function installDomPerformanceBridge(controller) {
     controller.setGauge('dash', dashRatio);
     controller.setGauge('recall', recallRatio);
     setHidden(shieldIndicator, !(Number(game.player?.shield) > 0));
-    controller.syncMinimap();
+    controller.syncMinimap(force, timeMs);
   };
 
   controller.syncSettings = () => {
@@ -202,23 +215,24 @@ export function installDomPerformanceBridge(controller) {
     }
   };
 
-  controller.sync = (force = false) => {
+  controller.sync = (force = false, timeMs = globalThis.performance?.now?.() || 0) => {
     stats.stateSyncs += 1;
     if (controller.locale !== i18n.locale) controller.localize();
     const state = controller.game.state;
-    root.dataset.state = state;
-    root.classList.toggle('is-touch', Boolean(controller.game.touchMode));
-    for (const [name, screen] of controller.screens) setHidden(screen, name !== state);
-    setHidden(toolbar, !['menu', 'paused'].includes(state));
+    const stateChanged = controller.lastState !== state;
 
-    if (controller.lastState !== state) {
+    if (stateChanged) {
       controller.lastState = state;
       controller.settingsOpen = false;
-      controller.syncSettings();
+      root.dataset.state = state;
+      root.classList.toggle('is-touch', Boolean(controller.game.touchMode));
+      for (const [name, screen] of controller.screens) setHidden(screen, name !== state);
+      setHidden(toolbar, !['menu', 'paused'].includes(state));
+      stats.stateTransitions += 1;
     }
 
     if (state === 'menu') controller.syncMenu();
-    else if (state === 'playing') controller.syncHud();
+    else if (state === 'playing') controller.syncHud(force || stateChanged, timeMs);
     else if (state === 'paused') controller.syncPause();
     else if (state === 'upgrade') controller.syncUpgrade(force);
     else if (state === 'gameover') controller.syncGameOver();
@@ -234,10 +248,13 @@ export function installDomPerformanceBridge(controller) {
         cachedGaugeCount: gauges.size,
         minimapTrailRebuilds: stats.minimapTrailRebuilds,
         minimapMarkerWrites: stats.minimapMarkerWrites,
+        minimapSyncs: stats.minimapSyncs,
+        minimapSkips: stats.minimapSkips,
         gaugeWrites: stats.gaugeWrites,
         hudSyncs: stats.hudSyncs,
         settingsSyncs: stats.settingsSyncs,
         stateSyncs: stats.stateSyncs,
+        stateTransitions: stats.stateTransitions,
         gameplayQueryFreeSync: true,
       };
     },

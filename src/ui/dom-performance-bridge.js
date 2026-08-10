@@ -76,12 +76,14 @@ export function installDomPerformanceBridge(controller) {
     settingsSyncs: 0,
     stateSyncs: 0,
     stateTransitions: 0,
+    touchModeWrites: 0,
   };
   let trailSignature = '';
   let cachedBoundsSignature = '';
   let projectedTrail = '';
   let lastAudioIcon = '';
   let lastMinimapSyncMs = -Infinity;
+  let lastTouchMode = null;
 
   controller.performanceElements = Object.freeze({
     gauges,
@@ -220,12 +222,18 @@ export function installDomPerformanceBridge(controller) {
     if (controller.locale !== i18n.locale) controller.localize();
     const state = controller.game.state;
     const stateChanged = controller.lastState !== state;
+    const touchMode = Boolean(controller.game.touchMode);
+
+    if (lastTouchMode !== touchMode) {
+      lastTouchMode = touchMode;
+      root.classList.toggle('is-touch', touchMode);
+      stats.touchModeWrites += 1;
+    }
 
     if (stateChanged) {
       controller.lastState = state;
       controller.settingsOpen = false;
       root.dataset.state = state;
-      root.classList.toggle('is-touch', Boolean(controller.game.touchMode));
       for (const [name, screen] of controller.screens) setHidden(screen, name !== state);
       setHidden(toolbar, !['menu', 'paused'].includes(state));
       stats.stateTransitions += 1;
@@ -255,6 +263,7 @@ export function installDomPerformanceBridge(controller) {
         settingsSyncs: stats.settingsSyncs,
         stateSyncs: stats.stateSyncs,
         stateTransitions: stats.stateTransitions,
+        touchModeWrites: stats.touchModeWrites,
         gameplayQueryFreeSync: true,
       };
     },

@@ -160,8 +160,8 @@ html[dir="rtl"] .button--primary:hover .button__chevron { transform: translateX(
 }
 
 @keyframes combat-announcement {
-  0% { opacity: 0; transform: translateY(-9px) scale(.985); filter: blur(2px); }
-  16% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  0% { opacity: 0; transform: translateY(-9px) scale(.985); }
+  16% { opacity: 1; transform: translateY(0) scale(1); }
   62% { opacity: .98; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-5px) scale(.995); }
 }
@@ -208,15 +208,10 @@ html[dir="rtl"] .game-ui-layer[data-bullet-state="returning"] .hud-status--bulle
 
 @keyframes low-health-breathe { 50% { opacity: .9; } }
 
-/* Damage feedback stays screen-space and very restrained. */
-.game-ui-layer[data-state="playing"] .hud-safe {
-  filter: saturate(calc(1 + var(--damage-feedback) * .08));
-}
-
 /* Lower tiers remove only decorative DOM cost. Core HUD/readability is unchanged. */
 .game-ui-layer[data-quality-tier="balanced"] .ambient-ui__grain,
 .game-ui-layer[data-quality-tier="performance"] .ambient-ui__grain { display: none; }
-.game-ui-layer[data-quality-tier="performance"] .ambient-ui__glow { filter: blur(48px); opacity: .06; }
+.game-ui-layer[data-quality-tier="performance"] .ambient-ui__glow,
 .game-ui-layer[data-quality-tier="performance"] .ambient-ui__trajectory { display: none; }
 .game-ui-layer[data-quality-tier="performance"] .surface--elevated { backdrop-filter: none; }
 

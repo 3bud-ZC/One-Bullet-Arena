@@ -37,6 +37,15 @@ test('effective DPR increases backing resolution while respecting the pixel budg
   assert.ok(pixels1440 <= DEFAULT_MAX_BACKING_PIXELS + 1);
 });
 
+test('low-cost quality profiles can downsample very large displays to honor their hard pixel budget', () => {
+  const maxBackingPixels = 3_300_000;
+  const dpr4kPerformance = computeEffectiveDpr(2, 3840, 2160, 1.3, maxBackingPixels);
+  assert.ok(dpr4kPerformance > 0);
+  assert.ok(dpr4kPerformance < 1);
+  const pixels = 3840 * 2160 * dpr4kPerformance * dpr4kPerformance;
+  assert.ok(pixels <= maxBackingPixels + 1);
+});
+
 test('client coordinates map to logical game coordinates independent of backing-store DPR', () => {
   const rect = { left: 200, top: 100, width: 1600, height: 900 };
   assert.deepEqual(mapClientPointToLogical(rect, 200, 100), { x: 0, y: 0 });

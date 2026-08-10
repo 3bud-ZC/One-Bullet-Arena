@@ -22,53 +22,73 @@
 
 There are no currencies, hubs, difficulty presets, or meta-progression trees. Progression happens inside the run through upgrades, encounter pressure, skill execution, and world expansion.
 
-## v3.7.0 High-Resolution Presentation
+## v3.8.0 Smooth Runtime
 
-`3.7.0-hires-ui` separates **simulation resolution**, **Canvas render resolution**, and **application UI rendering**.
+`3.8.0-smooth-runtime` preserves the accepted v3.7 High-Resolution Presentation and upgrades motion, frame pacing, game feel, adaptive rendering, and high-wave runtime efficiency.
 
-### Rendering architecture
+### Game-loop architecture
 
-- Gameplay simulation remains exactly **1280×720 logical coordinates**.
-- The arena, player, enemies, bullets, particles, combat effects, telegraphs, world camera, touch controls, and other world-space graphics remain Canvas2D.
-- The gameplay Canvas is rendered through a DPR-aware backing store and a single logical-to-physical transform.
-- The Canvas is always presented with a centered **16:9 contain** model; non-16:9 screens letterbox rather than stretch geometry.
-- Main Dashboard, desktop HUD, Pause, Upgrade Selection, Game Over, settings, language controls, run statistics, and world progression are semantic **HTML + CSS + SVG**.
-- The late-game minimap is a DOM/SVG projection of the real exploration/camera state on desktop.
+- Rendering remains driven directly by the browser's native `requestAnimationFrame()` cadence. There is no artificial 60 FPS render cap.
+- Gameplay simulation now advances through a bounded **120 Hz fixed timestep**.
+- Render cadence and simulation cadence are independent, so 60, 120, 144, 165, and 240 Hz displays do not change gameplay speed.
+- A fixed-step accumulator limits catch-up work to eight simulation steps after a stall and discards excessive backlog instead of entering a spiral of death.
+- Player, bullet, enemies, hostile projectiles, and world camera render from visual interpolation between the previous and current simulation transforms; collision continues to use simulation state only.
+- Visibility/state transitions reset frame timing so returning from a background tab cannot inject a giant delta.
 
-This removes the previous dependency on a 1280×720 rasterized Canvas for text-heavy player-facing UI while preserving deterministic gameplay coordinates.
+### Adaptive rendering quality
 
-### HiDPI Canvas
+Rendering quality is a visual-only system with `AUTO`, `ULTRA`, `HIGH`, `BALANCED`, and `PERFORMANCE` modes.
 
-`src/render/canvas-viewport.js` owns display geometry and backing-store sizing:
+- `AUTO` is the default and adapts from measured frame pacing rather than relying only on device labels.
+- Quality changes use sustained pressure/headroom windows plus cooldown hysteresis, preventing rapid tier oscillation.
+- Tiers may adjust DPR ceiling, backing-pixel budget, particle density/cap, trail history, ambient detail, shadows, and DOM/HUD update cadence.
+- Tiers never modify enemy count, AI, damage, collision, bullet speed, movement speed, encounter rules, or wave progression.
+- Expensive backing-store changes are deferred until a safe state such as menu/pause/wave transition rather than repeatedly resizing during combat.
+- The manual preference is persisted under `one-bullet-render-quality`.
 
-- reads `window.devicePixelRatio`;
-- clamps effective DPR using a performance ceiling and backing-pixel budget;
-- resizes on browser resize, orientation change, fullscreen transitions, visual viewport changes, and DPR changes;
-- maps logical 1280×720 drawing commands to the physical backing store with `ctx.setTransform()`;
-- keeps image smoothing enabled for the non-pixel-art renderer;
-- uses consistent round caps/joins and a bounded miter limit.
+### High-resolution rendering architecture
 
-Pointer and touch input continues to map from the CSS Canvas rectangle into logical game coordinates before the existing world-camera mapping is applied.
+Gameplay simulation remains exactly **1280×720 logical coordinates** while the display backing store scales independently through the accepted HiDPI architecture.
 
-### DOM presentation system
+- Arena, player, enemies, bullets, particles, combat effects, telegraphs, world camera, touch controls, and world-space graphics remain Canvas2D.
+- The Canvas uses a DPR-aware backing store and a single logical-to-physical transform.
+- Presentation remains a centered **16:9 contain** model; non-16:9 screens letterbox instead of distorting geometry.
+- Dashboard, desktop HUD, Pause, Upgrade Selection, Game Over, settings, language controls, run statistics, progression, and minimap remain semantic **HTML + CSS + SVG**.
+- The existing PWA/offline and checkpoint contracts remain intact.
 
-The active presentation owner remains `OneBulletGlobalUiRuntime`; no additional “final UI” runtime was stacked on top.
+`src/render/canvas-viewport.js` owns display geometry, input mapping, HiDPI backing size, and the safe quality-aware DPR/pixel budget.
 
-New presentation modules:
+### DOM and minimap performance
 
-- `src/ui/dom-ui.js` — semantic UI controller driven directly from current game state.
-- `src/ui/icons.js` — reusable inline SVG icon library using `currentColor` and consistent vector geometry.
-- `styles/tokens.css` — color, surface, radius, spacing, shadow, typography, and motion tokens.
-- `styles/ui.css` — premium Dashboard/HUD/overlay/component system.
-- `styles/responsive.css` — laptop, low-height, mobile-landscape, and reduced-motion composition.
+The active presentation owner remains `OneBulletGlobalUiRuntime`; no additional cosmetic UI runtime is stacked on top.
 
-The DOM layer uses real buttons, focus-visible states, ARIA labels, CSS Grid/Flexbox, logical CSS properties, tabular numeric telemetry, transform-based HUD gauges, restrained blur, and layered surfaces.
+High-refresh rendering no longer implies equally expensive DOM work:
+
+- HUD synchronization is dirty-state and cadence limited instead of rebuilding at every 120–240 Hz render opportunity.
+- Frequently updated gauge nodes are cached and use CSS custom properties.
+- Minimap DOM nodes are cached.
+- Exploration SVG path geometry is rebuilt only when the exploration trail or world bounds actually change.
+- Player/camera minimap markers remain live without reconstructing the whole path.
+- QA-only telemetry reports average/median/p95/p99 frame time, estimated display refresh, simulation steps per frame, long frames, effective DPR, quality tier, particles, enemies, and DOM/minimap write counts.
+
+### Game feel and motion
+
+The v3.8 pass deliberately changes presentation, not gameplay balance:
+
+- procedural player lean remains and now renders through fixed-step interpolation;
+- dash adds restrained direction-aware compression, wake, and time-based particles without delaying the command;
+- the one bullet receives refresh-independent trail sampling, clearer launch/flight presentation, magnetic recall motion, ricochet micro-impact, and catch feedback;
+- enemy materialization and Sniper/Charger telegraphs expose progress from their real gameplay timers;
+- hostile projectiles receive a directional threat streak;
+- camera follow keeps the existing exponential damping/look-ahead model while screen shake uses time-based coherent motion rather than render-frame jitter;
+- the old oversized Canvas wave banner is replaced by a short semantic DOM announcement;
+- low health, bullet state, dashboard orbit, CTA response, and screen transitions receive restrained CSS motion with `prefers-reduced-motion` support.
+
+Particles and trails are time/simulation based rather than emitted once per render frame, so a 240 Hz display does not create four times the decorative work of a 60 Hz display.
 
 ### Typography and localization
 
-The UI uses browser text rendering instead of Canvas text for migrated screens. This improves anti-aliasing, Arabic shaping, kerning, baseline handling, wrapping, accessibility, and scaling at 100–200% display scale.
-
-No external runtime font dependency was introduced. The font stack prioritizes modern system UI families and professional Arabic fallbacks so the offline/PWA contract remains intact.
+Browser typography, SVG icons, English/Arabic localization, RTL layout, and document `lang`/`dir` remain centralized in the v3.7 DOM architecture. No external runtime font dependency was introduced, preserving offline/PWA behavior.
 
 Localization remains centralized in `src/i18n.js`:
 
@@ -77,7 +97,6 @@ Localization remains centralized in `src/i18n.js`:
 - preference stored under `one-bullet-language`
 - active UI updates without reload
 - document `lang` and `dir` follow the selected language
-- layout uses logical properties and progression direction mirrors in RTL
 
 ## Expanding world
 
@@ -122,18 +141,20 @@ Late stages use a world-space camera, directional look-ahead, progressive zoom, 
 
 ## Active architecture
 
-- `src/main.js` — boots `OneBulletGlobalUiRuntime`, exposes QA hooks, handles fullscreen and service-worker updates.
-- `src/render/canvas-viewport.js` — canonical HiDPI Canvas sizing, contain geometry, backing-store and input-coordinate conversion.
+- `src/main.js` — boots `OneBulletGlobalUiRuntime`, exposes QA hooks, and handles fullscreen/service-worker updates.
+- `src/performance/frame-pacer.js` — fixed-step accumulator plus QA frame-pacing metrics.
+- `src/performance/quality-manager.js` — AUTO/manual rendering-quality profiles and hysteresis.
+- `src/render/canvas-viewport.js` — canonical HiDPI Canvas sizing, contain geometry, quality-aware backing-store limits, and input-coordinate conversion.
 - `src/ui/dom-ui.js` — crisp DOM application UI bound to real game state.
+- `src/ui/dom-performance-bridge.js` — cached high-frequency gauge/minimap nodes and exploration-path invalidation.
 - `src/ui/icons.js` — vector SVG icon system.
 - `src/i18n.js` — locale selection, persistence, translation, number formatting, and document direction.
-- `src/core/ui-repair-runtime.js` — **canonical final presentation owner**; bridges the Canvas world to the DOM UI and removes obsolete Canvas ownership of migrated surfaces.
+- `src/core/ui-repair-runtime.js` — **canonical presentation/runtime owner**; owns the fixed-step/render bridge, interpolation, adaptive quality integration, DOM dirty synchronization, and Canvas/DOM state synchronization.
 - `src/core/production-art-runtime.js` — retained lower-level arena presentation foundation.
-- `src/core/unified-ui-runtime.js` — retained camera-safe-zone and transition compatibility layer; its old screen UI is overridden by the canonical Global UI owner.
 - `src/core/world-expansion-runtime.js` — expanding world, camera, exploration, player-relative spawning, and encounter integration.
 - `src/core/checkpoint-runtime.js` — backward-compatible local checkpoint progression.
 - `src/core/combat-depth-runtime.js` — precision, bank-shot, momentum, and Overdrive systems.
-- `src/game.js` — base state machine and combat loop.
+- `src/game.js` — base state machine and combat mechanics.
 - `src/game-data.js` — enemy, encounter, wave-scaling, and upgrade data.
 - `src/arena.js` — collision geometry and world expansion milestones.
 
@@ -147,11 +168,11 @@ npm run test:browser
 npm run verify:all
 ```
 
-Browser verification covers the Dashboard at **1280×720, 1366×768, 1440×900, 1600×900, 1920×1080, and 2560×1440**, non-16:9 desktop sizes including **1792×832 and 1680×1050**, explicit HiDPI device scale, mobile landscape around **844×390**, pointer mapping, localization, Pause, Upgrade Selection, Game Over, and combat HUD states.
+Browser verification covers Chromium, Firefox, WebKit, HiDPI/mobile landscape, 1920×1080 and 2560×1440 presentation captures, dense Wave 67 stress scenes, Dashboard EN/AR, combat HUD, Sniper/Charger telegraphs, bullet flight/recall, dash, low health, DOM wave announcement, Pause, Upgrade Selection, and Game Over. Engine contracts additionally compare deterministic simulation across synthetic 60/120/144/165/240 Hz render schedules.
 
 ## Saved progression compatibility
 
-The v3.7 presentation architecture intentionally preserves:
+The v3.8 runtime intentionally preserves:
 
 - checkpoint schema and existing local checkpoint data;
 - Continue Run / checkpoint restore behavior;
@@ -159,9 +180,9 @@ The v3.7 presentation architecture intentionally preserves:
 - upgrades and run progression;
 - one-bullet physics and ricochet behavior;
 - enemy behavior and encounter balance;
-- world expansion and camera behavior;
+- world expansion rules and accepted camera behavior;
 - controls and Warden mechanics.
 
 ## Status
 
-[`STATUS.md`](./STATUS.md) is the only project status file and remains the source of truth for release verification and visual QA acceptance.
+[`STATUS.md`](./STATUS.md) is the only project status file and remains the source of truth for release verification, performance QA, browser QA, and visual acceptance.

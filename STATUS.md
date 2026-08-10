@@ -1,113 +1,128 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 ## Current release candidate
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.7.0 — High-Resolution Presentation**
-- Canonical version: `3.7.0-hires-ui`
-- Canonical label: `v3.7.0-hires-ui`
-- Release channel: `hires-ui`
-- Service Worker cache: `one-bullet-arena-v3.7.0-hires-ui`
-- Canonical presentation owner: `OneBulletGlobalUiRuntime`
-- UI revision: `dom-hidpi-presentation-v1`
+- Release: **v3.8.0 — Smooth Runtime**
+- Canonical version: `3.8.0-smooth-runtime`
+- Canonical label: `v3.8.0-smooth-runtime`
+- Release channel: `smooth-runtime`
+- Service Worker cache: `one-bullet-arena-v3.8.0-smooth-runtime`
+- Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
-- Feature branch: `feat/3.7.0-hires-ui`
+- Feature branch: `feat/3.8.0-smooth-runtime`
+- Pull request: **#52**
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
-- Candidate status: **implementation complete; verification gate pending**
+- Candidate status: **runtime implementation accepted by source/browser gates; final post-cleanup gates and production deployment pending**
 
-## High-DPI rendering architecture
+## Runtime architecture
 
-v3.7 separates three concerns that were previously coupled:
+v3.8 preserves the accepted v3.7 DOM + HiDPI presentation architecture and replaces render-frame-dependent gameplay timing with an explicit simulation/render boundary.
 
-1. **Simulation:** remains 1280×720 logical coordinates.
-2. **Canvas display:** a centered 16:9 CSS rectangle calculated from the available viewport.
-3. **Canvas backing store:** CSS display size multiplied by an effective DPR.
+- Browser rendering remains driven by native `requestAnimationFrame()` with no artificial 60 FPS render cap.
+- Gameplay simulation advances through a bounded **120 Hz fixed timestep**.
+- The fixed-step accumulator allows at most **8 catch-up simulation steps** after a stall and discards excessive backlog rather than entering a spiral of death.
+- Simulation cadence is independent of 60/120/144/165/240 Hz presentation cadence.
+- Player, bullet, enemies, hostile projectiles, camera-linked presentation, and other moving visuals interpolate between simulation transforms for smooth presentation while collision and gameplay truth remain simulation-owned.
+- Visibility/focus timing resets prevent background-tab time from becoming a giant gameplay delta.
 
-`src/render/canvas-viewport.js` is the single owner of display/backing-store sizing. The effective DPR is bounded by both a maximum DPR and a backing-pixel budget so high-resolution rendering does not allocate unbounded surfaces on 4K/HiDPI displays.
+## Adaptive rendering quality
 
-The renderer applies one logical-to-physical transform with `ctx.setTransform()`. Gameplay positions, collision geometry, physics, ricochet calculations, camera coordinates, spawn logic, and saved data are not multiplied by DPR.
+Rendering quality is visual-only. It does not alter enemy count, AI, collision, damage, movement speed, bullet speed, wave progression, checkpoint state, or scoring rules.
 
-The Canvas uses a 16:9 contain model. Non-16:9 viewports letterbox instead of independently stretching width and height, so circles remain circular and line geometry is not distorted.
+Current quality ceilings:
 
-Resize handling covers browser resize, fullscreen change, orientation change, visual viewport change, and devicePixelRatio changes detected while rendering. Canvas image smoothing is enabled and line caps/joins are normalized for the non-pixel-art visual style.
+| Tier | DPR ceiling | Backing-pixel budget |
+| --- | ---: | ---: |
+| ULTRA | 2.50 | 8.5 Mpx |
+| HIGH | 2.25 | 7.2 Mpx |
+| BALANCED | 1.75 | 5.2 Mpx |
+| PERFORMANCE | 1.35 | 3.3 Mpx |
 
-## DOM UI migration
+`AUTO` remains the default. It reacts to measured frame pacing using sustained pressure/headroom windows and cooldown hysteresis instead of rapidly oscillating tiers. Expensive backing-store changes are deferred to safe presentation states.
 
-The existing `OneBulletGlobalUiRuntime` remains the final presentation owner. No additional final/super UI runtime was added.
+## High-DPI / DOM presentation
 
-Migrated from low-resolution Canvas drawing to semantic browser UI:
+The rendering contract remains:
 
-- Main Dashboard / Current Run;
-- utility toolbar and language/audio/fullscreen/settings controls;
-- run statistics, Run Snapshot, and World Progression;
-- desktop Combat HUD and desktop late-game minimap;
-- Pause;
-- Upgrade Selection;
-- Game Over.
+1. **Simulation:** 1280×720 logical coordinates.
+2. **Canvas display:** centered 16:9 contain rectangle.
+3. **Canvas backing store:** CSS display size × effective quality-aware DPR.
+4. **Application UI:** semantic HTML + CSS + SVG where practical.
 
-The Canvas continues to own arena/environment geometry, player/enemy/projectile rendering, bullet trail and particles, telegraphs/targeting/impacts/world effects, camera/world rendering, and touch movement/aim controls. Touch controls intentionally remain on Canvas because they are coupled to gameplay safe zones and input semantics; they now render through the HiDPI backing store rather than a stretched 1280×720 bitmap.
+`src/render/canvas-viewport.js` remains the single owner of display geometry, pointer/touch mapping, backing-store dimensions, DPR constraints, and backing-pixel budgets.
 
-## DOM/UI system
+DOM-owned surfaces remain the Dashboard, desktop HUD, utility/settings controls, World Progression, late-game minimap, Pause, Upgrade Selection, and Game Over. Canvas remains responsible for world/gameplay rendering and touch gameplay controls.
 
-New modules:
+## Smooth-runtime performance work
 
-- `src/ui/dom-ui.js` — state-bound semantic UI controller;
-- `src/ui/icons.js` — reusable inline SVG icon system;
-- `styles/tokens.css` — shared surfaces, color, spacing, radius, typography, motion, and shadow tokens;
-- `styles/ui.css` — Dashboard/HUD/overlay/component styling;
-- `styles/responsive.css` — laptop, low-height desktop, mobile landscape, and reduced-motion rules.
+- `src/performance/frame-pacer.js` owns fixed-step accumulation and frame-pacing telemetry.
+- `src/performance/quality-manager.js` owns AUTO/manual quality profiles and hysteresis.
+- `src/ui/dom-performance-bridge.js` caches high-frequency DOM/minimap nodes and invalidates exploration geometry only when required.
+- HUD synchronization is dirty-state/cadence limited rather than rebuilt at every high-refresh render opportunity.
+- Particle/trail work is time/simulation based rather than emitted once per render frame.
+- QA telemetry tracks frame-time distribution, display cadence, simulation steps, long frames, effective DPR, quality tier, particles, enemies, and DOM/minimap writes.
 
-The presentation layer uses real `<button>` controls, focus-visible keyboard states, ARIA labels, CSS Grid/Flexbox, CSS logical properties for LTR/RTL, transform-based HUD gauge updates via CSS custom properties, tabular numeric telemetry, restrained backdrop blur with fallback surfaces, and soft elevation rather than full tactical wireframes.
+## Input / gameplay compatibility
 
-## SVG icon system
+Input mapping continues to use the Canvas CSS rectangle rather than physical backing-store pixels:
 
-UI controls use one vector icon family with a shared `viewBox`, `currentColor`, consistent stroke width, and rounded caps/joins. World Progression and the desktop minimap use SVG geometry, keeping lines, nodes, viewport rectangles, paths, and player markers vector-sharp at arbitrary display scale.
+`screen coordinate → contained Canvas rectangle → 1280×720 logical coordinate → world/camera transform`
 
-## Typography
+The v3.8 runtime intentionally preserves checkpoint compatibility, scoring semantics, one-bullet physics/ricochet, enemy behavior, encounter balance, upgrades, world expansion, Warden mechanics, controls, and saved progression.
 
-Migrated screens use browser text rendering instead of Canvas text. This improves anti-aliasing, Arabic shaping, kerning, baselines, text wrapping, accessibility, and browser zoom/display-scale quality.
+## Browser/UI behavior
 
-Typography is tokenized from readable label sizes through display/hero metrics. No external runtime font URL was added. The UI prioritizes modern system UI fonts and professional Arabic fallbacks so offline/PWA behavior remains deterministic. A packaged WOFF2 family is not included in this release candidate.
+- English and Arabic remain centralized in `src/i18n.js`.
+- RTL document direction and logical CSS remain active.
+- Browser typography and SVG icons remain the presentation source instead of low-resolution Canvas text for migrated application UI.
+- Mobile landscape remains a dedicated compact composition rather than a scaled desktop dashboard.
+- `prefers-reduced-motion` remains supported.
+- PWA/service-worker installation remains local-first and offline-capable.
 
-## Localization / RTL
+## Verified runtime gate
 
-`src/i18n.js` remains the single localization source. Supported locales are English (`en`, LTR) and العربية (`ar`, RTL). The saved preference key remains `one-bullet-language`; active UI updates without reload; document `lang` and `dir` follow locale; logical CSS properties avoid duplicate coordinate layouts; World Progression mirrors in RTL; numeric telemetry uses tabular numerals.
+The runtime/test head `8dc142b35a203f535dfba036145ee5ad87918f5a` passed the release validation that preceded the final CI/document cleanup:
 
-## Pointer / touch mapping
+- **Verify #1304:** 104/104 Node tests passed; 0 failed.
+- **Browser Smoke #476:** 236 Playwright cases total — 185 expected/passed, 51 intentionally skipped by project/capability conditions, 0 failed, 0 flaky.
+- Browser coverage includes Chromium, Firefox, WebKit, high-refresh/fixed-step contracts, HiDPI/responsive presentation, input mapping, localization, gameplay states, dense late-wave stress scenes, and frame-pacing telemetry.
 
-Input remains based on the actual Canvas CSS rectangle:
+The WebKit telemetry regression was fixed at the contract level: tests now require live positive finite frame-time telemetry and actual rAF activity without assuming that every headless browser/runner must collect an arbitrary minimum number of samples in the same wall-clock window. Performance requirements such as fixed simulation cadence and encounter caps remain enforced.
 
-`screen coordinate → contained Canvas rectangle → 1280×720 logical coordinate → existing world-camera transform`
+## Repository / CI cleanup
 
-The HiDPI backing-store size is not used as gameplay input space. The DOM UI root is `pointer-events: none`; only real interactive controls opt into pointer events, so gameplay center input remains targetable by the Canvas while menus/buttons capture their own interaction.
+The final release cleanup removes sources of workflow noise and stale generated output without deleting runtime dependencies:
 
-## Responsive behavior
+- Verify no longer runs twice for the same feature-branch change through both `push` and `pull_request` events.
+- Browser Smoke is a pull-request/manual quality gate; production deployment runs the full `verify:all` browser/source gate again before publishing.
+- GitHub Pages deployment no longer writes a synthetic `deployment-proof` branch after each publish.
+- Generated `_site/`, Playwright results/reports, verification output, coverage output, dependency folders, and logs are ignored by Git.
+- Official GitHub Actions were moved to current supported major generations used by this repository workflow.
+- Deployment builds a clean `_site` artifact from the tracked application shell instead of publishing working-tree/test output.
+- Live deployment verification polls both `release.json` and `src/release-config.js` and requires the exact version, channel, and deployed commit SHA before the Pages workflow succeeds.
 
-Desktop uses a spacious Dashboard with a dominant Current Run surface, compact Run Snapshot, vector World Progression, and compact utility toolbar. Laptop and low-height desktop states reduce decorative scale while keeping readable typography. Mobile landscape around 844×390 uses a dedicated compact composition instead of shrinking the desktop layout; the HUD remains a top rail so lower touch zones stay available.
+Historical source filenames such as `movement-hotfix-runtime.js`, `visual-design-runtime.js`, and the inherited core runtime layers are **not orphaned files**. They remain reachable in the active inheritance/import graph, so deleting them only because their names are old would break the game. Generated/stale artifacts are cleaned/ignored instead; active dependencies are retained until a deliberate architecture-flattening refactor replaces them safely.
 
-## Service Worker / deployment
+## Production state before merge
 
-The application-shell cache includes the DOM UI JavaScript, Canvas viewport module, SVG icon module, and all UI CSS. The cache identity is incremented to `one-bullet-arena-v3.7.0-hires-ui`, and the Pages workflow copies the new `styles/` directory and validates channel `hires-ui`.
+At this checkpoint the public GitHub Pages site may still show **v3.7.0-hires-ui** because PR #52 has not yet been merged into `main`. This is expected and is not treated as a successful v3.8 deployment.
 
-## Gameplay compatibility
+The release is accepted only after all of the following occur on the final cleanup head:
 
-This release intentionally does **not** change movement balance, collision rules, bullet physics/ricochet, enemy stats/spawn balance, encounter director, damage formulas, upgrades/progression rules, world expansion thresholds, camera behavior, Warden mechanics, scoring semantics, or checkpoint schema.
+1. final PR Verify succeeds;
+2. final PR Browser Smoke succeeds;
+3. PR #52 is merged to `main`;
+4. the Pages build completes `npm run verify:all` successfully;
+5. the deployed `release.json` and `release-config.js` report `3.8.0-smooth-runtime`, channel `smooth-runtime`, and the exact production commit SHA.
 
-## Verification gates
+## Remaining known limitations
 
-Implementation adds contracts for logical dimensions, contained 16:9 geometry, DPR/backing-store behavior and pixel budget, pointer mapping, DOM UI ownership/semantics, SVG icons, localization/RTL, responsive Dashboard/HUD, gameplay input pass-through, resize/fullscreen-change handling, mobile mapping, screenshot matrix, and explicit deviceScaleFactor=2 HiDPI rendering.
+- Touch gameplay controls intentionally remain Canvas-rendered because they are coupled to gameplay safe zones and input semantics; they use the HiDPI renderer and logical input mapper.
+- No bundled WOFF2 family is introduced; system/local font fallbacks preserve offline behavior without adding an external runtime font dependency.
+- Quality tiers intentionally cap effective DPR/backing pixels on very large or high-density screens. Effective DPR can therefore be lower than the device DPR to prevent excessive GPU/memory cost.
 
-Exact CI results and run identifiers will be recorded here after the candidate passes the repository verification gates.
-
-## Required visual QA matrix
-
-Automated screenshot evidence is configured for English Dashboard at 1280×720, 1366×768, 1440×900, 1600×900, 1920×1080, and 2560×1440; non-16:9 1792×832 and 1680×1050; Arabic Dashboard at 1920×1080; explicit HiDPI 1440×900 at device scale factor 2; Combat HUD; Pause; Upgrade Selection; Game Over; and Arabic mobile landscape around 844×390.
-
-## Real remaining limitations
-
-- Touch gameplay controls remain Canvas-rendered by design because they are coupled to gameplay safe zones/input; they benefit from the HiDPI renderer but are not semantic DOM controls yet.
-- No bundled WOFF2 font family is included; presentation uses system/local fallback stacks to preserve the offline contract without an unverified font license or external runtime dependency.
-- Visual screenshot artifacts still require the browser CI gate and manual inspection before the release can be marked production accepted.
+No other known release-blocking runtime defect remains at this checkpoint. The only open gate is final post-cleanup CI followed by merge and production convergence verification.

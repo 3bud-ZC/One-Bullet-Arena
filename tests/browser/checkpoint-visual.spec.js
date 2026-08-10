@@ -24,13 +24,13 @@ async function seedCheckpoint(page) {
   });
 }
 
-test('checkpoint dashboard uses v3.7 DOM presentation without changing saved-run semantics', async ({ page }, testInfo) => {
+test('checkpoint dashboard uses v3.8 DOM presentation without changing saved-run semantics', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Visual checkpoint QA runs once in Chromium.');
   await loadGame(page);
   await seedCheckpoint(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.7.0-hires-ui');
-  expect(snapshot.globalUiRevision).toBe('dom-hidpi-presentation-v1');
+  expect(snapshot.releaseVersion).toBe('3.8.0-smooth-runtime');
+  expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);
   expect(snapshot.domUiActive).toBe(true);

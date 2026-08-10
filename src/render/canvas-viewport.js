@@ -41,7 +41,11 @@ export function computeEffectiveDpr(
   const capped = Math.min(requested, finitePositive(maxDpr, DEFAULT_MAX_DPR));
   const displayPixels = Math.max(1, displayWidth * displayHeight);
   const pixelBudgetDpr = Math.sqrt(finitePositive(maxBackingPixels, DEFAULT_MAX_BACKING_PIXELS) / displayPixels);
-  return Math.max(1, Math.min(capped, pixelBudgetDpr));
+  // Quality profiles use maxBackingPixels as a hard allocation ceiling. On very
+  // large displays PERFORMANCE/BALANCED may therefore render below CSS-pixel
+  // density and let the browser upscale the Canvas, rather than silently
+  // allocating millions of pixels above the selected budget.
+  return Math.min(capped, pixelBudgetDpr);
 }
 
 export function mapClientPointToLogical(rect, clientX, clientY) {
@@ -82,6 +86,20 @@ export class CanvasViewport {
     document.addEventListener?.('fullscreenchange', this.onResize);
 
     this.resize(true);
+  }
+
+  setQualityProfile(profile = {}, { resize = true } = {}) {
+    const nextMaxDpr = finitePositive(profile.maxDpr, this.maxDpr);
+    const nextPixelBudget = finitePositive(profile.maxBackingPixels, this.maxBackingPixels);
+    const changed = !almostEqual(nextMaxDpr, this.maxDpr, 0.001)
+      || Math.round(nextPixelBudget) !== Math.round(this.maxBackingPixels);
+    this.maxDpr = nextMaxDpr;
+    this.maxBackingPixels = nextPixelBudget;
+    // A profile can be recorded during combat with resize:false, then applied
+    // later in a safe state. Force the backing-store reconciliation whenever
+    // resize:true is requested, even if the numeric profile was already staged.
+    if (resize) this.resize(true);
+    return changed;
   }
 
   scheduleResize() {

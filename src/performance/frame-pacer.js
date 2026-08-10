@@ -88,16 +88,28 @@ export class FramePacer {
     this.longFrames = 0;
     this.lastSimulationSteps = 0;
     this.totalSimulationSteps = 0;
+    this.timingResetCount = 0;
   }
 
-  reset(timestampMs = null) {
-    this.samples.length = 0;
-    this.sampleCursor = 0;
+  resetTiming(timestampMs = null) {
     this.lastTimestamp = Number.isFinite(Number(timestampMs)) ? Number(timestampMs) : null;
-    this.totalFrames = 0;
-    this.longFrames = 0;
     this.lastSimulationSteps = 0;
-    this.totalSimulationSteps = 0;
+    this.timingResetCount += 1;
+  }
+
+  reset(timestampMs = null, options = {}) {
+    if (options?.clearSamples) {
+      this.samples.length = 0;
+      this.sampleCursor = 0;
+      this.totalFrames = 0;
+      this.longFrames = 0;
+      this.totalSimulationSteps = 0;
+    }
+    this.resetTiming(timestampMs);
+  }
+
+  clear(timestampMs = null) {
+    this.reset(timestampMs, { clearSamples: true });
   }
 
   sample(timestampMs, simulationSteps = 0) {
@@ -140,6 +152,7 @@ export class FramePacer {
       longFrameCount: this.longFrames,
       simulationStepsPerFrame: this.lastSimulationSteps,
       averageSimulationStepsPerFrame: this.totalFrames > 0 ? this.totalSimulationSteps / this.totalFrames : 0,
+      timingResetCount: this.timingResetCount,
     };
   }
 }

@@ -106,7 +106,17 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       const enemy = enemies[index];
       enemy.spawnTime = Math.max(0, enemy.spawnTime - dt);
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
-      enemy.attackCooldown -= dt;
+      enemy.staggerTime = Math.max(0, (enemy.staggerTime || 0) - dt);
+
+      if (Math.abs(enemy.physicsVx || 0) > 0.1 || Math.abs(enemy.physicsVy || 0) > 0.1) {
+        enemy.x += (enemy.physicsVx || 0) * dt;
+        enemy.y += (enemy.physicsVy || 0) * dt;
+        const damping = Math.pow(0.035, dt);
+        enemy.physicsVx *= damping;
+        enemy.physicsVy *= damping;
+      }
+
+      enemy.attackCooldown = Math.max(-1, (enemy.attackCooldown || 0) - dt);
       enemy.phase += dt * 2;
       const toPlayer = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
 
@@ -114,15 +124,27 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
       else {
         const currentDistance = distance(enemy, this.player);
-        const orbit = enemy.type === 'scout' ? 0.36 + Math.sin(enemy.phase) * 0.18 : enemy.type === 'brute' ? 0.12 : 0.22;
-        const pressure = enemy.type === 'scout' && currentDistance < 185 ? -0.22 : 1;
+        const contactDistance = this.player.radius + enemy.radius;
+        const baseOrbit = enemy.type === 'scout'
+          ? 0.28 + Math.sin(enemy.phase) * 0.14
+          : enemy.type === 'brute'
+            ? 0.1
+            : 0.18;
+        const orbit = currentDistance <= contactDistance + 28 ? baseOrbit * 0.22 : baseOrbit;
+        const pressure = currentDistance <= contactDistance ? 0.38 : 1;
+        const control = enemy.staggerTime > 0 ? 0.35 : 1;
         this.steerEnemy(enemy, {
           x: toPlayer.x * pressure - toPlayer.y * orbit,
           y: toPlayer.y * pressure + toPlayer.x * orbit,
-        }, dt);
+        }, dt, control);
       }
+
       this.constrainCombatCircle(enemy);
-      if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);
+      const touchingPlayer = enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2);
+      if (touchingPlayer && enemy.attackCooldown <= 0) {
+        this.damagePlayer(enemy.x, enemy.y);
+        enemy.attackCooldown = enemy.type === 'brute' || enemy.type === 'warden' ? 1.05 : 0.72;
+      }
     }
     this.separateEnemies();
   }

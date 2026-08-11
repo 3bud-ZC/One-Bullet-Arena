@@ -1,0 +1,19 @@
+# Canonical line endings.
+#
+# The repository stores LF and checks out LF on every platform, so Windows,
+# macOS, Linux, and the ubuntu-latest CI runners all see byte-identical files.
+# Without this, `core.autocrlf` on Windows makes every tracked file appear
+# modified and lets CRLF/BOM corruption reach a commit.
+* text=auto eol=lf
+
+# Binary assets: never touch the bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.ogg binary
+*.wav binary

@@ -26,8 +26,8 @@ test('v3.8 canonical presentation preserves DOM + HiDPI architecture and adds sm
   await loadGame(page, 'en');
   await seedCheckpoint(page, 64);
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.9.0-command-deck');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.9.0-command-deck');
+  expect(snapshot.releaseVersion).toBe('3.10.0-arena-identity');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.10.0-arena-identity');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.renderingArchitecture).toBe('canvas-world+dom-ui');

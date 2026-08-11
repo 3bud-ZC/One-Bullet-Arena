@@ -68,9 +68,11 @@ test('navigation routes around a vertical obstacle instead of pressing into it',
 });
 
 test('navigation routes around a horizontal obstacle', () => {
+  // Anchored to the long top-left corridor wall of the corridors sector
+  // (140,220 420x38); the sector's mid-span is an open crossing lane.
   const stage = arenaStageForWave(10);
-  const enemy = { id: 3, x: 640, y: 120, radius: 17 };
-  const player = { x: 640, y: 360, radius: 18 };
+  const enemy = { id: 3, x: 300, y: 120, radius: 17 };
+  const player = { x: 300, y: 360, radius: 18 };
   assert.equal(hasClearPath(enemy, player, stage.obstacles, enemy.radius), false);
   const result = simulatePursuit({ enemy, player, stage, seconds: 5 });
   assert.ok(result.endDistance < 95);
@@ -78,8 +80,10 @@ test('navigation routes around a horizontal obstacle', () => {
 });
 
 test('corner stuck recovery replans with route persistence', () => {
+  // Anchored beside the left bracket of the wings sector (vertical 330,250
+  // 44x190), so the direct line to the player is blocked and must be routed.
   const stage = arenaStageForWave(5);
-  const enemy = { id: 4, x: 348, y: 250, radius: 19 };
+  const enemy = { id: 4, x: 300, y: 300, radius: 19 };
   const player = { x: 640, y: 360, radius: 18 };
   const firstTarget = navigationTargetForEnemy(enemy, player, {
     bounds: stage.bounds,
@@ -187,9 +191,12 @@ test('knockback can reset and resume successful pursuit', () => {
 });
 
 test('sniper can find a useful line-of-fire position without rushing melee', () => {
+  // Anchored across a matrix-sector pillar (440,300 64x64): the sniper sits
+  // directly above it and the player directly below, so the firing lane is
+  // genuinely blocked and a reposition is required.
   const stage = arenaStageForWave(30);
-  const player = { x: 640, y: 360, radius: 18 };
-  const sniper = { id: 13, x: 230, y: 360, radius: 20 };
+  const player = { x: 472, y: 520, radius: 18 };
+  const sniper = { id: 13, x: 472, y: 180, radius: 20 };
   const point = findRangedAttackPoint({
     start: sniper,
     player,

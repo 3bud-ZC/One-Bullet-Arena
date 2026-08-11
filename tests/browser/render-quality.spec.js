@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const RELEASE = '3.9.0-command-deck';
+const RELEASE = '3.10.0-arena-identity';
 
 async function loadGame(page, locale = 'en') {
   await page.addInitScript((value) => localStorage.setItem('one-bullet-language', value), locale);

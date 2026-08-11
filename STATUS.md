@@ -5,15 +5,107 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.9.0 — Command Deck**
-- Canonical version: `3.9.0-command-deck`
-- Canonical label: `v3.9.0-command-deck`
+- Release: **v3.10.0 — Arena Identity**
+- Canonical version: `3.10.0-arena-identity`
+- Canonical label: `v3.10.0-arena-identity`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.9.0-command-deck`
+- Service Worker cache: `one-bullet-arena-v3.10.0-arena-identity`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Arena identity pass - 2026-08-11 (v3.10.0)
+
+Gameplay-facing pass. The v3.9 Command Deck established the product identity;
+this brings the game itself to that standard. Simulation architecture,
+checkpoints (schema 1, unchanged), navigation, Warden guard mechanics,
+one-bullet physics, recall, upgrades, controls, localisation, and the DOM/SVG
+UI are all unchanged.
+
+### What the scan found
+
+Played waves 1, 5, 10, 15, 20, 25, 30, 35 and 42 through `?qa=1` with real
+fixed-step simulation rather than staged scenes. Five substantive weaknesses:
+
+1. **Sectors 3-7 were the same room.** They shared one identical central
+   obstacle cluster and only bolted extra blocks onto the perimeter as bounds
+   grew. Every obstacle in the game was one of two rectangle shapes.
+2. **Late waves were mostly wave-1 enemies.** `buildWaveComposition` filled any
+   remainder with scouts and capped interesting archetypes at 2-3, so wave 36
+   was 11 scouts out of 18 — roughly 60% trash.
+3. **Encounters were phase-locked to sector unlocks.** Both cycle every 5
+   waves, and the index was a plain `(wave - 10) % 5`, so every sector was
+   entered on the same encounter for the entire run.
+4. **The Warden had no visual identity at all.** It had no `ENEMY_STYLE` entry,
+   so it fell back to the scout palette, and no shape branch, so it fell back to
+   the splitter's pentagon. The game's guard enemy rendered as a pink splitter.
+5. **Sector accents repeated every third sector**, because a three-entry accent
+   table was indexed `stage % 3` across eight sectors.
+
+### World and maps
+
+- All eight sectors rebuilt with their own composition language: duel chamber,
+  asymmetric wings, long parallel corridors, open bowl ringed by cover,
+  diagonal cascade, heavy industrial masses with choke points, a lattice of
+  identical pillars, and concentric belts.
+- Obstacle **count** is deliberately unchanged (2/4/6/8/10/12/14/16). Navigation
+  builds up to eight waypoints per obstacle and runs Dijkstra over the result,
+  so cost is quadratic in obstacle count. Identity comes from arrangement and
+  proportion, never from adding clutter.
+- Sector accents expanded from 3 to 8 — one per sector — and floor value now
+  darkens with depth, so later sectors read as further in rather than wider.
+- `arenaStage.name` is now a stable slug; player-facing names come from
+  `stage.<id>` in i18n.
+
+`tests/arena-stages.test.js` validates every layout: obstacles inside bounds,
+no overlapping rectangles (which produce ambiguous push-out directions), spawn
+pocket clear, every corner routable by the widest enemy, the obstacle budget
+respected, themes unique, and no sector repeating more than half of the
+previous sector's geometry. It caught two real faults in the first draft — a
+centre pillar sitting on the spawn point, and the same pillar sealing the
+middle corridor with 42px and 32px gaps where a brute needs ~54px.
+
+### Enemies
+
+- Added the missing Warden style and gave it its own silhouette: an octagonal
+  bunker with its guard arc drawn on the facing it actually blocks, scaled by
+  `guardStrength` and flipped to danger colour when broken, so "flank it or
+  break it" is readable from the shape.
+- Splitter moved off the shared pentagon to a seamed hexagon whose seam
+  oscillates — the tell that it breaks in two.
+- Per-archetype motion character replaced one shared rotation: scouts flutter,
+  brutes are near-immobile, snipers hold almost still, chargers stay locked to
+  their facing, splitters shake. Presentation only — it reads `enemy.phase` and
+  writes nothing back, and the pulse only ever contracts, so a drawn body is
+  never larger than the collision radius it claims.
+
+### Progression
+
+- Encounters now define composition through archetype weights rather than
+  tinting three stat multipliers, so an encounter name predicts the fight.
+  Crossfire deliberately excludes Wardens and Siege brings them, preserving the
+  contrast the previous design intended.
+- Scout share falls from 56% at wave 10 to 11% by wave 35 instead of staying
+  the majority.
+- Encounter index advances an extra step per completed cycle, so each sector is
+  entered on a different encounter.
+
+### Release delivery
+
+Reviewing the diff surfaced a shipping bug: neither `sw.js` nor
+`release-config.js` changed in this pass, so the service worker's byte
+comparison would have found no update, and the v3.9 cache-first asset strategy
+would have kept serving the old bundle to returning players indefinitely. The
+version bump to `3.10.0-arena-identity` is what makes this release reachable.
+Any future asset-only change carries the same requirement.
+
+### Verification
+
+- `npm run verify`: **131/131** Node tests.
+- Full Playwright matrix via `--workers=1`.
+- Replayed the full progression after the change: no non-finite coordinates and
+  no console errors at any sampled wave.
 
 ## Dashboard redesign and startup optimisation - 2026-08-11 (v3.9.0)
 

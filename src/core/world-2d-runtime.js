@@ -8,10 +8,31 @@ export const WORLD_2D_RUNTIME_VERSION = '3.2.0-true-2d';
 
 const TILE_SIZE = 54;
 const ECHO_LIFETIME = 0.24;
+/*
+ * One accent per sector, in sector order.
+ *
+ * This was a three-entry table indexed with `stage % length`, so sectors 0/3/6
+ * and 1/4/7 shared a palette and the world visibly reset every third sector.
+ * The progression now runs cool-structural to warm-industrial and back to a
+ * cold endgame, so a glance at the floor tells you roughly how deep you are.
+ *
+ * Cyan stays the structural/system colour throughout and gold is never used
+ * here — it belongs to the bullet.
+ */
 const STAGE_ACCENTS = Object.freeze([
-  Object.freeze({ primary: '#39d9ff', secondary: '#2a67bd', warm: '#ffd66b' }),
-  Object.freeze({ primary: '#63f4c4', secondary: '#227ca4', warm: '#ffca69' }),
-  Object.freeze({ primary: '#a989ff', secondary: '#3e67c9', warm: '#ffb45f' }),
+  Object.freeze({ primary: '#39d9ff', secondary: '#2a67bd', warm: '#ffd66b' }), // 0 chamber
+  Object.freeze({ primary: '#4ce0e0', secondary: '#236f9e', warm: '#ffca69' }), // 1 wings
+  Object.freeze({ primary: '#63f4c4', secondary: '#227ca4', warm: '#ffca69' }), // 2 corridors
+  Object.freeze({ primary: '#7fe0a4', secondary: '#2f6f9c', warm: '#ffc46a' }), // 3 bowl
+  Object.freeze({ primary: '#c8b972', secondary: '#4a6394', warm: '#ffb45f' }), // 4 cascade
+  Object.freeze({ primary: '#ff9f6b', secondary: '#6a5590', warm: '#ffab52' }), // 5 industrial
+  Object.freeze({ primary: '#a989ff', secondary: '#3e67c9', warm: '#ffb45f' }), // 6 matrix
+  Object.freeze({ primary: '#7ea8ff', secondary: '#2b3f86', warm: '#ffd2a0' }), // 7 belt
+]);
+
+// Top-of-gradient floor value per sector, paired with STAGE_ACCENTS.
+const FLOOR_TOPS = Object.freeze([
+  '#121e35', '#141f38', '#16233c', '#18213a', '#1b2138', '#20202f', '#1d1c33', '#141a30',
 ]);
 
 export function smoothVisualValue(current, target, dt, response = 14) {
@@ -244,10 +265,14 @@ export class OneBulletWorld2DRuntime extends OneBulletWardenRuntime {
     roundedRect(ctx, bounds.x, bounds.y, bounds.w, bounds.h, 14);
     ctx.clip();
 
+    // Floor value darkens as sectors get deeper, so later sectors read as
+    // further underground rather than as the same room with a wider boundary.
+    const depth = Math.min(1, Math.max(0, stage) / 7);
+    const top = FLOOR_TOPS[Math.min(FLOOR_TOPS.length - 1, Math.max(0, stage))];
     const floor = ctx.createLinearGradient(bounds.x, bounds.y, bounds.x, bounds.y + bounds.h);
-    floor.addColorStop(0, stage >= 2 ? '#18213a' : '#121e35');
-    floor.addColorStop(0.52, '#0b1428');
-    floor.addColorStop(1, '#080f20');
+    floor.addColorStop(0, top);
+    floor.addColorStop(0.52, depth > 0.5 ? '#091120' : '#0b1428');
+    floor.addColorStop(1, depth > 0.5 ? '#050a15' : '#080f20');
     ctx.fillStyle = floor;
     ctx.fillRect(bounds.x, bounds.y, bounds.w, bounds.h);
 

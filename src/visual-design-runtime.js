@@ -23,7 +23,28 @@ const ENEMY_STYLE = Object.freeze({
   brute: Object.freeze({ icon: 'B', title: 'BRUTE', core: '#ffab4f', secondary: '#ffd08a' }),
   sniper: Object.freeze({ icon: 'N', title: 'SNIPER', core: '#b887ff', secondary: '#dfc7ff' }),
   charger: Object.freeze({ icon: 'C', title: 'CHARGER', core: '#5df2a6', secondary: '#b3ffd8' }),
+  // The warden had no entry, so it fell back to the scout palette and, having no
+  // shape branch either, to the splitter's pentagon — the guard enemy rendered
+  // as a pink splitter.
+  warden: Object.freeze({ icon: 'W', title: 'WARDEN', core: '#67ddff', secondary: '#c2f0ff' }),
   splitter: Object.freeze({ icon: 'X', title: 'SPLITTER', core: '#ff7fd3', secondary: '#ffc2eb' }),
+});
+
+/*
+ * Motion character per archetype.
+ *
+ * `spin` is body rotation rate, `bob` is a small scale pulse, `phase` offsets
+ * the pulse so a crowd never breathes in unison. All of it is presentation
+ * only: it reads from enemy.phase, which the simulation already advances, and
+ * writes nothing back.
+ */
+const ENEMY_MOTION = Object.freeze({
+  scout: Object.freeze({ spin: 0.9, bob: 0.05, rate: 7.5 }),
+  brute: Object.freeze({ spin: 0.12, bob: 0.03, rate: 2.1 }),
+  sniper: Object.freeze({ spin: 0.05, bob: 0.015, rate: 1.4 }),
+  charger: Object.freeze({ spin: 0, bob: 0.045, rate: 5.5 }),
+  warden: Object.freeze({ spin: 0.22, bob: 0.02, rate: 2.6 }),
+  splitter: Object.freeze({ spin: 0.4, bob: 0.085, rate: 9.5 }),
 });
 
 const UPGRADE_STYLE = Object.freeze({
@@ -455,10 +476,19 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     const spawnScale = Math.max(0.2, 1 - enemy.spawnTime * 0.65);
     const radius = enemy.radius;
 
+    const motion = ENEMY_MOTION[enemy.type] || ENEMY_MOTION.scout;
+    // Presentation-only breathing: scouts flutter, brutes barely move, snipers
+    // hold almost still, splitters shake like they are about to come apart.
+    // The pulse only ever contracts, never expands past 1, so the drawn body is
+    // never larger than the collision radius it claims to have.
+    const bob = this.reducedMotion
+      ? 1
+      : 1 - ((1 + Math.sin(enemy.phase * motion.rate)) / 2) * motion.bob;
+
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
-    ctx.scale(spawnScale, spawnScale);
-    ctx.rotate(enemy.type === 'charger' ? 0 : enemy.phase * 0.18);
+    ctx.scale(spawnScale * bob, spawnScale * bob);
+    ctx.rotate(enemy.phase * motion.spin);
     ctx.shadowColor = hit ? UI_COLORS.text : style.core;
     ctx.shadowBlur = 0;
     ctx.fillStyle = hit ? UI_COLORS.text : '#10172d';
@@ -498,13 +528,41 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
       ctx.moveTo(0, radius * 0.2);
       ctx.lineTo(0, radius * 1.65);
       ctx.stroke();
-    } else {
-      polygon(ctx, 5, radius + 2, -Math.PI / 2);
+    } else if (enemy.type === 'warden') {
+      // Octagonal bunker with the guard arc drawn on the facing it actually
+      // blocks, so "flank it or break it" is readable from the silhouette.
+      polygon(ctx, 8, radius + 2, Math.PI / 8);
       ctx.fill();
       ctx.stroke();
-      ctx.rotate(-enemy.phase * 0.54);
-      ctx.globalAlpha = 0.45;
-      polygon(ctx, 5, radius * 0.64, Math.PI / 2);
+
+      const guardAngle = Number(enemy.guardAngle);
+      if (Number.isFinite(guardAngle)) {
+        const strength = clamp((enemy.guardStrength || 0) / Math.max(1, enemy.guardMax || 1), 0, 1);
+        const broken = (enemy.guardBrokenTimer || 0) > 0;
+        ctx.save();
+        // Cancel the body spin so the arc stays locked to the guard direction.
+        ctx.rotate(guardAngle - enemy.phase * motion.spin);
+        ctx.globalAlpha = broken ? 0.22 : 0.5 + strength * 0.45;
+        ctx.lineWidth = broken ? 2 : 3 + strength * 2.5;
+        ctx.strokeStyle = broken ? UI_COLORS.danger : style.secondary;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + 8, -0.72, 0.72);
+        ctx.stroke();
+        ctx.restore();
+      }
+    } else {
+      // Splitter: a divided core. The seam is the tell that it breaks in two.
+      polygon(ctx, 6, radius + 2, Math.PI / 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 2;
+      const seam = radius * (0.22 + Math.sin(enemy.phase * 9.5) * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(-radius * 0.86, -seam);
+      ctx.lineTo(radius * 0.86, -seam);
+      ctx.moveTo(-radius * 0.86, seam);
+      ctx.lineTo(radius * 0.86, seam);
       ctx.stroke();
     }
 

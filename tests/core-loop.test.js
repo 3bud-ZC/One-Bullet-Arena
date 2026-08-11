@@ -61,12 +61,37 @@ test('dangerous enemy types vary by encounter without overwhelming every wave', 
   for (let wave = 1; wave <= 80; wave += 1) {
     const composition = buildWaveComposition(wave);
     assert.equal(composition.length, enemyCountForWave(wave));
-    assert.ok(composition.filter((type) => type === 'sniper').length <= 3);
-    assert.ok(composition.filter((type) => type === 'charger').length <= 3);
-    assert.ok(composition.filter((type) => type === 'splitter').length <= 3);
-    assert.ok(composition.filter((type) => type === 'warden').length <= 3);
-    assert.ok(composition.includes('scout'));
+    // An encounter is allowed to be dominated by its own archetype — that is
+    // what makes "siege" and "crossfire" read differently — but no single
+    // dangerous type may fill an entire wave.
+    for (const type of ['sniper', 'charger', 'splitter', 'warden', 'brute']) {
+      const share = composition.filter((entry) => entry === type).length;
+      assert.ok(
+        share <= Math.ceil(composition.length * 0.75),
+        `wave ${wave} is ${share}/${composition.length} ${type}`,
+      );
+    }
+    assert.ok(composition.includes('scout'), `wave ${wave} has no scouts at all`);
   }
+});
+
+test('scouts stop being the bulk of a wave as the run escalates', () => {
+  // Scouts are the wave-1 enemy and used to be unlimited filler, which left a
+  // wave-35 fight roughly 60% wave-1 trash.
+  const shareAt = (wave) => {
+    const composition = buildWaveComposition(wave);
+    return composition.filter((type) => type === 'scout').length / composition.length;
+  };
+
+  assert.ok(shareAt(35) < 0.25, `wave 35 scout share is ${shareAt(35)}`);
+  assert.ok(shareAt(35) < shareAt(12), 'scout share must fall as waves escalate');
+});
+
+test('each sector is entered on a different encounter', () => {
+  // Sectors unlock every 5 waves and there are 5 encounter profiles, so a plain
+  // modulo made every sector open on the same encounter for the whole run.
+  const entries = [10, 15, 20, 25, 30].map((wave) => waveEncounterForWave(wave).id);
+  assert.equal(new Set(entries).size, entries.length, `sector entries repeat: ${entries.join(', ')}`);
 });
 
 test('enemy scaling keeps growing while staying inside hard safety caps', () => {

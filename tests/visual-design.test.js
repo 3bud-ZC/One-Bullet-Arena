@@ -9,7 +9,10 @@ test('visual design release exposes its identifier and complete theme', () => {
   assert.equal(theme.version, VISUAL_DESIGN_VERSION);
   assert.equal(theme.player, UI_COLORS.player);
   assert.equal(theme.bullet, UI_COLORS.bullet);
-  assert.equal(theme.enemyTypes.length, 5);
+  // Six archetypes: the warden previously had no style entry and fell back to
+  // the scout palette and the splitter silhouette.
+  assert.equal(theme.enemyTypes.length, 6);
+  assert.ok(theme.enemyTypes.includes('warden'));
   assert.ok(theme.upgradeKinds.includes('movement'));
   assert.ok(theme.upgradeKinds.includes('recall'));
   assert.ok(theme.upgradeKinds.includes('defense'));

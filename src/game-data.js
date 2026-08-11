@@ -41,6 +41,28 @@ const ENCOUNTER_PROFILES = Object.freeze([
 
 const EARLY_ENCOUNTER = Object.freeze({ id: 'foundation', name: 'ضغط متوازن', health: 1, speed: 1, shotSpeed: 1 });
 
+// Archetype weights per encounter. These decide what a wave IS, so an encounter
+// name predicts the fight rather than just tinting three stat multipliers.
+const ENCOUNTER_SQUADS = Object.freeze({
+  rush: Object.freeze([['charger', 4], ['splitter', 2], ['brute', 1]]),
+  // No wardens here on purpose: crossfire is about ranged lanes and siege is
+  // where armour shows up. Keeping them apart is what makes the two read
+  // differently instead of blurring into one late-game soup.
+  crossfire: Object.freeze([['sniper', 4], ['splitter', 2], ['brute', 1]]),
+  swarm: Object.freeze([['splitter', 4], ['charger', 2], ['scout', 2]]),
+  siege: Object.freeze([['brute', 4], ['warden', 3], ['sniper', 1]]),
+  hunters: Object.freeze([['charger', 2], ['warden', 2], ['sniper', 2], ['splitter', 2], ['brute', 1]]),
+});
+
+// Scouts are the wave-1 enemy and were previously used as unlimited filler, so
+// a wave-35 fight was still ~60% wave-1 trash. They stay as pressure filler but
+// their share falls as the run escalates.
+function scoutShareForWave(wave) {
+  const safeWave = sanitizeWave(wave);
+  if (safeWave < 10) return 1;
+  return Math.max(0.12, 0.5 - (safeWave - 10) * 0.018);
+}
+
 export function sanitizeWave(value) {
   return Math.max(1, Math.trunc(Number(value) || 1));
 }
@@ -48,7 +70,14 @@ export function sanitizeWave(value) {
 export function waveEncounterForWave(wave) {
   const safeWave = sanitizeWave(wave);
   if (safeWave < 10) return EARLY_ENCOUNTER;
-  return ENCOUNTER_PROFILES[(safeWave - 10) % ENCOUNTER_PROFILES.length];
+
+  // Sectors unlock every 5 waves and there are 5 encounter profiles, so a plain
+  // modulo phase-locked the two: every sector was entered on the same encounter
+  // for the life of a run. Advancing the index by one extra step per completed
+  // cycle breaks that alignment while keeping all five profiles in rotation.
+  const cycle = safeWave - 10;
+  const rotation = Math.floor(cycle / ENCOUNTER_PROFILES.length);
+  return ENCOUNTER_PROFILES[(cycle + rotation) % ENCOUNTER_PROFILES.length];
 }
 
 export function enemyPoolForWave(wave) {
@@ -82,34 +111,30 @@ export function buildWaveComposition(wave) {
     return result;
   }
 
-  const encounter = waveEncounterForWave(safeWave);
+  const squad = ENCOUNTER_SQUADS[encounterIdForWave(safeWave)] || ENCOUNTER_SQUADS.hunters;
+  const scouts = Math.min(count, Math.round(count * scoutShareForWave(safeWave)));
   const result = [];
-  if (encounter.id === 'rush') {
-    addTypes(result, 'charger', Math.min(3, 1 + Math.floor(count / 6)), count);
-    addTypes(result, 'splitter', Math.min(2, Math.floor(count / 7)), count);
-    addTypes(result, 'brute', Math.min(2, Math.floor(count / 8)), count);
-  } else if (encounter.id === 'crossfire') {
-    addTypes(result, 'sniper', Math.min(3, 1 + Math.floor(count / 7)), count);
-    addTypes(result, 'splitter', Math.min(2, Math.floor(count / 8)), count);
-    addTypes(result, 'brute', Math.min(2, Math.floor(count / 8)), count);
-  } else if (encounter.id === 'swarm') {
-    addTypes(result, 'splitter', Math.min(3, 1 + Math.floor(count / 6)), count);
-    addTypes(result, 'charger', Math.min(2, Math.floor(count / 8)), count);
-  } else if (encounter.id === 'siege') {
-    addTypes(result, 'warden', Math.min(3, 1 + Math.floor(count / 7)), count);
-    addTypes(result, 'brute', Math.min(4, 2 + Math.floor(count / 6)), count);
-    addTypes(result, 'sniper', Math.min(2, Math.floor(count / 9)), count);
-  } else {
-    addTypes(result, 'warden', Math.min(2, 1 + Math.floor(count / 9)), count);
-    addTypes(result, 'charger', Math.min(3, 1 + Math.floor(count / 7)), count);
-    addTypes(result, 'sniper', Math.min(2, Math.floor(count / 8)), count);
-    addTypes(result, 'splitter', Math.min(2, Math.floor(count / 8)), count);
-    addTypes(result, 'brute', Math.min(2, Math.floor(count / 8)), count);
+
+  // Deal the squad out by weight, round-robin, so an encounter reads as its
+  // archetype rather than as a handful of specials in a crowd of scouts.
+  const budget = count - scouts;
+  const totalWeight = squad.reduce((sum, [, weight]) => sum + weight, 0);
+  let assigned = 0;
+  for (const [type, weight] of squad) {
+    const share = Math.round((weight / totalWeight) * budget);
+    addTypes(result, type, share, count - scouts);
+    assigned += share;
   }
+  // Rounding can leave the budget short; top up with the heaviest archetype.
+  if (assigned < budget) addTypes(result, squad[0][0], budget - assigned, count - scouts);
 
   while (result.length < count) result.push('scout');
-  const rotation = (safeWave * 3 + encounter.id.length) % result.length;
+  const rotation = (safeWave * 3 + encounterIdForWave(safeWave).length) % result.length;
   return [...result.slice(rotation), ...result.slice(0, rotation)];
+}
+
+function encounterIdForWave(wave) {
+  return waveEncounterForWave(wave).id;
 }
 
 export function enemyScaleForWave(wave) {

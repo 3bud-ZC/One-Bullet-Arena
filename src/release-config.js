@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.9.0-command-deck';
+  const version = '3.10.0-arena-identity';
   const release = Object.freeze({
     version,
     label: `v${version}`,

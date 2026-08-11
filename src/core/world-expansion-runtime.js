@@ -9,6 +9,7 @@ import {
   GAME_WIDTH as WIDTH,
   waveEncounterForWave,
 } from '../game-data.js';
+import { i18n } from '../i18n.js';
 import { UI_FONT } from '../ui-renderer.js';
 import { OneBulletDashboardPolishRuntime } from './dashboard-polish-runtime.js';
 
@@ -81,9 +82,11 @@ export class OneBulletWorldExpansionRuntime extends OneBulletDashboardPolishRunt
     this.worldCamera.targetZoom = cameraZoomForStage(this.arenaStage.id);
     const expanded = this.arenaStage.id > previousStageId;
     if (this.banner) {
+      // Both halves go through i18n: the sector name comes from stage.<id>, not
+      // from arenaStage.name, which is an internal slug.
       this.banner.subtitle = expanded
-        ? `${this.arenaStage.name} — مساحة جديدة اتفتحت`
-        : `${this.currentEncounter.name} — غيّر تمركزك واستغل المساحة`;
+        ? i18n.t('banner.sectorUnlocked', { sector: i18n.t(`stage.${this.arenaStage.id}`) })
+        : i18n.t('banner.encounter', { encounter: i18n.t(`encounter.${this.currentEncounter.id}`) });
       this.banner.time = expanded ? 2.45 : Math.max(this.banner.time || 0, 1.55);
     }
   }

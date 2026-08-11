@@ -1,4 +1,5 @@
 import { clamp, normalize } from '../arena.js';
+import { HEALTH_REVEAL_FADE_SECONDS } from '../game-data.js';
 import { RELEASE_VERSION } from '../release.js';
 import { UI_COLORS, label, polygon, progressBar } from '../ui-renderer.js';
 import { OneBulletCheckpointRuntime } from './checkpoint-runtime.js';
@@ -220,14 +221,26 @@ export class OneBulletWardenRuntime extends OneBulletCheckpointRuntime {
       return;
     }
 
-    const width = enemy.radius * 2.35;
-    const x = enemy.x - width / 2;
-    const y = enemy.y + enemy.radius + 12;
-    progressBar(this.ctx, x, y, width, 5, Math.max(0, enemy.health / enemy.maxHealth), '#dffaff', 'rgba(0,0,0,0.58)');
+    // Health uses the same compact bar as every other enemy, including the
+    // damage-triggered reveal, so the Warden does not get bespoke chrome.
+    const reveal = Number(enemy.healthReveal) || 0;
+    if (reveal > 0) {
+      const alpha = Math.min(1, reveal / HEALTH_REVEAL_FADE_SECONDS);
+      const ratio = Math.max(0, enemy.health / enemy.maxHealth);
+      this.drawCompactHealthBar(enemy, ratio, '#dffaff', alpha);
+    }
+
+    // Guard is a live mechanic the player must read at all times, so it stays
+    // visible independently of the health reveal — and it is drawn as a
+    // separate, thinner cyan track well clear of the health bar so the two are
+    // never confused with each other or with the body guard arc.
     const guardRatio = enemy.guardBrokenTimer > 0
       ? 0
       : Math.max(0, (enemy.guardStrength || 0) / (enemy.guardMax || WARDEN_GUARD_MAX));
-    progressBar(this.ctx, x, y + 8, width, 3, guardRatio, UI_COLORS.electric, 'rgba(0,0,0,0.5)');
+    const width = Math.round(Math.max(18, Math.min(46, enemy.radius * 1.7)));
+    const x = Math.round(enemy.x - width / 2);
+    const y = Math.round(enemy.y + enemy.radius + 6 + (reveal > 0 ? 6 : 0));
+    progressBar(this.ctx, x, y, width, 2, guardRatio, UI_COLORS.electric, 'rgba(0,0,0,0.5)');
   }
 
   drawEnemyTelegraph(enemy) {

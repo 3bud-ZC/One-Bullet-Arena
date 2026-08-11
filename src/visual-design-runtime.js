@@ -1,5 +1,9 @@
 import { clamp, normalize, pointInsideRect } from './arena.js';
-import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
+import {
+  GAME_HEIGHT as HEIGHT,
+  GAME_WIDTH as WIDTH,
+  HEALTH_REVEAL_FADE_SECONDS,
+} from './game-data.js';
 import { OneBulletMovementHotfixRuntime } from './movement-hotfix-runtime.js';
 import {
   TOUCH_LAYOUT,
@@ -660,29 +664,52 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.restore();
   }
 
+  /*
+   * Enemy health.
+   *
+   * A small horizontal bar sitting just under the body. The previous curved
+   * arcs hugged the silhouette closely enough that they read as part of the
+   * enemy's geometry rather than as an indicator, and in groups the overlapping
+   * curves became noise.
+   *
+   * Rules: 1-HP enemies never show one, multi-HP enemies only show one after
+   * taking damage, and the bar fades out once the enemy has been left alone.
+   * Guardians are excluded entirely — their health lives in the HUD.
+   */
   drawEnemyHealth(enemy) {
+    if (enemy.guardian) return;
     if (enemy.maxHealth <= 1.1) return;
-    const ratio = Math.max(0, Math.min(1, enemy.health / enemy.maxHealth));
-    if (ratio >= 0.999 && !enemy.guardian) return;
 
-    const ctx = this.ctx;
+    const reveal = Number(enemy.healthReveal) || 0;
+    if (reveal <= 0) return;
+    const alpha = Math.min(1, reveal / HEALTH_REVEAL_FADE_SECONDS);
+
+    const ratio = Math.max(0, Math.min(1, enemy.health / enemy.maxHealth));
     const style = ENEMY_STYLE[enemy.type] || ENEMY_STYLE.scout;
-    const radius = enemy.radius + (enemy.guardian ? 12 : 7);
-    const span = enemy.guardian ? Math.PI * 1.5 : Math.PI * 0.9;
-    const start = -Math.PI / 2 - span / 2;
+    this.drawCompactHealthBar(enemy, ratio, style.core, alpha);
+  }
+
+  // Shared by regular enemies and the Warden so both read identically.
+  drawCompactHealthBar(enemy, ratio, fill, alpha, offset = 0) {
+    const ctx = this.ctx;
+    // Scales with the body but stays small enough to never rival the silhouette.
+    const width = Math.round(Math.max(18, Math.min(46, enemy.radius * 1.7)));
+    const height = 3;
+    const x = Math.round(enemy.x - width / 2);
+    const y = Math.round(enemy.y + enemy.radius + 6 + offset);
 
     ctx.save();
-    ctx.lineCap = 'butt';
-    ctx.lineWidth = enemy.guardian ? 5 : 3;
-    ctx.strokeStyle = 'rgba(2, 8, 16, 0.72)';
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, radius, start, start + span);
-    ctx.stroke();
-
-    ctx.strokeStyle = ratio <= 0.34 ? UI_COLORS.danger : style.core;
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, radius, start, start + span * ratio);
-    ctx.stroke();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    // A pure dark track vanished against the arena floor, leaving only the fill
+    // visible — which shows how much health is left but not out of how much.
+    // A dark base plus a faint light track keeps the full length readable on
+    // both the dark floor and the lighter structure tops.
+    ctx.fillStyle = 'rgba(2, 7, 14, 0.85)';
+    ctx.fillRect(x - 1, y - 1, width + 2, height + 2);
+    ctx.fillStyle = 'rgba(146, 178, 199, 0.32)';
+    ctx.fillRect(x, y, width, height);
+    ctx.fillStyle = ratio <= 0.34 ? UI_COLORS.danger : fill;
+    ctx.fillRect(x, y, Math.max(1, Math.round(width * ratio)), height);
     ctx.restore();
   }
 

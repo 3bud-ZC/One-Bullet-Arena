@@ -246,6 +246,13 @@ export function installDomPerformanceBridge(controller) {
     else if (state === 'upgrade') controller.syncUpgrade(force);
     else if (state === 'gameover') controller.syncGameOver();
 
+    // This bridge replaces controller.sync and controller.syncHud outright
+    // rather than wrapping them, so anything added to those methods in
+    // dom-ui.js never runs in production. The Guardian bar is driven from here
+    // for that reason, and outside the state branches so it is torn down when
+    // the run leaves the playing state.
+    controller.syncGuardian?.(state);
+
     // Settings are only visible/interactive in menu or pause. Avoid the old
     // unconditional settings DOM work in the high-frequency gameplay path.
     if (['menu', 'paused'].includes(state)) controller.syncSettings();

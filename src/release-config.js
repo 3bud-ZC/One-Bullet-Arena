@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.12.0-guardian-arena';
+  const version = '3.12.1-health-readability';
   const release = Object.freeze({
     version,
     label: `v${version}`,

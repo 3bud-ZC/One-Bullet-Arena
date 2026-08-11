@@ -28,6 +28,18 @@ export const ENEMY_TYPES = Object.freeze({
  *   - Bastion:  immune head-on, so the answer is a ricochet from behind cover.
  *   - Harrier:  fast and evasive, punished by recall timing rather than aim.
  */
+/*
+ * Enemy health bar reveal timing.
+ *
+ * HOLD is how long the bar stays fully visible after the last damage; FADE is
+ * the tail it dissolves over. Together they keep a damaged enemy's state
+ * readable through a follow-up shot without leaving permanent chrome attached
+ * to every enemy on screen.
+ */
+export const HEALTH_REVEAL_HOLD_SECONDS = 1.9;
+export const HEALTH_REVEAL_FADE_SECONDS = 0.45;
+export const HEALTH_REVEAL_SECONDS = HEALTH_REVEAL_HOLD_SECONDS + HEALTH_REVEAL_FADE_SECONDS;
+
 export const GUARDIAN_WAVES = Object.freeze([10, 20, 30]);
 
 // Phase loop, shared by the spawner and the behaviour update. Stalk is the

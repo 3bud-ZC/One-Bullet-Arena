@@ -5,15 +5,68 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.12.0 — Guardian Arena**
-- Canonical version: `3.12.0-guardian-arena`
-- Canonical label: `v3.12.0-guardian-arena`
+- Release: **v3.12.1 — Health Readability**
+- Canonical version: `3.12.1-health-readability`
+- Canonical label: `v3.12.1-health-readability`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.12.0-guardian-arena`
+- Service Worker cache: `one-bullet-arena-v3.12.1-health-readability`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Enemy health presentation - 2026-08-12 (v3.12.1)
+
+The v3.12 curved health arcs were rejected and are removed. Scope was the health
+display only; gameplay, navigation, damage, balance, boss mechanics, maps and
+the dashboard are untouched.
+
+### What was wrong
+
+The arcs hugged the silhouette closely enough that they read as part of the
+enemy's geometry rather than as an indicator, and in groups the overlapping
+curves became noise instead of information.
+
+### Regular enemies
+
+A small horizontal bar directly under the body, scaled to enemy radius and
+clamped to 18-46px so it never rivals the silhouette. 1-HP enemies never show
+one. Multi-HP enemies show one only after taking damage; it holds for 1.9s from
+the last hit and then fades over 0.45s, and any further damage immediately
+re-reveals and resets it. The reveal timer is decayed on the fixed simulation
+step, not on render, and is never read by gameplay.
+
+The first attempt used a pure dark track, which vanished against the arena floor
+and left only the fill visible — showing how much health remained but not out of
+how much. The track is now a faint light fill over a dark base so the full
+length reads on both the floor and the lighter structure tops.
+
+### Warden
+
+Health uses the same compact bar and the same reveal rule. Guard remains
+permanently visible as a separate, thinner cyan track, because it is a live
+mechanic the player must read at all times.
+
+### Guardians
+
+No body-attached bar at all. A dedicated HUD bar sits top-centre directly under
+the wave block, showing the localised Guardian name, health fill, and a phase
+label that turns green during the `stalk` vulnerability window and red while the
+Guardian is sealed. It appears only while a Guardian is alive and is torn down
+on death or any state change.
+
+### Two real bugs found by screenshot review
+
+1. `domSignature()` did not include Guardian health or phase, so the DOM sync
+   would have shown the bar on spawn and then left it frozen at full health for
+   the entire encounter. Health is now bucketed into the signature so the bar
+   animates without forcing a DOM write every frame.
+2. `dom-performance-bridge.js` **replaces** `controller.sync`, `syncHud`,
+   `syncMinimap` and `setGauge` on the instance rather than wrapping them, so
+   the `syncGuardian()` call added to `dom-ui.js` was dead code in production.
+   The call now lives in the bridge. This is the third release in which a
+   subclass or wrapper silently shadowed an edited method; verifying against the
+   live object rather than the source is what caught it.
 
 ## Sector Guardians, combat audio, readability - 2026-08-11 (v3.12.0)
 

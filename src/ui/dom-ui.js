@@ -316,6 +316,19 @@ export class DomUiController {
             </div>
           </div>
 
+          <!-- Guardian health. Lives in the HUD rather than on the body: a
+               body-attached bar on a boss competes with its own silhouette and
+               telegraphs. Shown only while a Guardian is alive. -->
+          <div class="hud-guardian" data-guardian-hud hidden aria-live="polite">
+            <div class="hud-guardian__head">
+              <span class="hud-guardian__name" data-bind="guardian-name"></span>
+              <span class="hud-guardian__phase" data-bind="guardian-phase"></span>
+            </div>
+            <div class="hud-guardian__track">
+              <span class="hud-guardian__fill" data-guardian-fill></span>
+            </div>
+          </div>
+
           <div class="hud-cluster hud-cluster--right">
             <div class="hud-resource-row">
               <span class="hud-resource__icon hud-resource__icon--health">${iconSvg('health')}</span>
@@ -554,6 +567,9 @@ export class DomUiController {
 
     if (state === 'menu') this.syncMenu();
     if (state === 'playing') this.syncHud();
+    // Driven from sync() rather than syncHud() so the bar is torn down on any
+    // state change too, not only while the HUD is being refreshed.
+    this.syncGuardian(state);
     if (state === 'paused') this.syncPause();
     if (state === 'upgrade') this.syncUpgrade(force);
     if (state === 'gameover') this.syncGameOver();
@@ -678,6 +694,25 @@ export class DomUiController {
     const shield = this.root.querySelector('[data-shield-indicator]');
     setHidden(shield, !(Number(game.player?.shield) > 0));
     this.syncMinimap();
+  }
+
+  syncGuardian(state = this.game.state) {
+    const host = this.root.querySelector('[data-guardian-hud]');
+    if (!host) return;
+    const guardian = state === 'playing'
+      ? (this.game.enemies?.find((enemy) => enemy.guardian) || null)
+      : null;
+    setHidden(host, !guardian);
+    if (!guardian) return;
+
+    setText(this.bindings.get('guardian-name'), i18n.t(`guardian.${guardian.guardianId}.name`));
+    setText(this.bindings.get('guardian-phase'), i18n.t(`guardian.phase.${guardian.phaseName}`));
+    host.dataset.phase = guardian.phaseName || 'stalk';
+
+    const ratio = clamp01(guardian.health / Math.max(1, guardian.maxHealth));
+    const fill = this.root.querySelector('[data-guardian-fill]');
+    // Scale transform rather than width so this never triggers layout.
+    if (fill) fill.style.setProperty('--value', ratio.toFixed(4));
   }
 
   syncMinimap() {

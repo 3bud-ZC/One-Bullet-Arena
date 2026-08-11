@@ -626,6 +626,49 @@ html[dir="rtl"] .hud-gauge__fill { transform-origin: right center; }
 .hud-resource__shield { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--cyan); font-size: 0.76rem; }
 .hud-cluster--right .hud-gauge { margin-block-start: 6px; }
 
+/* Guardian health — HUD-resident, directly under the wave block. Sized to be
+   informative without becoming a cinematic bar that covers the play field. */
+.hud-guardian {
+  /* Absolutely placed rather than flowed: as a grid item it landed in row 2 of
+     .hud-safe, which stretches the full height and pushed it to mid-screen. */
+  position: absolute;
+  top: calc(clamp(13px, 1.25vw, 20px) + 78px);
+  left: 50%;
+  translate: -50% 0;
+  width: min(360px, 34vw);
+  padding: 7px 11px 8px;
+  border: 1px solid rgba(255, 212, 65, 0.3);
+  border-radius: 10px;
+  background: rgba(2, 12, 19, 0.72);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26), var(--inset-highlight);
+  backdrop-filter: blur(10px) saturate(112%);
+}
+
+.hud-guardian__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-block-end: 6px; }
+.hud-guardian__name { color: var(--text-strong); font-size: 0.72rem; font-weight: 820; letter-spacing: 0.06em; text-transform: uppercase; }
+html[lang="ar"] .hud-guardian__name { letter-spacing: 0; text-transform: none; font-size: 0.78rem; }
+.hud-guardian__phase { color: var(--bullet); font-size: 0.6rem; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+html[lang="ar"] .hud-guardian__phase { letter-spacing: 0; text-transform: none; font-size: 0.66rem; }
+
+.hud-guardian__track { position: relative; height: 5px; overflow: hidden; border-radius: 999px; background: rgba(131, 168, 183, 0.16); }
+.hud-guardian__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--bullet);
+  transform: scaleX(var(--value, 1));
+  transform-origin: left center;
+  transition: transform 120ms linear;
+  will-change: transform;
+}
+html[dir="rtl"] .hud-guardian__fill { transform-origin: right center; }
+
+/* The vulnerability window is the one moment the player must not miss. */
+.hud-guardian[data-phase="stalk"] { border-color: rgba(88, 215, 156, 0.42); }
+.hud-guardian[data-phase="stalk"] .hud-guardian__phase { color: var(--green); }
+.hud-guardian[data-phase="wind"] .hud-guardian__phase,
+.hud-guardian[data-phase="strike"] .hud-guardian__phase { color: #ef8995; }
+
 .hud-minimap { position: absolute; inset-block-start: clamp(92px, 8.5vw, 126px); inset-inline-end: clamp(13px, 1.25vw, 20px); width: clamp(138px, 10.5vw, 170px); padding: 8px 9px 9px; border: 1px solid rgba(116, 203, 232, 0.11); border-radius: 11px; background: rgba(2, 12, 19, 0.58); box-shadow: 0 8px 24px rgba(0,0,0,.18), var(--inset-highlight); backdrop-filter: blur(9px) saturate(108%); }
 .hud-minimap__label { display: flex; align-items: center; justify-content: space-between; margin-block-end: 5px; color: var(--text-muted); font-size: 0.59rem; font-weight: 760; letter-spacing: 0.05em; text-transform: uppercase; }
 .hud-minimap__label b { color: var(--cyan); font-family: var(--font-ui-latin); font-variant-numeric: tabular-nums; }

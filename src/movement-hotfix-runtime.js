@@ -117,6 +117,10 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       const enemy = enemies[index];
       enemy.spawnTime = Math.max(0, enemy.spawnTime - dt);
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+      // Presentation-only reveal timer for the health bar. Decayed here so it
+      // follows the fixed simulation step rather than render cadence; it is
+      // never read by gameplay.
+      enemy.healthReveal = Math.max(0, (enemy.healthReveal || 0) - dt);
       enemy.staggerTime = Math.max(0, (enemy.staggerTime || 0) - dt);
 
       const physicsSpeed = Math.hypot(enemy.physicsVx || 0, enemy.physicsVy || 0);

@@ -1,3 +1,4 @@
+import { HEALTH_REVEAL_SECONDS } from '../game-data.js';
 import { i18n } from '../i18n.js';
 import { AdaptiveQualityManager, QUALITY_MODES } from '../performance/quality-manager.js';
 import { FixedStepClock, FramePacer, lerp } from '../performance/frame-pacer.js';
@@ -7,7 +8,7 @@ import { DomUiController } from '../ui/dom-ui.js';
 import { installDomPerformanceBridge } from '../ui/dom-performance-bridge.js';
 import { OneBulletProductionArtRuntime } from './production-art-runtime.js';
 
-export const GLOBAL_UI_RUNTIME_VERSION = '3.12.0-guardian-arena';
+export const GLOBAL_UI_RUNTIME_VERSION = '3.12.1-health-readability';
 export const GLOBAL_UI_REVISION = 'smooth-fixedstep-presentation-v1';
 export const UI_REPAIR_RUNTIME_VERSION = GLOBAL_UI_RUNTIME_VERSION;
 export const UI_REPAIR_REVISION = GLOBAL_UI_REVISION;
@@ -517,7 +518,20 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       this.arenaStage?.id || 0,
       bulletState,
       this.stats?.upgrades || 0,
+      // Guardian health and phase drive a HUD bar. Without them the signature
+      // never changes as the Guardian is damaged, so the bar would appear on
+      // spawn and then sit frozen at full health for the whole encounter.
+      // Health is bucketed so the bar animates smoothly without forcing a DOM
+      // write on every frame.
+      this.guardianSignature(),
     ].join(':');
+  }
+
+  guardianSignature() {
+    const guardian = this.enemies?.find((enemy) => enemy.guardian);
+    if (!guardian) return 'none';
+    const bucket = Math.round((guardian.health / Math.max(1, guardian.maxHealth)) * 40);
+    return `${guardian.guardianId}-${guardian.phaseName}-${bucket}`;
   }
 
   syncDomUi(timeMs, force = false) {
@@ -686,7 +700,11 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const before = Number(enemy?.health) || 0;
     const result = super.damageEnemy(enemy, damage, fromBullet);
     const after = Number(enemy?.health) || 0;
-    if (fromBullet && after < before && after > 0) this.audio?.play?.('hit');
+    if (after < before) {
+      // Any damage immediately reveals and resets the health display.
+      if (enemy) enemy.healthReveal = HEALTH_REVEAL_SECONDS;
+      if (fromBullet && after > 0) this.audio?.play?.('hit');
+    }
     return result;
   }
 

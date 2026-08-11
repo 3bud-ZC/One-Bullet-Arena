@@ -495,6 +495,16 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
 
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
+    // Hit reaction: compress along the damage vector and stretch across it, so
+    // the body visibly absorbs the shot. Presentation only — the collision
+    // radius the simulation uses is unchanged.
+    const squash = enemy.hitSquash > 0 ? enemy.hitSquash : 0;
+    if (squash > 0) {
+      const angle = Math.atan2(enemy.hitDirY || 0, enemy.hitDirX || 0);
+      ctx.rotate(angle);
+      ctx.scale(1 - squash * 0.28, 1 + squash * 0.2);
+      ctx.rotate(-angle);
+    }
     ctx.scale(spawnScale * bob, spawnScale * bob);
     ctx.rotate(enemy.phase * motion.spin);
     ctx.shadowColor = hit ? UI_COLORS.text : style.core;

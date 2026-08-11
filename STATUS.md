@@ -5,15 +5,93 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.12.1 — Health Readability**
-- Canonical version: `3.12.1-health-readability`
-- Canonical label: `v3.12.1-health-readability`
+- Release: **v3.13.0 — Combat VFX**
+- Canonical version: `3.13.0-combat-vfx`
+- Canonical label: `v3.13.0-combat-vfx`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.12.1-health-readability`
+- Service Worker cache: `one-bullet-arena-v3.13.0-combat-vfx`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Combat VFX - 2026-08-12 (v3.13.0)
+
+### Runtime ownership, verified against the live object
+
+Before touching anything, a probe walked the prototype chain of the running
+runtime and listed the owner of every combat method. Results that matter:
+
+| method | actual owner |
+|---|---|
+| draw, update, fireBullet, recallBullet, catchBullet, onRicochet, damageEnemy, killEnemy | `OneBulletGlobalUiRuntime` |
+| `drawParticles` | `OneBulletCombatFeedbackRuntime` (before this pass) |
+| `drawEnemyBody`, `drawEnemyHealth` | `OneBulletWardenRuntime` |
+| `updateEnemies` | `OneBulletMovementHotfixRuntime` |
+
+Instance-level replacements: `dom-performance-bridge` replaces `sync`,
+`syncHud`, `syncMinimap`, `syncSettings` and `setGauge` on the DOM controller,
+shadowing the entire prototype chain for those five methods.
+
+`tests/runtime-ownership.test.js` now pins this. It asserts the owner of each
+combat-critical method, that the chain order it reasons about matches the real
+`extends` graph, that the bridge's replacement set is exactly the declared one,
+and that no file outside the chain defines a combat-critical method. It does not
+ban overriding — it makes moving an override a deliberate act that updates the
+test. Negative-tested by adding a shadowing override and confirming the failure
+message names both the new owner and the file that would become dead code.
+
+### VFX architecture
+
+`src/render/combat-vfx.js`, owned by the terminal runtime because every method
+it hooks is overridden somewhere in the chain.
+
+Four fixed-size pools (220 sparks, 48 streaks, 24 marks, 160 shards) allocated
+once. Emitting past capacity reuses the oldest slot rather than growing, so
+dense combat cannot spike allocation or produce an unbounded filter. No radial
+gradients and no `shadowBlur` anywhere in the system; effects are short line
+segments and thin triangles. Emission counts scale with the quality tier;
+lifetimes never do. Everything advances on the fixed step.
+
+- **Fire** — tight directional wedge plus departure streak, no muzzle circle,
+  and a presentation-only recoil offset.
+- **Ricochet** — sparks raked between the reflected vector and the surface
+  tangent, a short fading wall mark, and an outgoing streak. `chain` escalates
+  spark count, spread and streak length so BANK x5 does not look like BANK x1.
+- **Hit** — directional impulse along the bullet vector in the enemy's own
+  colour, plus silhouette compression along that vector (render transform only;
+  the collision radius is untouched).
+- **Kill** — archetype-aware breakup: scout collapses sharply with few fast
+  shards, brute throws heavier slower fragments, sniper fractures along one
+  axis, splitter breaks into two opposed groups reinforcing the split, warden
+  and guardian add a failing ring.
+- **Recall** — cyan chevrons trailing the returning bullet on a distance-based
+  cadence, tightening as it closes. No permanent line to the player.
+- **Catch** — normal catch closes the loop with four small cyan sparks; perfect
+  catch is a sharp four-point gold geometric confirmation.
+
+### Performance
+
+Dense wave 32, 18 enemies, damage applied every 40 ticks so VFX stays hot.
+Three runs each; budget is 8.33ms.
+
+| | p95 | max | ticks over budget (of 600) |
+|---|---|---|---|
+| v3.12.1 baseline | 2.3 ms | 7.3-9.9 ms | 1 / 0 / 0 |
+| VFX, first cut | 2.9-3.5 ms | 9-12.3 ms | 2 / 1 / 2 |
+| VFX, optimised | 2.5-2.6 ms | 7.8-11 ms | 2 / 0 / 0 |
+
+The first cut recomputed `Math.pow` for drag per particle per tick — up to 380
+calls per step. It is now computed once per update, and the draw layer exits
+before its own save/restore when nothing is live. That recovered essentially all
+of the regression, though one run still shows 2 over-budget ticks versus the
+baseline's 1.
+
+### Dead code
+
+`src/ui-system.js` re-verified as having zero importers; its similarly-named
+helpers are independently defined in three other modules. Removed along with its
+`check` script entry and its service-worker app-shell entry.
 
 ## Enemy health presentation - 2026-08-12 (v3.12.1)
 

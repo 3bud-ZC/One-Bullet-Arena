@@ -4,11 +4,12 @@ import { AdaptiveQualityManager, QUALITY_MODES } from '../performance/quality-ma
 import { FixedStepClock, FramePacer, lerp } from '../performance/frame-pacer.js';
 import { RELEASE_VERSION } from '../release.js';
 import { CanvasViewport } from '../render/canvas-viewport.js';
+import { CombatVfx } from '../render/combat-vfx.js';
 import { DomUiController } from '../ui/dom-ui.js';
 import { installDomPerformanceBridge } from '../ui/dom-performance-bridge.js';
 import { OneBulletProductionArtRuntime } from './production-art-runtime.js';
 
-export const GLOBAL_UI_RUNTIME_VERSION = '3.12.1-health-readability';
+export const GLOBAL_UI_RUNTIME_VERSION = '3.13.0-combat-vfx';
 export const GLOBAL_UI_REVISION = 'smooth-fixedstep-presentation-v1';
 export const UI_REPAIR_RUNTIME_VERSION = GLOBAL_UI_RUNTIME_VERSION;
 export const UI_REPAIR_REVISION = GLOBAL_UI_REVISION;
@@ -81,6 +82,12 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.damageVisual = 0;
     this.lastRicochetPoint = null;
     this.lastBannerSignature = '';
+    // Combat VFX is owned here, at the terminal runtime, because every method
+    // it hooks (fireBullet, onRicochet, damageEnemy, killEnemy, catchBullet,
+    // drawParticles) is overridden somewhere in the chain; anything added
+    // further down would be shadowed.
+    this.combatVfx = new CombatVfx();
+    this.combatVfx.reducedMotion = this.reducedMotion;
     this.boundSmoothLoop = (time) => this.loop(time);
 
     this.installQualityControls();
@@ -608,8 +615,48 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   }
 
   update(dt) {
+    // Captured before super so onRicochet, which fires inside the bullet
+    // update, can report the incoming vector as well as the outgoing one.
+    if (this.bullet && !this.bullet.held) {
+      this.preRicochetVelocity = normalize(this.bullet.vx || 0, this.bullet.vy || 0);
+    }
+
     super.update(dt);
     this.decayVisualFeedback(dt);
+
+    const step = Math.max(0, Number(dt) || 0);
+    this.combatVfx?.update(step);
+
+    if (this.muzzleRecoil) {
+      this.muzzleRecoil.life -= step;
+      if (this.muzzleRecoil.life <= 0) this.muzzleRecoil = null;
+    }
+    for (const enemy of this.enemies || []) {
+      if (enemy.hitSquash > 0) enemy.hitSquash = Math.max(0, enemy.hitSquash - step * 7);
+    }
+
+    // Recall chevrons, emitted on a distance-based cadence so a long return
+    // reads as urgency building rather than a constant stream.
+    if (this.bullet?.recalling && !this.reducedMotion) {
+      this.recallPulseTimer = (this.recallPulseTimer || 0) - step;
+      if (this.recallPulseTimer <= 0) {
+        const toPlayer = normalize(this.player.x - this.bullet.x, this.player.y - this.bullet.y);
+        const distance = Math.hypot(this.player.x - this.bullet.x, this.player.y - this.bullet.y);
+        const urgency = Math.max(0, Math.min(1, 1 - distance / 420));
+        this.combatVfx?.recallPulse(this.bullet.x, this.bullet.y, toPlayer.x, toPlayer.y, urgency);
+        this.recallPulseTimer = 0.09 - urgency * 0.045;
+      }
+    } else {
+      this.recallPulseTimer = 0;
+    }
+  }
+
+  // Drawn inside the world transform by the base draw pipeline, after the
+  // existing particle layer so effects sit above the floor but below the HUD.
+  drawParticles() {
+    super.drawParticles();
+    this.combatVfx?.setQuality(this.qualityManager?.snapshot?.()?.tier || 'HIGH');
+    this.combatVfx?.draw(this.ctx);
   }
 
   decayVisualFeedback(dt) {
@@ -634,6 +681,11 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     if (fired) {
       this.bulletTrailAccumulator = 0;
       this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 4.5);
+      const direction = normalize(this.bullet?.vx || 0, this.bullet?.vy || 0);
+      this.combatVfx?.fire(this.bullet.x, this.bullet.y, direction.x, direction.y);
+      // Presentation-only recoil: the player is nudged visually against the
+      // shot. Written to a render offset, never to simulation position.
+      this.muzzleRecoil = { x: -direction.x, y: -direction.y, life: 0.12 };
     }
     return fired;
   }
@@ -657,6 +709,17 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const chain = Math.min(4, banks);
     this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.8 + chain * 0.45);
     this.audio?.play?.('ricochet');
+
+    // Incoming vector is captured before the bounce by updateBullet; outgoing
+    // is the post-bounce velocity. Both are needed for the geometry cue.
+    const incoming = this.preRicochetVelocity || { x: 0, y: 0 };
+    const outgoing = normalize(this.bullet?.vx || 0, this.bullet?.vy || 0);
+    this.combatVfx?.ricochet(
+      this.bullet.x, this.bullet.y,
+      incoming.x, incoming.y,
+      outgoing.x, outgoing.y,
+      banks,
+    );
   }
 
   catchBullet() {
@@ -668,7 +731,10 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     const perfect = (this.combatDepthStats?.perfectCatches ?? 0) > before;
     this.catchVisual = perfect ? 0.8 : 0.45;
     this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : (perfect ? 3.2 : 0.7));
-    if (wasReturning) this.audio?.play?.(perfect ? 'perfect-catch' : 'catch');
+    if (wasReturning) {
+      this.audio?.play?.(perfect ? 'perfect-catch' : 'catch');
+      this.combatVfx?.catchLoop(this.player.x, this.player.y, perfect);
+    }
   }
 
   /*
@@ -704,6 +770,17 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       // Any damage immediately reveals and resets the health display.
       if (enemy) enemy.healthReveal = HEALTH_REVEAL_SECONDS;
       if (fromBullet && after > 0) this.audio?.play?.('hit');
+      if (enemy && after > 0) {
+        const direction = fromBullet
+          ? normalize(this.bullet?.vx || 0, this.bullet?.vy || 0)
+          : normalize(enemy.x - this.player.x, enemy.y - this.player.y);
+        this.combatVfx?.hit(enemy.x, enemy.y, direction.x, direction.y, enemy.color || '#ff6b7f');
+        // Silhouette compression along the damage vector. Read by the renderer
+        // only; collision radius is untouched.
+        enemy.hitSquash = 1;
+        enemy.hitDirX = direction.x;
+        enemy.hitDirY = direction.y;
+      }
     }
     return result;
   }
@@ -711,10 +788,17 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   killEnemy(enemy) {
     const existed = this.enemies?.includes(enemy);
     const guardian = Boolean(enemy?.guardian);
+    // Captured before super, which removes the enemy from the array.
+    const snapshot = enemy
+      ? { x: enemy.x, y: enemy.y, type: guardian ? 'guardian' : enemy.type, color: enemy.color, radius: enemy.radius }
+      : null;
     const result = super.killEnemy(enemy);
     if (existed && !this.enemies?.includes(enemy)) {
       this.audio?.play?.(guardian ? 'guardian-down' : 'kill');
       if (guardian) this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 16);
+      if (snapshot) {
+        this.combatVfx?.kill(snapshot.x, snapshot.y, snapshot.type, snapshot.color || '#ff6b7f', snapshot.radius || 18);
+      }
     }
     return result;
   }

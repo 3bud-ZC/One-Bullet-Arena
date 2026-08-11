@@ -80,7 +80,7 @@ async function sampleRaf(page, durationMs = 1400) {
 test('v3.8 owns native rAF rendering, 120 Hz fixed simulation, interpolation, and adaptive quality', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.12.1-health-readability');
+  expect(snapshot.releaseVersion).toBe('3.13.0-combat-vfx');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.nativeRafRendering).toBe(true);
   expect(snapshot.artificialRenderFpsCap).toBe(false);

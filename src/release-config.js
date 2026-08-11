@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.12.1-health-readability';
+  const version = '3.13.0-combat-vfx';
   const release = Object.freeze({
     version,
     label: `v${version}`,

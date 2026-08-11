@@ -31,7 +31,7 @@ Last updated: 2026-08-11
   - Knockback/stagger movement now goes through the same collision-aware movement path and resets stale navigation state.
   - Enemy separation remains deterministic and stable under dense overlap tests.
 - Spawn changes: `selectSpawnPoint` now scores reachable engagement-band candidates around the player in addition to arena perimeter candidates; it keeps player safety distance, obstacle/safe-zone clearance, and enemy spacing while preventing late-arena spawns from being needlessly far away.
-- Cleanup performed: updated the existing telegraph-lock browser test to use valid unobstructed sniper/charger lanes while the new blocked-lane tests assert the new rejection behavior.
+- Cleanup performed: updated the existing telegraph-lock browser test to use valid unobstructed sniper/charger lanes while the new blocked-lane tests assert the new rejection behavior; added `src/enemy-navigation.js` to the service-worker app shell and Pages artifact validation so the new runtime module is release/offline-safe.
 - Automated coverage added:
   - `tests/enemy-navigation.test.js` covers direct pursuit, vertical/horizontal obstacle routing, stuck recovery, solid geometry rejection, crowd separation stability, spawn safety, late-arena engagement distance, knockback recovery, sniper firing-position selection, charger lane rejection, and Warden guard preservation.
   - `tests/browser/enemy-navigation.spec.js` covers actual QA-runtime gameplay for obstacle routing, sniper repositioning, charger blocked-lane rejection, dense late-wave finite coordinates, obstacle avoidance, and pressure.
@@ -45,7 +45,7 @@ Last updated: 2026-08-11
   - Reproduced before fix: Wave 1 Scout, Wave 5 Brute, Wave 10 Splitter, Wave 30 Charger, and blocked Sniper scenarios stalled at obstacle-adjacent distances instead of converging.
   - After fix: controlled browser scenarios reached engagement without obstacle overlap or non-finite coordinates; no browser console/page errors were observed.
   - Dense performance diagnostics stayed capped at 18 enemies with finite frame telemetry; desktop Chromium same-runner candidate remained valid under the existing performance test, and mobile/Firefox/WebKit dense diagnostics passed.
-- Publication status: pending commit and push at the time of this status edit; final published `main` commit is the commit containing this section.
+- Publication status: pending final correction commit and push at the time of this status edit; final published `main` commit is the commit containing this section.
 
 ## Local audit - 2026-08-10
 

@@ -101,6 +101,7 @@ jobs:
             src/core/ui-repair-runtime.js
             src/game.js
             src/game-runtime.js
+            src/enemy-navigation.js
             src/input-controller.js
             src/spawn-system.js
             src/ui-renderer.js
@@ -114,6 +115,7 @@ jobs:
           grep -Fq "channel: 'smooth-runtime'" _site/src/release-config.js
           grep -Fq "src/performance/frame-pacer.js" _site/sw.js
           grep -Fq "src/performance/quality-manager.js" _site/sw.js
+          grep -Fq "src/enemy-navigation.js" _site/sw.js
           grep -Fq "src/ui/dom-performance-bridge.js" _site/sw.js
           grep -Fq "styles/smooth-runtime.css" _site/sw.js
           grep -Fq "OneBulletGlobalUiRuntime" _site/src/main.js

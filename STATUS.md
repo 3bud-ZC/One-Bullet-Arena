@@ -1,6 +1,6 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 ## Current release
 
@@ -17,6 +17,35 @@ Last updated: 2026-08-10
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
 - Release status: **merged to main; production Pages convergence is the remaining deployment gate**
+
+## Enemy AI reliability pass - 2026-08-11
+
+- Starting source-of-truth commit verified from `origin/main`: `07510b41b8a2b5813b9d05fd1acf5faab57dcebc` (`fix: restore enemy pursuit and attack pressure`).
+- Runtime architecture preserved: production still boots through `OneBulletGlobalUiRuntime`; 1280x720 logical simulation, DOM/SVG application UI, fixed-step simulation, world expansion, Warden mechanics, checkpoints, controls, localization, and adaptive visual quality remain intact.
+- Root enemy AI issues reproduced locally in `?qa=1`: obstacle-blocked enemies kept orbiting/strafe-sliding at nearly fixed distance, fragile axis fallback did not create useful routes, blocked snipers could preserve range without useful fire, chargers could evaluate telegraphs from invalid lanes, and late-stage spawn scoring favored excessive distance.
+- Navigation change: added deterministic lightweight visibility-graph routing in `src/enemy-navigation.js` with cached obstacle waypoints, direct-path preference, route hysteresis, target-move replanning, stuck/progress tracking, and physical-wall versus navigation-clearance checks.
+- Enemy movement changes:
+  - Scouts, Brutes, Splitters, mini Scouts, and Wardens now use pursuit routing when direct approach is blocked; near-contact orbit is reduced so pressure continues.
+  - Snipers keep standoff identity but seek reachable line-of-fire positions before shooting when cover blocks useful engagement.
+  - Chargers reject blocked charge lanes, route before committing, and step charges through collision checks so they do not tunnel through obstacles.
+  - Knockback/stagger movement now goes through the same collision-aware movement path and resets stale navigation state.
+  - Enemy separation remains deterministic and stable under dense overlap tests.
+- Spawn changes: `selectSpawnPoint` now scores reachable engagement-band candidates around the player in addition to arena perimeter candidates; it keeps player safety distance, obstacle/safe-zone clearance, and enemy spacing while preventing late-arena spawns from being needlessly far away.
+- Cleanup performed: updated the existing telegraph-lock browser test to use valid unobstructed sniper/charger lanes while the new blocked-lane tests assert the new rejection behavior.
+- Automated coverage added:
+  - `tests/enemy-navigation.test.js` covers direct pursuit, vertical/horizontal obstacle routing, stuck recovery, solid geometry rejection, crowd separation stability, spawn safety, late-arena engagement distance, knockback recovery, sniper firing-position selection, charger lane rejection, and Warden guard preservation.
+  - `tests/browser/enemy-navigation.spec.js` covers actual QA-runtime gameplay for obstacle routing, sniper repositioning, charger blocked-lane rejection, dense late-wave finite coordinates, obstacle avoidance, and pressure.
+- Verification completed locally:
+  - `npm run check`: passed.
+  - `npm test`: passed, **116/116 Node tests**.
+  - `npm run verify`: passed after final browser-test adjustment.
+  - `npm run test:browser -- --workers=1`: passed, **205 passed, 51 skipped, 0 failed** across desktop Chromium, mobile landscape Chromium, desktop Firefox, and desktop WebKit.
+  - `npm run verify:all` was run with the repository default 10 workers; it completed Node verification but the browser phase hit runner saturation/timeouts. The same full Playwright matrix then passed through the npm browser script with `--workers=1`.
+- Browser QA/performance evidence:
+  - Reproduced before fix: Wave 1 Scout, Wave 5 Brute, Wave 10 Splitter, Wave 30 Charger, and blocked Sniper scenarios stalled at obstacle-adjacent distances instead of converging.
+  - After fix: controlled browser scenarios reached engagement without obstacle overlap or non-finite coordinates; no browser console/page errors were observed.
+  - Dense performance diagnostics stayed capped at 18 enemies with finite frame telemetry; desktop Chromium same-runner candidate remained valid under the existing performance test, and mobile/Firefox/WebKit dense diagnostics passed.
+- Publication status: pending commit and push at the time of this status edit; final published `main` commit is the commit containing this section.
 
 ## Local audit - 2026-08-10
 

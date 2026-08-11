@@ -1,6 +1,7 @@
 import { OneBulletGame } from './game.js';
 import {
   ARENA_STAGE_COUNT,
+  circleRectOverlap,
   circleOverlap,
   clamp,
   combatSafeZones,
@@ -9,6 +10,7 @@ import {
   pointInsideRect,
   resolveCombatCircle,
 } from './arena.js';
+import { findRangedAttackPoint, hasClearPath, resetEnemyNavigation } from './enemy-navigation.js';
 import {
   GAME_HEIGHT as HEIGHT,
   GAME_WIDTH as WIDTH,
@@ -179,15 +181,47 @@ export class OneBulletRuntime extends OneBulletGame {
     }
 
     const currentDistance = distance(enemy, this.player);
-    const desired = currentDistance < 270 ? -1 : currentDistance > 440 ? 1 : 0;
+    const clearLine = hasClearPath(enemy, this.player, this.arenaStage.obstacles, enemy.radius * 0.45, 4);
     const strafe = { x: -toPlayer.y, y: toPlayer.x };
     const control = enemy.staggerTime > 0 ? 0.35 : 1;
-    this.steerEnemy(enemy, {
-      x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.42,
-      y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.42,
-    }, dt, control);
+    let desired;
+    let target = this.player;
+    let behavior = 'pursuit';
 
-    if (enemy.attackCooldown <= 0) {
+    if (!clearLine) {
+      const existingTarget = enemy.rangedTarget;
+      const targetStillUseful = existingTarget
+        && hasClearPath(existingTarget, this.player, this.arenaStage.obstacles, enemy.radius * 0.45, 4)
+        && distance(existingTarget, this.player) >= 285
+        && distance(existingTarget, this.player) <= 530;
+      enemy.rangedTarget = targetStillUseful
+        ? existingTarget
+        : findRangedAttackPoint({
+          start: enemy,
+          player: this.player,
+          obstacles: this.arenaStage.obstacles,
+          bounds: this.arenaStage.bounds,
+          radius: enemy.radius,
+        });
+      if (enemy.rangedTarget) {
+        target = enemy.rangedTarget;
+        desired = normalize(target.x - enemy.x, target.y - enemy.y);
+      } else {
+        desired = { x: toPlayer.x * 0.8 + strafe.x * 0.16, y: toPlayer.y * 0.8 + strafe.y * 0.16 };
+      }
+    } else {
+      enemy.rangedTarget = null;
+      const desiredRange = currentDistance < 270 ? -1 : currentDistance > 455 ? 1 : 0;
+      desired = {
+        x: toPlayer.x * desiredRange + strafe.x * Math.sin(enemy.phase) * 0.3,
+        y: toPlayer.y * desiredRange + strafe.y * Math.sin(enemy.phase) * 0.3,
+      };
+      if (desiredRange <= 0) behavior = 'direct';
+    }
+
+    this.steerEnemy(enemy, desired, dt, control, { behavior, target });
+
+    if (enemy.attackCooldown <= 0 && clearLine && currentDistance >= 235 && currentDistance <= 590) {
       enemy.shotDirection = { ...toPlayer };
       enemy.shotTelegraph = 0.5;
     }
@@ -195,9 +229,30 @@ export class OneBulletRuntime extends OneBulletGame {
 
   updateCharger(enemy, toPlayer, dt) {
     if (enemy.chargeRemaining > 0) {
-      enemy.chargeRemaining -= dt;
-      enemy.x += enemy.chargeDirection.x * 620 * dt;
-      enemy.y += enemy.chargeDirection.y * 620 * dt;
+      const travel = 620 * dt;
+      const steps = Math.max(1, Math.ceil(travel / 8));
+      const stepDistance = travel / steps;
+      let blocked = false;
+      for (let step = 0; step < steps && enemy.chargeRemaining > 0; step += 1) {
+        const next = {
+          x: enemy.x + enemy.chargeDirection.x * stepDistance,
+          y: enemy.y + enemy.chargeDirection.y * stepDistance,
+          radius: enemy.radius,
+        };
+        const hitsObstacle = this.arenaStage.obstacles.some((rect) => circleRectOverlap(next, rect));
+        if (hitsObstacle) {
+          blocked = true;
+          break;
+        }
+        enemy.x = next.x;
+        enemy.y = next.y;
+        this.constrainCombatCircle(enemy);
+      }
+      enemy.chargeRemaining = blocked ? 0 : enemy.chargeRemaining - dt;
+      if (blocked) {
+        enemy.attackCooldown = Math.max(enemy.attackCooldown || 0, 0.85);
+        resetEnemyNavigation(enemy);
+      }
       return;
     }
 
@@ -214,8 +269,15 @@ export class OneBulletRuntime extends OneBulletGame {
     this.steerEnemy(enemy, {
       x: toPlayer.x * desired + strafe.x * Math.sin(enemy.phase) * 0.28,
       y: toPlayer.y * desired + strafe.y * Math.sin(enemy.phase) * 0.28,
-    }, dt, control);
-    if (enemy.attackCooldown <= 0) {
+    }, dt, control, { behavior: desired > 0 ? 'pursuit' : 'direct', target: this.player });
+    const chargeDistance = Math.min(currentDistance, 390);
+    const chargeEnd = {
+      x: enemy.x + toPlayer.x * chargeDistance,
+      y: enemy.y + toPlayer.y * chargeDistance,
+    };
+    const clearChargeLane = currentDistance <= 560
+      && hasClearPath(enemy, chargeEnd, this.arenaStage.obstacles, enemy.radius + 2, 2);
+    if (enemy.attackCooldown <= 0 && clearChargeLane) {
       enemy.chargeDirection = { ...toPlayer };
       enemy.chargeTelegraph = 0.62;
       enemy.attackCooldown = Math.max(1.8, 3.1 - this.wave * 0.03);

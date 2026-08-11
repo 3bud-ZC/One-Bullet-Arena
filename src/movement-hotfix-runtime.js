@@ -6,6 +6,7 @@ import {
   normalize,
   pointInsideBounds,
 } from './arena.js';
+import { markEnemyNavigationBlocked } from './enemy-navigation.js';
 import { enemyScaleForWave } from './game-data.js';
 import { OneBulletPolishRuntime } from './polish-runtime.js';
 import { TOUCH_LAYOUT } from './ui-renderer.js';
@@ -108,9 +109,19 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       enemy.staggerTime = Math.max(0, (enemy.staggerTime || 0) - dt);
 
-      if (Math.abs(enemy.physicsVx || 0) > 0.1 || Math.abs(enemy.physicsVy || 0) > 0.1) {
-        enemy.x += (enemy.physicsVx || 0) * dt;
-        enemy.y += (enemy.physicsVy || 0) * dt;
+      const physicsSpeed = Math.hypot(enemy.physicsVx || 0, enemy.physicsVy || 0);
+      if (physicsSpeed > 0.1) {
+        const moved = this.moveEnemyWithCollision(
+          enemy,
+          normalize(enemy.physicsVx || 0, enemy.physicsVy || 0),
+          physicsSpeed * dt,
+          dt,
+        );
+        if (!moved) {
+          enemy.physicsVx *= -0.18;
+          enemy.physicsVy *= -0.18;
+          markEnemyNavigationBlocked(enemy, true, dt);
+        }
         const damping = Math.pow(0.035, dt);
         enemy.physicsVx *= damping;
         enemy.physicsVy *= damping;
@@ -136,7 +147,7 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
         this.steerEnemy(enemy, {
           x: toPlayer.x * pressure - toPlayer.y * orbit,
           y: toPlayer.y * pressure + toPlayer.x * orbit,
-        }, dt, control);
+        }, dt, control, { behavior: 'pursuit', target: this.player });
       }
 
       this.constrainCombatCircle(enemy);

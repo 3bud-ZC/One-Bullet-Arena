@@ -24,6 +24,14 @@ import {
   pushCircleOutOfSafeZones,
   resolveCircleAgainstRects,
 } from './arena.js';
+import {
+  buildNavigationWaypoints,
+  ensureEnemyNavigationState,
+  hasClearPath,
+  markEnemyNavigationBlocked,
+  navigationTargetForEnemy,
+  resetEnemyNavigation,
+} from './enemy-navigation.js';
 
 const FONT = 'Tahoma, Arial, sans-serif';
 const STORAGE = Object.freeze({
@@ -183,6 +191,7 @@ export class OneBulletGame {
       trail: [],
     };
     this.arenaStage = arenaStageForWave(1);
+    this.enemyNavigationCache = null;
     this.enemies = [];
     this.enemyShots = [];
     this.particles = [];
@@ -259,6 +268,7 @@ export class OneBulletGame {
     this.wave += 1;
     const previousStageId = this.arenaStage.id;
     this.arenaStage = arenaStageForWave(this.wave);
+    this.enemyNavigationCache = null;
     this.highWave = Math.max(this.highWave, this.wave);
     writeNumber(STORAGE.highWave, this.highWave);
     this.enemies = [];
@@ -312,7 +322,9 @@ export class OneBulletGame {
       spawnTime: 0.55,
       hitFlash: 0,
       mini: Boolean(options.mini),
+      nav: null,
     };
+    ensureEnemyNavigationState(enemy);
     this.enemies.push(enemy);
     return enemy;
   }
@@ -659,6 +671,7 @@ export class OneBulletGame {
     enemy.physicsVx = (enemy.physicsVx || 0) + fallback.x * strength;
     enemy.physicsVy = (enemy.physicsVy || 0) + fallback.y * strength;
     enemy.staggerTime = Math.max(enemy.staggerTime || 0, stagger);
+    resetEnemyNavigation(enemy);
   }
 
   applyCatchImpulse(recallDistance = 0) {
@@ -690,32 +703,97 @@ export class OneBulletGame {
     }
   }
 
-  steerEnemy(enemy, desired, dt, speedScale = 1) {
-    const direction = normalize(desired.x, desired.y);
-    if (!direction.x && !direction.y) return;
-    const speed = enemy.speed * speedScale * dt;
+  enemyNavigationContext() {
+    const obstacles = this.arenaStage.obstacles;
+    if (!this.enemyNavigationCache || this.enemyNavigationCache.stageId !== this.arenaStage.id) {
+      this.enemyNavigationCache = {
+        stageId: this.arenaStage.id,
+        waypointsByRadius: new Map(),
+      };
+    }
+    return {
+      bounds: this.arenaStage.bounds,
+      obstacles,
+      waypointsForRadius: (radius) => {
+        const key = Math.round(radius);
+        if (!this.enemyNavigationCache.waypointsByRadius.has(key)) {
+          this.enemyNavigationCache.waypointsByRadius.set(
+            key,
+            buildNavigationWaypoints(obstacles, this.arenaStage.bounds, radius),
+          );
+        }
+        return this.enemyNavigationCache.waypointsByRadius.get(key);
+      },
+    };
+  }
+
+  moveEnemyWithCollision(enemy, direction, speed, dt) {
+    if (speed <= 0 || (!direction.x && !direction.y)) return false;
+    const moveX = direction.x * speed;
+    const moveY = direction.y * speed;
     const canMove = (dx, dy) => !this.arenaStage.obstacles.some((rect) => circleRectOverlap({
       x: enemy.x + dx,
       y: enemy.y + dy,
       radius: enemy.radius,
     }, rect));
-    const moveX = direction.x * speed;
-    const moveY = direction.y * speed;
+
     if (canMove(moveX, moveY)) {
       enemy.x += moveX;
       enemy.y += moveY;
-      return;
+      markEnemyNavigationBlocked(enemy, false, dt);
+      return true;
     }
 
-    const side = enemy.id % 2 === 0 ? 1 : -1;
-    const strafe = { x: -direction.y * side, y: direction.x * side };
-    if (canMove(strafe.x * speed, strafe.y * speed)) {
-      enemy.x += strafe.x * speed;
-      enemy.y += strafe.y * speed;
-      return;
+    let moved = false;
+    if (Math.abs(moveX) >= Math.abs(moveY)) {
+      if (canMove(moveX, 0)) {
+        enemy.x += moveX;
+        moved = true;
+      }
+      if (canMove(0, moveY)) {
+        enemy.y += moveY;
+        moved = true;
+      }
+    } else {
+      if (canMove(0, moveY)) {
+        enemy.y += moveY;
+        moved = true;
+      }
+      if (canMove(moveX, 0)) {
+        enemy.x += moveX;
+        moved = true;
+      }
     }
-    if (canMove(moveX, 0)) enemy.x += moveX;
-    if (canMove(0, moveY)) enemy.y += moveY;
+    markEnemyNavigationBlocked(enemy, !moved, dt);
+    return moved;
+  }
+
+  steerEnemy(enemy, desired, dt, speedScale = 1, options = {}) {
+    let direction = normalize(desired.x, desired.y);
+    if (!direction.x && !direction.y) return;
+    const target = options.target || this.player;
+    const behavior = options.behavior || 'direct';
+    const toTarget = normalize(target.x - enemy.x, target.y - enemy.y);
+    const targetIntent = direction.x * toTarget.x + direction.y * toTarget.y;
+    const shouldNavigate = behavior !== 'direct' && targetIntent > 0.18;
+
+    if (shouldNavigate) {
+      const context = this.enemyNavigationContext();
+      const navigation = navigationTargetForEnemy(enemy, target, {
+        bounds: context.bounds,
+        obstacles: context.obstacles,
+        waypoints: context.waypointsForRadius(enemy.radius),
+      }, dt);
+      if (!navigation.direct) {
+        const routed = normalize(navigation.target.x - enemy.x, navigation.target.y - enemy.y);
+        if (routed.x || routed.y) direction = routed;
+      }
+    } else if (behavior === 'direct' && hasClearPath(enemy, target, this.arenaStage.obstacles, enemy.radius)) {
+      resetEnemyNavigation(enemy);
+    }
+
+    const speed = enemy.speed * speedScale * dt;
+    this.moveEnemyWithCollision(enemy, direction, speed, dt);
   }
 
   updateEnemies(dt) {
@@ -739,13 +817,20 @@ export class OneBulletGame {
       else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
       else {
         const currentDistance = distance(enemy, this.player);
-        const orbit = enemy.type === 'scout' ? 0.36 + Math.sin(enemy.phase) * 0.18 : enemy.type === 'brute' ? 0.12 : 0.22;
-        const pressure = enemy.type === 'scout' && currentDistance < 185 ? -0.22 : 1;
+        const contactDistance = this.player.radius + enemy.radius;
+        const orbit = currentDistance <= contactDistance + 34
+          ? 0
+          : enemy.type === 'scout'
+            ? 0.2 + Math.sin(enemy.phase) * 0.08
+            : enemy.type === 'brute'
+              ? 0.04
+              : 0.12;
+        const pressure = currentDistance <= contactDistance ? 0.35 : 1;
         const control = enemy.staggerTime > 0 ? 0.35 : 1;
         this.steerEnemy(enemy, {
           x: toPlayer.x * pressure - toPlayer.y * orbit,
           y: toPlayer.y * pressure + toPlayer.x * orbit,
-        }, dt, control);
+        }, dt, control, { behavior: 'pursuit', target: this.player });
       }
       this.constrainCombatCircle(enemy);
       if (enemy.spawnTime <= 0 && circleOverlap(enemy, this.player, -2)) this.damagePlayer(enemy.x, enemy.y);

@@ -1,4 +1,5 @@
-import { circleRectOverlap, distance } from './arena.js';
+import { circleRectOverlap, clamp, distance } from './arena.js';
+import { findNavigationPath } from './enemy-navigation.js';
 
 export function buildSpawnCandidates(bounds, wave = 1) {
   const padding = 66;
@@ -38,6 +39,24 @@ export function selectSpawnPoint({
   sanitize = (point) => point,
 }) {
   const candidates = buildSpawnCandidates(bounds, wave);
+  const safeWave = Math.max(1, Math.trunc(Number(wave) || 1));
+  const idealDistance = safeWave >= 20 ? 560 : safeWave >= 10 ? 500 : 410;
+  const maxEngagementDistance = safeWave >= 25 ? 820 : safeWave >= 15 ? 720 : 620;
+
+  if (player) {
+    const angles = [0, Math.PI, Math.PI / 2, 3 * Math.PI / 2, Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4];
+    const rotation = ((seed + safeWave * 3) % angles.length + angles.length) % angles.length;
+    for (const radius of [idealDistance, idealDistance + 130, Math.max(310, idealDistance - 120)]) {
+      for (let index = 0; index < angles.length; index += 1) {
+        const angle = angles[(index + rotation) % angles.length];
+        candidates.push({
+          x: clamp(player.x + Math.cos(angle) * radius, bounds.x + 66, bounds.x + bounds.w - 66),
+          y: clamp(player.y + Math.sin(angle) * radius, bounds.y + 66, bounds.y + bounds.h - 66),
+        });
+      }
+    }
+  }
+
   let best = null;
   let bestScore = -Infinity;
 
@@ -45,7 +64,8 @@ export function selectSpawnPoint({
     const raw = candidates[(Math.max(0, seed) + offset) % candidates.length];
     const point = sanitize(raw, radius);
     const probe = { ...point, radius };
-    if (distance(point, player) < 230) continue;
+    const playerDistance = distance(point, player);
+    if (playerDistance < 245) continue;
     if (obstacles.some((rect) => circleRectOverlap(probe, rect))) continue;
     if (safeZones.some((rect) => circleRectOverlap(probe, rect))) continue;
 
@@ -54,7 +74,19 @@ export function selectSpawnPoint({
       : 999;
     if (nearestEnemy < 20) continue;
 
-    const score = distance(point, player) + Math.min(300, nearestEnemy) * 1.4;
+    const route = findNavigationPath({
+      start: point,
+      target: player,
+      obstacles,
+      bounds,
+      radius,
+    });
+    if (!route) continue;
+    const routeDistance = route.distance;
+    const routePenalty = Math.max(0, routeDistance - maxEngagementDistance) * 1.6;
+    const bandPenalty = Math.abs(playerDistance - idealDistance) * 1.15;
+    const spacingReward = Math.min(320, nearestEnemy) * 1.25;
+    const score = spacingReward - bandPenalty - routePenalty;
     if (score > bestScore) {
       best = point;
       bestScore = score;

@@ -194,8 +194,8 @@ test('sniper and charger telegraphs lock their direction before execution', asyn
     game.enemyShots = [];
 
     game.player.x = 800;
-    game.player.y = 300;
-    const sniper = game.spawnEnemy('sniper', 0, { point: { x: 400, y: 300 } });
+    game.player.y = 200;
+    const sniper = game.spawnEnemy('sniper', 0, { point: { x: 400, y: 200 } });
     sniper.spawnTime = 0;
     sniper.attackCooldown = 0;
     game.updateSniper(sniper, { x: 1, y: 0 }, { shotSpeed: 1 }, 0.01);
@@ -205,7 +205,9 @@ test('sniper and charger telegraphs lock their direction before execution', asyn
     game.updateSniper(sniper, { x: 0, y: 1 }, { shotSpeed: 1 }, 0.6);
     const shot = game.enemyShots[0];
 
-    const charger = game.spawnEnemy('charger', 1, { point: { x: 700, y: 300 } });
+    game.player.x = 400;
+    game.player.y = 200;
+    const charger = game.spawnEnemy('charger', 1, { point: { x: 700, y: 200 } });
     charger.spawnTime = 0;
     charger.attackCooldown = 0;
     game.updateCharger(charger, { x: -1, y: 0 }, 0.01);

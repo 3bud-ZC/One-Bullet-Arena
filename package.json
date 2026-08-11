@@ -1,6 +1,6 @@
 {
   "name": "one-bullet-arena",
-  "version": "3.8.0-smooth-runtime",
+  "version": "3.9.0-command-deck",
   "private": true,
   "type": "module",
   "description": "A smooth one-bullet tactical arcade game with fixed-step simulation, adaptive HiDPI Canvas rendering, and semantic DOM/SVG UI.",

@@ -4,6 +4,33 @@ import { iconSvg } from './icons.js';
 
 const STAGE_WAVES = Object.freeze([1, 5, 10, 15, 20, 25, 30, 35]);
 
+// Bounce vertices for the sector ricochet track.
+//
+// The x positions are the centres of eight equal columns so the label grid
+// below lines up with them exactly. The SVG stretches with
+// preserveAspectRatio="none" — fine for a polyline, but it would squash a
+// circle into an ellipse, so the node markers are positioned HTML rather than
+// SVG shapes and carry these coordinates as percentages.
+const SPINE_VIEWBOX = Object.freeze({ width: 720, height: 104 });
+const SPINE_COLUMN = SPINE_VIEWBOX.width / STAGE_WAVES.length;
+const SPINE_POINTS = Object.freeze(STAGE_WAVES.map((_, index) => Object.freeze({
+  x: SPINE_COLUMN * (index + 0.5),
+  y: index % 2 === 0 ? 76 : 28,
+})));
+
+function spinePercent(point) {
+  return {
+    left: `${((point.x / SPINE_VIEWBOX.width) * 100).toFixed(3)}%`,
+    top: `${((point.y / SPINE_VIEWBOX.height) * 100).toFixed(3)}%`,
+  };
+}
+
+function spinePathTo(index) {
+  return SPINE_POINTS.slice(0, Math.max(1, index + 1))
+    .map((point, position) => `${position ? 'L' : 'M'}${point.x} ${point.y}`)
+    .join(' ');
+}
+
 const UPGRADE_ICONS = Object.freeze({
   'heavy-shot': 'target',
   'bullet-velocity': 'bullet',
@@ -95,16 +122,26 @@ export class DomUiController {
   }
 
   renderShell() {
-    const progressionNodes = STAGE_WAVES.map((wave, index) => {
-      const x = 40 + index * (620 / (STAGE_WAVES.length - 1));
-      return `<circle class="progression-node" data-stage-node="${index}" cx="${x.toFixed(2)}" cy="24" r="6"></circle>`;
+    // The sector track is drawn as a real ricochet: eight bounce vertices
+    // alternating between the top and bottom of the band, joined by straight
+    // segments. Sector progress and the bullet's flight path are the same line.
+    const spine = SPINE_POINTS.map((point, index) => `${index ? 'L' : 'M'}${point.x} ${point.y}`).join(' ');
+
+    const progressionNodes = SPINE_POINTS.map((point, index) => {
+      const { left, top } = spinePercent(point);
+      return `<span class="progression-node" data-stage-node="${index}" style="left:${left};top:${top}"></span>`;
     }).join('');
 
-    const progressionLabels = STAGE_WAVES.map((wave, index) => `
+    // Labels sit on the same side as their bounce vertex, so a sector that
+    // peaks at the top of the track is captioned above it and one that dips is
+    // captioned below. A single flat row would leave half of them stranded.
+    const progressionLabel = (index) => `
       <span class="progression-label" data-stage-label="${index}">
-        <strong>${String(index + 1).padStart(2, '0')}</strong>
+        <strong dir="ltr">${String(index + 1).padStart(2, '0')}</strong>
         <span data-stage-name="${index}"></span>
-      </span>`).join('');
+      </span>`;
+    const labelsAbove = STAGE_WAVES.map((_, index) => index).filter((index) => index % 2 === 1).map(progressionLabel).join('');
+    const labelsBelow = STAGE_WAVES.map((_, index) => index).filter((index) => index % 2 === 0).map(progressionLabel).join('');
 
     this.root.innerHTML = `
       <div class="ambient-ui" aria-hidden="true">
@@ -140,139 +177,112 @@ export class DomUiController {
       </div>
 
       <section class="ui-screen dashboard-screen" data-screen="menu" aria-labelledby="dashboard-title">
+        <div class="arena-backdrop" aria-hidden="true">
+          <div class="arena-backdrop__floor"></div>
+          <div class="arena-backdrop__grid"></div>
+          <div class="arena-backdrop__vignette"></div>
+        </div>
+
         <div class="dashboard">
           <header class="brand-bar">
-            <div class="brand-lockup">
-              <div class="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 56 56" fill="none">
-                  <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="1.2" opacity=".42"/>
-                  <circle cx="28" cy="28" r="9" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M28 5v9M28 42v9M5 28h9M42 28h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M21 34 35 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="m33 19 4-1-1 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="brand-copy">
-                <p class="eyebrow" data-i18n="brand.shortMantra"></p>
-                <h1 id="dashboard-title" data-i18n="brand.name"></h1>
-                <div class="brand-meta">
-                  <span>ONE BULLET SYSTEM</span>
-                  <span class="brand-version">v${RELEASE_VERSION}</span>
-                </div>
-              </div>
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 56 56" fill="none">
+                <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="1.2" opacity=".38"/>
+                <circle cx="28" cy="28" r="9" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M28 5v7M28 44v7M5 28h7M44 28h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <path class="brand-mark__shot" d="M19 36 37 18" stroke-width="2.6" stroke-linecap="round"/>
+              </svg>
             </div>
+            <h1 id="dashboard-title" class="brand-title">
+              <span class="brand-title__line" data-i18n="brand.line1"></span>
+              <span class="brand-title__line brand-title__line--accent" data-i18n="brand.line2"></span>
+            </h1>
+            <p class="brand-mantra" data-i18n="brand.shortMantra"></p>
           </header>
 
-          <div class="dashboard-grid">
-            <article class="run-hero surface surface--hero">
-              <div class="run-hero__header">
-                <div>
-                  <p class="eyebrow eyebrow--accent" data-bind="run-kicker"></p>
-                  <h2 data-bind="run-sector">Central Room</h2>
-                </div>
+          <div class="deck">
+            <section class="run-readout" aria-labelledby="run-readout-title">
+              <div class="run-readout__head">
+                <p class="eyebrow eyebrow--accent" id="run-readout-title" data-bind="run-kicker"></p>
                 <div class="checkpoint-pill" data-bind-class="checkpoint-pill">
                   <span>${iconSvg('checkpoint')}</span>
                   <span data-bind="checkpoint-status"></span>
                 </div>
               </div>
 
-              <div class="run-hero__center">
-                <div class="bullet-orbit" aria-hidden="true">
-                  <svg viewBox="0 0 300 220" fill="none">
-                    <ellipse cx="150" cy="110" rx="116" ry="70" class="bullet-orbit__ring"/>
-                    <ellipse cx="150" cy="110" rx="76" ry="46" class="bullet-orbit__ring bullet-orbit__ring--inner"/>
-                    <path d="M42 145c52-80 107-103 215-68" class="bullet-orbit__trajectory"/>
-                    <circle cx="150" cy="110" r="28" class="bullet-orbit__core"/>
-                    <path d="m139 122 31-31" class="bullet-orbit__bullet"/>
-                    <path d="m165 89 9-2-2 9" class="bullet-orbit__bullet"/>
-                  </svg>
+              <div class="figures">
+                <div class="figure">
+                  <span class="figure__label" data-i18n="stat.wave"></span>
+                  <strong class="figure__value" data-bind="hero-wave" dir="ltr">1</strong>
                 </div>
-
-                <div class="run-primary-stats" aria-label="Current run">
-                  <div class="hero-stat">
-                    <span data-i18n="stat.wave"></span>
-                    <strong data-bind="hero-wave" dir="ltr">1</strong>
-                  </div>
-                  <div class="hero-stat hero-stat--score">
-                    <span data-i18n="stat.score"></span>
-                    <strong data-bind="hero-score" dir="ltr">0</strong>
-                  </div>
+                <div class="figure figure--score">
+                  <span class="figure__label" data-i18n="stat.score"></span>
+                  <strong class="figure__value" data-bind="hero-score" dir="ltr">0</strong>
                 </div>
               </div>
 
-              <div class="run-stat-strip">
-                ${metricTemplate('upgrade', 'stat.upgrades', 'hero-upgrades')}
-                ${metricTemplate('checkpoint', 'stat.checkpoint', 'hero-checkpoint-wave')}
-                ${metricTemplate('sector', 'stat.sector', 'hero-sector-number')}
-              </div>
-
-              <div class="run-actions">
-                <button class="button button--primary" type="button" data-action="primary-run" data-interactive>
-                  <span class="button__icon" data-primary-icon>${iconSvg('bullet')}</span>
-                  <span class="button__content">
-                    <strong data-bind="primary-label"></strong>
-                    <small data-bind="primary-hint"></small>
-                  </span>
-                  <span class="button__chevron">${iconSvg('chevron')}</span>
-                </button>
-
-                <div class="run-actions__secondary">
-                  <button class="button button--secondary" type="button" data-action="new-run" data-interactive>
-                    <span class="button__icon">${iconSvg('newRun')}</span>
-                    <span data-i18n="menu.newRun"></span>
-                  </button>
-                  <button class="button button--danger button--quiet" type="button" data-action="delete-checkpoint" data-delete-button data-interactive>
-                    <span class="button__icon">${iconSvg('delete')}</span>
-                    <span data-bind="delete-label"></span>
-                  </button>
+              <dl class="ledger">
+                <div class="ledger__item">
+                  <dt data-i18n="stat.upgrades"></dt>
+                  <dd data-bind="hero-upgrades" dir="ltr">0</dd>
                 </div>
-              </div>
-            </article>
-
-            <aside class="run-snapshot surface">
-              <div class="section-heading">
-                <div>
-                  <p class="eyebrow" data-i18n="menu.runSnapshot"></p>
-                  <h2 data-bind="snapshot-title"></h2>
+                <div class="ledger__item">
+                  <dt data-i18n="stat.bestWave"></dt>
+                  <dd data-bind="record-best-wave" dir="ltr">0</dd>
                 </div>
-                <span class="snapshot-status-dot" data-snapshot-dot aria-hidden="true"></span>
-              </div>
+                <div class="ledger__item">
+                  <dt data-i18n="stat.highScore"></dt>
+                  <dd data-bind="record-high-score" dir="ltr">0</dd>
+                </div>
+              </dl>
+            </section>
 
-              <div class="snapshot-metrics">
-                ${metricTemplate('wave', 'stat.wave', 'snapshot-wave')}
-                ${metricTemplate('score', 'stat.score', 'snapshot-score')}
-                ${metricTemplate('upgrade', 'stat.upgrades', 'snapshot-upgrades')}
-                ${metricTemplate('wave', 'stat.bestWave', 'snapshot-best-wave')}
-                ${metricTemplate('score', 'stat.highScore', 'snapshot-high-score')}
-              </div>
-
-              <div class="sector-card">
-                <span class="sector-card__icon">${iconSvg('sector')}</span>
-                <span class="sector-card__copy">
-                  <small data-i18n="stat.sector"></small>
-                  <strong data-bind="snapshot-sector"></strong>
+            <section class="launch" aria-label="Run controls">
+              <button class="launch__primary" type="button" data-action="primary-run" data-interactive>
+                <span class="launch__icon" data-primary-icon>${iconSvg('bullet')}</span>
+                <span class="launch__copy">
+                  <strong data-bind="primary-label"></strong>
+                  <small data-bind="primary-hint"></small>
                 </span>
-                <span class="sector-card__index" data-bind="snapshot-sector-index" dir="ltr">01 / 08</span>
+                <span class="launch__chevron">${iconSvg('chevron')}</span>
+              </button>
+
+              <div class="launch__secondary">
+                <button class="button button--ghost" type="button" data-action="new-run" data-interactive>
+                  <span class="button__icon">${iconSvg('newRun')}</span>
+                  <span data-i18n="menu.newRun"></span>
+                </button>
+                <button class="button button--ghost button--danger" type="button" data-action="delete-checkpoint" data-delete-button data-interactive>
+                  <span class="button__icon">${iconSvg('delete')}</span>
+                  <span data-bind="delete-label"></span>
+                </button>
               </div>
-            </aside>
+
+              <p class="launch__sector">
+                <span class="launch__sector-index" data-bind="sector-index" dir="ltr">01 / 08</span>
+                <span data-bind="run-sector"></span>
+              </p>
+            </section>
           </div>
 
-          <section class="world-progression surface surface--flat" aria-labelledby="world-progress-title">
-            <div class="section-heading section-heading--compact">
-              <div>
-                <p class="eyebrow" id="world-progress-title" data-i18n="menu.worldProgress"></p>
-                <strong data-bind="progress-status"></strong>
-              </div>
-              <span class="progression-counter" data-bind="progress-counter" dir="ltr"></span>
+          <section class="sector-track" aria-labelledby="world-progress-title">
+            <div class="sector-track__head">
+              <p class="eyebrow" id="world-progress-title" data-i18n="menu.worldProgress"></p>
+              <strong data-bind="progress-status"></strong>
+              <span class="sector-track__counter"><span data-bind="progress-counter" dir="ltr"></span></span>
             </div>
 
             <div class="progression-visual">
-              <svg class="progression-svg" viewBox="0 0 700 48" preserveAspectRatio="none" aria-hidden="true">
-                <path class="progression-line progression-line--base" d="M40 24H660"></path>
-                <path class="progression-line progression-line--active" data-progress-line d="M40 24H40"></path>
-                ${progressionNodes}
+              <div class="progression-labels progression-labels--above">${labelsAbove}</div>
+              <svg class="progression-svg" viewBox="0 0 ${SPINE_VIEWBOX.width} ${SPINE_VIEWBOX.height}" preserveAspectRatio="none" aria-hidden="true">
+                <path class="progression-line progression-line--base" d="${spine}"></path>
+                <path class="progression-line progression-line--active" data-progress-line d="${spinePathTo(0)}"></path>
               </svg>
-              <div class="progression-labels">${progressionLabels}</div>
+              <div class="progression-markers" aria-hidden="true">
+                ${progressionNodes}
+                <span class="progression-bullet" data-progress-bullet style="left:${spinePercent(SPINE_POINTS[0]).left};top:${spinePercent(SPINE_POINTS[0]).top}"></span>
+              </div>
+              <div class="progression-labels progression-labels--below">${labelsBelow}</div>
             </div>
           </section>
         </div>
@@ -581,9 +591,9 @@ export class DomUiController {
     setText(this.bindings.get('checkpoint-status'), i18n.t(hasCheckpoint ? 'menu.checkpointReady' : 'menu.noCheckpoint'));
     setText(this.bindings.get('hero-wave'), formatNumber(source.wave));
     setText(this.bindings.get('hero-score'), formatNumber(source.score));
+    // The wave figure already reports the checkpoint wave whenever a checkpoint
+    // exists, so the ledger deliberately does not repeat it.
     setText(this.bindings.get('hero-upgrades'), formatNumber(source.upgrades));
-    setText(this.bindings.get('hero-checkpoint-wave'), hasCheckpoint ? formatNumber(source.checkpointWave) : '—');
-    setText(this.bindings.get('hero-sector-number'), String(stageIndex + 1).padStart(2, '0'));
 
     setText(this.bindings.get('primary-label'), i18n.t(hasCheckpoint ? 'menu.continue' : 'menu.start'));
     setText(this.bindings.get('primary-hint'), i18n.t(hasCheckpoint ? 'menu.continueHint' : 'menu.actionHint'));
@@ -596,17 +606,10 @@ export class DomUiController {
     setHidden(deleteButton, !hasCheckpoint);
     deleteButton?.classList.toggle('is-confirming', deleting);
 
-    setText(this.bindings.get('snapshot-title'), hasCheckpoint ? i18n.t('menu.savedLocally') : i18n.t('menu.freshRun'));
-    setText(this.bindings.get('snapshot-wave'), formatNumber(source.wave));
-    setText(this.bindings.get('snapshot-score'), formatNumber(source.score));
-    setText(this.bindings.get('snapshot-upgrades'), formatNumber(source.upgrades));
-    setText(this.bindings.get('snapshot-best-wave'), formatNumber(this.game.highWave));
-    setText(this.bindings.get('snapshot-high-score'), formatNumber(this.game.highScore));
-    setText(this.bindings.get('snapshot-sector'), sectorName);
-    setText(this.bindings.get('snapshot-sector-index'), `${String(stageIndex + 1).padStart(2, '0')} / 08`);
+    setText(this.bindings.get('record-best-wave'), formatNumber(this.game.highWave));
+    setText(this.bindings.get('record-high-score'), formatNumber(this.game.highScore));
+    setText(this.bindings.get('sector-index'), `${String(stageIndex + 1).padStart(2, '0')} / 08`);
 
-    const snapshotDot = this.root.querySelector('[data-snapshot-dot]');
-    snapshotDot?.classList.toggle('is-active', hasCheckpoint);
     this.root.querySelector('[data-bind-class="checkpoint-pill"]')?.classList.toggle('is-active', hasCheckpoint);
     this.syncProgression();
   }
@@ -614,17 +617,21 @@ export class DomUiController {
   syncProgression(force = false) {
     const source = this.menuSource();
     const current = stageIndexForWave(source.wave);
-    const start = 40;
-    const end = 660;
-    const currentX = start + (end - start) * (current / (STAGE_WAVES.length - 1));
+
+    // The travelled part of the ricochet ends on the current sector's vertex.
     const line = this.root.querySelector('[data-progress-line]');
-    if (line) line.setAttribute('d', `M${start} 24H${currentX.toFixed(2)}`);
+    if (line) line.setAttribute('d', spinePathTo(current));
+
+    const bullet = this.root.querySelector('[data-progress-bullet]');
+    if (bullet) {
+      const { left, top } = spinePercent(SPINE_POINTS[current]);
+      bullet.style.left = left;
+      bullet.style.top = top;
+    }
 
     for (let index = 0; index < STAGE_WAVES.length; index += 1) {
       const node = this.root.querySelector(`[data-stage-node="${index}"]`);
       const label = this.root.querySelector(`[data-stage-label="${index}"]`);
-      const x = start + (end - start) * (index / (STAGE_WAVES.length - 1));
-      node?.setAttribute('cx', x.toFixed(2));
       node?.classList.toggle('is-complete', index < current);
       node?.classList.toggle('is-current', index === current);
       label?.classList.toggle('is-complete', index < current);

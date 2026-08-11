@@ -48,31 +48,68 @@ self.addEventListener('message', (event) => {
   event.ports?.[0]?.postMessage(RELEASE);
 });
 
+const SHELL_DOCUMENT = './index.html';
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, './index.html'));
+    event.respondWith(navigationStrategy(event));
     return;
   }
-  event.respondWith(networkFirst(request));
+  event.respondWith(assetStrategy(request));
 });
 
-async function networkFirst(request, fallbackPath = null) {
+// Static assets are immutable within a release: every cache is keyed by the
+// release version and activate() deletes the others, so a hit is always current
+// and never needs revalidating. These previously went network-first while also
+// bypassing the HTTP cache, so a fully cached repeat visit still waited on ~45
+// round trips before the dashboard could paint.
+async function assetStrategy(request) {
   const cache = await caches.open(CACHE_NAME);
+  // ignoreSearch so the shell entry './src/main.js' answers the versioned
+  // './src/main.js?v=<release>' that index.html actually requests.
+  const cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) return cached;
+
   try {
-    const response = await fetch(request, { cache: 'reload' });
+    const response = await fetch(request);
     if (response.ok) await cache.put(request, response.clone());
     return response;
   } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    if (fallbackPath) {
-      const fallback = await cache.match(fallbackPath);
-      if (fallback) return fallback;
-    }
+    return Response.error();
+  }
+}
+
+// Stale-while-revalidate. The cached shell is returned immediately so a repeat
+// visit never blocks on the network, and the refresh happens afterwards.
+//
+// This does not weaken update delivery: the browser re-checks sw.js and its
+// imported release-config.js on every navigation, and a release bump changes
+// that file. The new worker then installs a new versioned cache, calls
+// skipWaiting(), and the controllerchange handler in main.js reloads the page.
+async function navigationStrategy(event) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(SHELL_DOCUMENT, { ignoreSearch: true });
+
+  const network = fetch(event.request)
+    .then(async (response) => {
+      if (response.ok) await cache.put(SHELL_DOCUMENT, response.clone());
+      return response;
+    });
+
+  if (cached) {
+    // respondWith only keeps the worker alive until the response resolves, so
+    // the refresh needs waitUntil or it can be killed before it writes back.
+    event.waitUntil(network.catch(() => {}));
+    return cached;
+  }
+
+  try {
+    return await network;
+  } catch {
     return Response.error();
   }
 }

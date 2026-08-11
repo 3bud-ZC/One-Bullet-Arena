@@ -1,46 +1,39 @@
 @media (max-width: 1180px) {
   .dashboard { width: min(1120px, calc(100vw - 42px)); }
-  .dashboard-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr); }
-  .brand-bar { padding-inline-end: 500px; }
-  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.4fr); }
+  .deck { grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr); gap: clamp(16px, 2.6vw, 32px); }
+  .brand-bar { padding-inline-end: 340px; }
   .utility-button__label,
   .language-control__label { display: none; }
   .utility-button { width: 38px; padding: 0; justify-content: center; }
   .language-control { padding-inline: 5px; }
-  .run-actions { grid-template-columns: 1fr minmax(205px, 0.62fr); }
-  html[dir="rtl"] .run-actions { grid-template-columns: minmax(205px, 0.62fr) 1fr; }
-  .progression-label span { font-size: 0.63rem; }
+  .progression-label span { font-size: 0.62rem; }
 }
 
+/* Laptops: trade vertical air, not structure. */
 @media (max-height: 820px) and (min-width: 901px) {
-  .dashboard { padding-block: 18px; gap: 14px; }
-  .brand-bar { min-height: 50px; }
-  .brand-mark { width: 42px; height: 42px; }
-  .brand-meta { display: none; }
-  .dashboard-grid { gap: 14px; }
-  .run-hero,
-  .run-snapshot { min-height: 0; }
-  .run-hero { padding: 19px 22px; gap: 12px; }
-  .run-hero__center { min-height: 130px; }
-  .bullet-orbit { width: 290px; }
-  .run-snapshot { padding: 19px 22px; gap: 12px; }
-  .snapshot-metrics .metric { min-height: 38px; }
-  .sector-card { min-height: 65px; padding: 11px; }
-  .world-progression { padding-block: 12px 13px; }
-  .progression-svg { height: 25px; }
+  .dashboard { padding-block: 16px; gap: 16px; }
+  .brand-mantra { display: none; }
+  .figure__value { font-size: clamp(2.6rem, 1.6rem + 3.6vw, 4.4rem); }
+  .progression-svg { height: 54px; }
+}
+
+/* Single column once the two decks would each be too narrow to read. */
+@media (max-width: 860px) and (orientation: portrait) {
+  .deck { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .brand-bar { padding-inline-end: 0; }
+  .launch__sector { justify-content: flex-start; }
 }
 
 /* Intentional compact mobile-landscape composition */
 @media (max-width: 900px) and (orientation: landscape) {
   :root { --radius-lg: 12px; --radius-md: 10px; }
   .dashboard-screen { overflow: hidden; }
-  .dashboard { width: calc(100vw - 24px); height: 100%; min-height: 0; padding: 10px 0; grid-template-rows: 40px minmax(0, 1fr) 58px; gap: 7px; align-content: stretch; }
-  .brand-bar { min-height: 40px; padding-inline-end: 330px; }
-  .brand-lockup { gap: 9px; }
-  .brand-mark { width: 34px; height: 34px; }
-  .brand-copy .eyebrow,
-  .brand-meta { display: none; }
-  .brand-copy h1 { margin: 0; font-size: 1rem; line-height: 1; }
+  .dashboard { width: calc(100vw - 24px); height: 100%; min-height: 0; padding: 8px 0; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; align-content: stretch; }
+  .brand-bar { padding-inline-end: 300px; column-gap: 9px; }
+  .brand-mark { width: 28px; }
+  .brand-mantra { display: none; }
+  .brand-title { font-size: 1.02rem; line-height: 0.94; letter-spacing: -0.04em; grid-auto-flow: column; justify-content: start; column-gap: 0.32em; }
+  html[lang="ar"] .brand-title { font-size: 0.95rem; line-height: 1.1; }
   .game-ui-toolbar { top: 8px; inset-inline-end: 10px; }
   .utility-group { gap: 3px; padding: 3px; border-radius: 9px; }
   .utility-button,
@@ -52,60 +45,36 @@
   .language-control__icon { display: none; }
   .language-segment { min-width: 29px; height: 26px; padding: 0 5px; font-size: 0.62rem; }
   .settings-popover { top: 39px; width: 210px; padding: 10px; }
-  .dashboard-grid { grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.85fr); gap: 7px; }
-  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(250px, 0.85fr) minmax(0, 1.45fr); }
-  .run-hero,
-  .run-snapshot { min-height: 0; height: 100%; }
-  .run-hero { padding: 12px 13px; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 6px; }
-  .run-hero__header h2 { margin-top: 2px; font-size: 0.95rem; }
-  .run-hero__header .eyebrow { font-size: 0.58rem; }
-  .checkpoint-pill { min-height: 26px; padding-inline: 8px; gap: 5px; font-size: 0.58rem; }
+  .deck { grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.85fr); gap: 14px; align-items: center; }
+  .run-readout { gap: 8px; }
+  .run-readout__head .eyebrow { font-size: 0.58rem; }
+  .checkpoint-pill { min-height: 24px; padding-inline: 8px; gap: 5px; font-size: 0.56rem; }
   .checkpoint-pill .ui-icon { width: 0.9em; height: 0.9em; }
-  .run-hero__center { min-height: 0; place-items: stretch; }
-  .bullet-orbit { width: 210px; min-width: 0; left: 50%; top: 50%; translate: -50% -50%; opacity: 0.34; }
-  .run-primary-stats { align-items: center; gap: 18px; }
-  .hero-stat > span { font-size: 0.58rem; }
-  .hero-stat strong,
-  .hero-stat--score strong { font-size: clamp(1.55rem, 5.2vw, 2.2rem); line-height: 0.92; }
-  .run-stat-strip { gap: 3px; padding: 4px; border-radius: 8px; }
-  .run-stat-strip .metric { grid-template-columns: auto 1fr; gap: 5px; padding: 3px 5px; }
-  .run-stat-strip .metric__label { display: none; }
-  .run-stat-strip .metric__icon { font-size: 0.75rem; }
-  .run-stat-strip .metric__value { font-size: 0.66rem; }
-  .run-actions { grid-template-columns: 1fr auto; gap: 6px; }
-  html[dir="rtl"] .run-actions { grid-template-columns: auto 1fr; }
-  .button { min-height: 34px; padding: 6px 9px; border-radius: 8px; font-size: 0.68rem; }
-  .button--primary { min-height: 41px; padding-inline: 11px 9px; }
-  .button__content strong { font-size: 0.74rem; }
-  .button__content small { display: none; }
-  .button__icon { font-size: 0.9rem; }
-  .button__chevron { font-size: 0.8rem; }
-  .run-actions__secondary { display: flex; gap: 4px; }
-  .run-actions__secondary .button { width: 36px; padding: 0; }
-  .run-actions__secondary .button > span:not(.button__icon) { display: none; }
-  .run-snapshot { padding: 12px 13px; gap: 6px; }
-  .run-snapshot .section-heading h2 { margin-top: 2px; font-size: 0.86rem; }
-  .run-snapshot .section-heading .eyebrow { font-size: 0.56rem; }
-  .snapshot-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 8px; padding: 0; }
-  .snapshot-metrics .metric { min-height: 28px; grid-template-columns: auto 1fr auto; gap: 5px; padding: 2px 0; border-block-end: 0; }
-  .snapshot-metrics .metric__icon { font-size: 0.72rem; }
-  .snapshot-metrics .metric__label { font-size: 0.55rem; }
-  .snapshot-metrics .metric__value { font-size: 0.64rem; }
-  .sector-card { min-height: 43px; padding: 6px 8px; gap: 7px; }
-  .sector-card__icon { width: 28px; height: 28px; border-radius: 7px; font-size: 0.82rem; }
-  .sector-card__copy small { display: none; }
-  .sector-card__copy strong { font-size: 0.68rem; }
-  .sector-card__index { font-size: 0.57rem; }
-  .world-progression { padding: 7px 12px 6px; }
-  .world-progression .section-heading { display: none; }
-  .progression-visual { margin: 0; }
-  .progression-svg { height: 22px; }
-  .progression-node { r: 5; }
-  .progression-node.is-current { r: 6.5; }
-  .progression-labels { margin-top: -4px; }
-  .progression-label { gap: 0; font-size: 0; }
+  .figures { gap: 14px; }
+  .figure--score { padding-inline-start: 14px; }
+  .figure__label { font-size: 0.55rem; }
+  .figure__value { font-size: clamp(1.7rem, 6.4vw, 2.7rem); line-height: 0.86; }
+  .ledger dt { font-size: 0.54rem; }
+  .ledger dd { font-size: 0.72rem; }
+  .ledger__item { padding-inline: 8px; gap: 2px; }
+  .launch { gap: 6px; }
+  .launch__primary { min-height: 44px; padding: 8px 11px; gap: 9px; border-radius: 9px; }
+  .launch__copy strong { font-size: 0.76rem; }
+  .launch__copy small { display: none; }
+  .launch__icon { font-size: 1rem; }
+  .launch__chevron { font-size: 0.8rem; }
+  .launch__secondary { gap: 5px; }
+  .launch__sector { margin: 0; font-size: 0.6rem; gap: 6px; }
+  .launch__sector-index { font-size: 0.55rem; }
+  .button { min-height: 32px; padding: 6px 8px; border-radius: 8px; font-size: 0.64rem; }
+  .button__icon { font-size: 0.85rem; }
+  .sector-track { gap: 3px; }
+  .sector-track__head strong { display: none; }
+  .sector-track__head .eyebrow { font-size: 0.55rem; }
+  .progression-svg { height: 34px; }
+  .progression-label { gap: 0; }
   .progression-label span { display: none; }
-  .progression-label strong { font-size: 0.56rem; }
+  .progression-label strong { font-size: 0.55rem; }
   .hud-safe { grid-template-columns: 0.85fr 1.2fr 0.85fr; gap: 5px; padding: 7px 8px; }
   .hud-cluster,
   .hud-center { min-height: 49px; border-radius: 8px; background: rgba(2, 12, 19, 0.58); backdrop-filter: blur(7px); }
@@ -153,15 +122,14 @@
 }
 
 @media (max-width: 680px) and (orientation: landscape) {
-  .brand-bar { padding-inline-end: 260px; }
-  .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(200px, 0.8fr); }
-  html[dir="rtl"] .dashboard-grid { grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.2fr); }
-  .snapshot-metrics .metric__label { display: none; }
+  .brand-bar { padding-inline-end: 250px; }
+  .deck { grid-template-columns: minmax(0, 1fr) minmax(180px, 0.8fr); gap: 10px; }
+  .ledger__item { padding-inline: 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bullet-orbit__trajectory { stroke-dasharray: none; }
   .button:hover,
+  .launch__primary:hover,
   .upgrade-card:hover,
   .utility-button:hover { transform: none; }
 }

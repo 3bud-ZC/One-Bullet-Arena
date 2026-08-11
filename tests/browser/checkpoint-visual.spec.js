@@ -29,7 +29,7 @@ test('checkpoint dashboard uses v3.8 DOM presentation without changing saved-run
   await loadGame(page);
   await seedCheckpoint(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.8.0-smooth-runtime');
+  expect(snapshot.releaseVersion).toBe('3.9.0-command-deck');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.checkpointWave).toBe(6);
   expect(snapshot.checkpointAvailable).toBe(true);

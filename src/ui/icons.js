@@ -30,9 +30,12 @@ const ICON_PATHS = Object.freeze({
     '<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',
     '<path d="M10 11v5M14 11v5"/>',
   ],
+  // A round with its trail. The previous art here was a pencil outline, which
+  // read as "edit" on the one control that fires the game's only bullet.
   bullet: [
-    '<path d="M14.5 4.5 19.5 9.5 10 19H5v-5l9.5-9.5z"/>',
-    '<path d="m12.5 6.5 5 5"/>',
+    '<path d="M4 20 12.5 11.5"/>',
+    '<path d="M4.5 14.5 9.5 19.5"/>',
+    '<circle cx="16.5" cy="7.5" r="3.2" fill="currentColor" stroke="none"/>',
   ],
   wave: [
     '<path d="M3 13c2.2-4 4.4-4 6.6 0s4.4 4 6.6 0 4.4-4 5.8-1"/>',

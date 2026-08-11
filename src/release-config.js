@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.8.0-smooth-runtime';
+  const version = '3.9.0-command-deck';
   const release = Object.freeze({
     version,
     label: `v${version}`,

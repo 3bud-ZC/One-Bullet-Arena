@@ -1,4 +1,5 @@
-@import url("./styles/tokens.css");
+/* tokens.css is linked from index.html so it downloads in parallel with this
+   file instead of being discovered only after this one is parsed. */
 
 *,
 *::before,

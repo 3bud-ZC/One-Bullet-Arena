@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { RELEASE_CACHE_NAME, RELEASE_INFO, RELEASE_LABEL, RELEASE_VERSION } from '../src/release.js';
 
 test('release metadata exposes the canonical smooth runtime identity', () => {
-  assert.equal(RELEASE_VERSION, '3.8.0-smooth-runtime');
-  assert.equal(RELEASE_LABEL, 'v3.8.0-smooth-runtime');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.8.0-smooth-runtime');
+  assert.equal(RELEASE_VERSION, '3.9.0-command-deck');
+  assert.equal(RELEASE_LABEL, 'v3.9.0-command-deck');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.9.0-command-deck');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
   assert.equal(RELEASE_INFO.channel, 'smooth-runtime');
   assert.ok(Object.isFrozen(RELEASE_INFO));
@@ -52,11 +52,16 @@ test('package, fixed-step/HiDPI presentation, localization, and service worker c
   assert.match(indexSource, /smooth-runtime\.css/);
 });
 
-test('service worker keeps an explicit release handshake and network-first fallback', async () => {
+test('service worker keeps an explicit release handshake and a cache-first asset path', async () => {
   const workerSource = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   assert.match(workerSource, /GET_RELEASE_INFO/);
-  assert.match(workerSource, /fetch\(request, \{ cache: 'reload' \}\)/);
+  // Nothing on the startup path may block on the network when it is already
+  // cached: assets are cache-first and the navigation is stale-while-revalidate.
+  assert.match(workerSource, /cache\.match\(request, \{ ignoreSearch: true \}\)/);
+  assert.match(workerSource, /cache\.match\(SHELL_DOCUMENT, \{ ignoreSearch: true \}\)/);
+  assert.doesNotMatch(workerSource, /cache: 'reload'/);
+  assert.doesNotMatch(workerSource, /await withTimeout/);
   assert.match(mainSource, /updateViaCache: 'none'/);
   assert.match(mainSource, /registration\.update\(\)/);
   assert.match(mainSource, /controllerchange/);

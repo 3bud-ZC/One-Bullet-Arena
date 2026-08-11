@@ -8,6 +8,8 @@ export const LOCALES = Object.freeze({
 const EN = Object.freeze({
   'brand.name': 'ONE BULLET ARENA',
   'brand.title': 'One Bullet Arena',
+  'brand.line1': 'ONE BULLET',
+  'brand.line2': 'ARENA',
   'brand.mantra': 'ONE BULLET. ONE SHOT. RICOCHET. RECOVER. SURVIVE.',
   'brand.shortMantra': 'PRECISION. DODGE. SURVIVE.',
   'menu.continue': 'Continue Run',
@@ -206,6 +208,8 @@ const EN = Object.freeze({
 const AR = Object.freeze({
   'brand.name': 'ONE BULLET ARENA',
   'brand.title': 'حلبة الطلقة الواحدة',
+  'brand.line1': 'حلبة',
+  'brand.line2': 'الطلقة الواحدة',
   'brand.mantra': 'طلقة واحدة. إصابة واحدة. ارتداد. استعادة. نجاة.',
   'brand.shortMantra': 'الدقة • المراوغة • النجاة',
   'menu.continue': 'استكمال الجولة',

@@ -3,23 +3,148 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#02070c" />
+    <meta name="theme-color" content="#050a16" />
     <meta name="description" content="One Bullet Arena — one bullet, tactical ricochets, recovery, and an expanding survival arena." />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="One Bullet Arena" />
     <title>One Bullet Arena</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=3.8.0-smooth-runtime" />
-    <link rel="icon" href="./icons/app-icon.svg?v=3.8.0-smooth-runtime" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.8.0-smooth-runtime" />
-    <link rel="stylesheet" href="./game.css?v=3.8.0-smooth-runtime" />
-    <link rel="stylesheet" href="./styles/ui.css?v=3.8.0-smooth-runtime" />
-    <link rel="stylesheet" href="./styles/responsive.css?v=3.8.0-smooth-runtime" />
-    <link rel="stylesheet" href="./styles/polish.css?v=3.8.0-smooth-runtime" />
-    <link rel="stylesheet" href="./styles/smooth-runtime.css?v=3.8.0-smooth-runtime" />
+    <link rel="manifest" href="./manifest.webmanifest?v=3.9.0-command-deck" />
+    <link rel="icon" href="./icons/app-icon.svg?v=3.9.0-command-deck" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/app-icon.svg?v=3.9.0-command-deck" />
+
+    <!--
+      Boot styles are inlined so the branded loading state paints on the first
+      frame, before any stylesheet or module has arrived. It is removed by the
+      `data-game-state` attribute that the DOM UI sets on <body> once the
+      dashboard is live, so no extra script is needed to dismiss it.
+    -->
+    <style>
+      :root { color-scheme: dark; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: #050a16;
+        color: #dce8ed;
+        font-family: Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 22px;
+        background:
+          radial-gradient(120% 80% at 50% 42%, rgba(98, 213, 243, 0.07), transparent 62%),
+          linear-gradient(180deg, #071228 0%, #050a16 62%, #03060e 100%);
+        transition: opacity 320ms ease, visibility 320ms ease;
+      }
+      body[data-game-state] .boot { opacity: 0; visibility: hidden; }
+      .boot__mark { width: 46px; height: 46px; color: #62d5f3; }
+      .boot__mark svg { display: block; width: 100%; height: 100%; }
+      .boot__word {
+        margin: 0;
+        font-size: clamp(1.5rem, 1.1rem + 1.9vw, 2.9rem);
+        font-weight: 800;
+        line-height: 0.94;
+        letter-spacing: -0.045em;
+        text-align: center;
+        color: #f2f8fb;
+      }
+      .boot__word b { display: block; font-weight: 800; color: #62d5f3; }
+      .boot__track {
+        position: relative;
+        width: min(220px, 46vw);
+        height: 2px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: rgba(98, 213, 243, 0.16);
+      }
+      .boot__track::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inline-size: 38%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, transparent, #ffd441, transparent);
+        animation: boot-ricochet 1150ms ease-in-out infinite alternate;
+      }
+      @keyframes boot-ricochet { from { transform: translateX(-115%); } to { transform: translateX(275%); } }
+      @media (prefers-reduced-motion: reduce) {
+        .boot__track::after { animation: none; transform: translateX(0); inline-size: 100%; }
+      }
+    </style>
+
+    <!-- tokens.css is linked directly rather than @import-ed from game.css, which
+         made the browser parse game.css before it could even discover it. -->
+    <link rel="stylesheet" href="./styles/tokens.css?v=3.9.0-command-deck" />
+    <link rel="stylesheet" href="./game.css?v=3.9.0-command-deck" />
+    <link rel="stylesheet" href="./styles/ui.css?v=3.9.0-command-deck" />
+    <link rel="stylesheet" href="./styles/responsive.css?v=3.9.0-command-deck" />
+    <link rel="stylesheet" href="./styles/polish.css?v=3.9.0-command-deck" />
+    <link rel="stylesheet" href="./styles/smooth-runtime.css?v=3.9.0-command-deck" />
+
+    <!--
+      The runtime is a 22-module-deep inheritance chain, so the browser would
+      otherwise discover it one level per round trip. Preloading the graph up
+      front turns that waterfall into a single parallel batch. Sub-module
+      imports resolve without the ?v= query, so these hrefs must not carry it.
+    -->
+    <link rel="modulepreload" href="./src/release-config.js" />
+    <link rel="modulepreload" href="./src/release.js" />
+    <link rel="modulepreload" href="./src/i18n.js" />
+    <link rel="modulepreload" href="./src/core/ui-repair-runtime.js" />
+    <link rel="modulepreload" href="./src/core/production-art-runtime.js" />
+    <link rel="modulepreload" href="./src/core/unified-ui-runtime.js" />
+    <link rel="modulepreload" href="./src/core/world-expansion-runtime.js" />
+    <link rel="modulepreload" href="./src/core/dashboard-polish-runtime.js" />
+    <link rel="modulepreload" href="./src/core/visual-overhaul-runtime.js" />
+    <link rel="modulepreload" href="./src/core/world-2d-runtime.js" />
+    <link rel="modulepreload" href="./src/core/warden-runtime.js" />
+    <link rel="modulepreload" href="./src/core/checkpoint-runtime.js" />
+    <link rel="modulepreload" href="./src/core/checkpoint-store.js" />
+    <link rel="modulepreload" href="./src/core/combat-depth-runtime.js" />
+    <link rel="modulepreload" href="./src/core/event-runtime.js" />
+    <link rel="modulepreload" href="./src/core/event-bus.js" />
+    <link rel="modulepreload" href="./src/core/game-events.js" />
+    <link rel="modulepreload" href="./src/core/game-states.js" />
+    <link rel="modulepreload" href="./src/ui-layout-runtime.js" />
+    <link rel="modulepreload" href="./src/combat-feedback-runtime.js" />
+    <link rel="modulepreload" href="./src/visual-design-runtime.js" />
+    <link rel="modulepreload" href="./src/movement-hotfix-runtime.js" />
+    <link rel="modulepreload" href="./src/polish-runtime.js" />
+    <link rel="modulepreload" href="./src/game-runtime.js" />
+    <link rel="modulepreload" href="./src/game.js" />
+    <link rel="modulepreload" href="./src/enemy-navigation.js" />
+    <link rel="modulepreload" href="./src/arena.js" />
+    <link rel="modulepreload" href="./src/audio.js" />
+    <link rel="modulepreload" href="./src/game-data.js" />
+    <link rel="modulepreload" href="./src/input-controller.js" />
+    <link rel="modulepreload" href="./src/spawn-system.js" />
+    <link rel="modulepreload" href="./src/ui-renderer.js" />
+    <link rel="modulepreload" href="./src/ui/dom-ui.js" />
+    <link rel="modulepreload" href="./src/ui/icons.js" />
+    <link rel="modulepreload" href="./src/ui/dom-performance-bridge.js" />
+    <link rel="modulepreload" href="./src/performance/frame-pacer.js" />
+    <link rel="modulepreload" href="./src/performance/quality-manager.js" />
+    <link rel="modulepreload" href="./src/render/canvas-viewport.js" />
   </head>
   <body>
+    <div class="boot" role="status" aria-live="polite">
+      <span class="boot__mark" aria-hidden="true">
+        <svg viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="22" stroke="currentColor" stroke-width="1.2" opacity=".4" />
+          <circle cx="28" cy="28" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M21 34 35 20" stroke="#ffd441" stroke-width="2.4" stroke-linecap="round" />
+        </svg>
+      </span>
+      <p class="boot__word">ONE BULLET<b>ARENA</b></p>
+      <span class="boot__track" aria-hidden="true"></span>
+    </div>
+
     <main class="game-shell">
       <section class="game-frame" aria-label="One Bullet Arena">
         <div class="game-render-layer" aria-hidden="false">
@@ -36,6 +161,6 @@
       </p>
       <p id="game-status" class="visually-hidden" aria-live="polite"></p>
     </main>
-    <script type="module" src="./src/main.js?v=3.8.0-smooth-runtime"></script>
+    <script type="module" src="./src/main.js?v=3.9.0-command-deck"></script>
   </body>
 </html>

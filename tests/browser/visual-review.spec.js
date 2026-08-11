@@ -35,9 +35,9 @@ test('captures v3.8 dashboard and representative game-feel states', async ({ pag
   await loadGame(page, 'en');
 
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.8.0-smooth-runtime');
+  expect(menu.releaseVersion).toBe('3.9.0-command-deck');
   expect(menu.releaseChannel).toBe('smooth-runtime');
-  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.8.0-smooth-runtime');
+  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.9.0-command-deck');
   expect(menu.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(menu.combatDepthActive).toBe(true);
   expect(menu.checkpointProgressionActive).toBe(true);

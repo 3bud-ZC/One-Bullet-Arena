@@ -5,18 +5,105 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.8.0 — Smooth Runtime**
-- Canonical version: `3.8.0-smooth-runtime`
-- Canonical label: `v3.8.0-smooth-runtime`
+- Release: **v3.9.0 — Command Deck**
+- Canonical version: `3.9.0-command-deck`
+- Canonical label: `v3.9.0-command-deck`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.8.0-smooth-runtime`
+- Service Worker cache: `one-bullet-arena-v3.9.0-command-deck`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
-- Pull request: **#52 — merged**
-- Runtime merge commit: `e0db3466cafac5d265ca07b489cfdb90e7edee9c`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
-- Release status: **merged to main; production Pages convergence is the remaining deployment gate**
+
+## Dashboard redesign and startup optimisation - 2026-08-11 (v3.9.0)
+
+Scope was the main menu and the startup path only. Gameplay, checkpoints,
+progression, controls, localisation, the DOM/SVG UI architecture, and the Canvas
+runtime are unchanged.
+
+### Dashboard
+
+- The menu was a muted teal card grid that shared no visual language with the
+  game. Colour, backdrop, and motifs are now taken from the running game: the
+  backdrop uses the arena floor gradient drawn in `world-2d-runtime`, and cyan
+  `#62d5f3` / gold `#ffd441` are the canvas `ART` constants. Gold is reserved for
+  the bullet — the trajectory, the sector head, and the primary action.
+- Composition replaced, not restyled. Two large cards and a five-row metric list
+  gave way to a brand lockup, a two-figure run readout (wave and score set at
+  display scale with a hairline divider), a launch column, and the sector track.
+  No card chrome, and hierarchy comes from type scale rather than borders.
+- Signature element: world progression is drawn as one continuous **ricochet**.
+  Eight sector vertices alternate between the top and bottom of the band, joined
+  by straight segments; travelled segments are gold, the rest dashed and dim,
+  and the bullet head sits on the current sector. Sector captions sit on the same
+  side as their vertex. Progress and the bullet's flight path are the same line.
+- Sector markers are positioned HTML rather than SVG shapes. The track SVG
+  stretches with `preserveAspectRatio="none"`, which would otherwise squash the
+  circles into ellipses — the previous code worked around this by hiding the SVG
+  nodes and faking them at a fixed height, which a zigzag track cannot use.
+- Removed duplicated data: the ledger's `Checkpoint` figure always repeated the
+  wave figure, because the menu already sources its wave from the checkpoint.
+- Fixed the `bullet` icon, which was a pencil outline and read as "edit" on the
+  control that fires the game's only bullet.
+- Secondary actions are flex, so `New Run` fills the row when
+  `Delete Checkpoint` is hidden instead of leaving an empty half.
+
+### Startup
+
+Two independent bottlenecks were measured and fixed. Hosting stayed on GitHub
+Pages; neither cause was the host.
+
+1. **Service worker.** Every same-origin GET went network-first while also
+   bypassing the HTTP cache, so a fully warm repeat visit still waited on ~45
+   round trips before the dashboard could paint. Assets are now cache-first, and
+   because each cache is keyed by release version and `activate()` deletes the
+   others, a hit is always current. Matching uses `ignoreSearch` so shell entries
+   answer the `?v=` URLs `index.html` requests — previously they missed and every
+   asset was stored twice. Navigation is stale-while-revalidate.
+2. **Module waterfall.** The runtime is a 22-module-deep inheritance chain, so
+   the browser discovered roughly one level per round trip. `index.html` now
+   declares `modulepreload` for the 39-module graph, turning the waterfall into
+   one parallel batch. `tokens.css` moved from an `@import` inside `game.css` to
+   a direct `<link>` for the same reason.
+
+Update delivery is unchanged in strength: the browser still re-checks `sw.js`
+and its imported `release-config.js` on every navigation, and a release bump
+installs a new worker, a new cache, and triggers the existing `controllerchange`
+reload.
+
+A branded boot state is inlined in `index.html` — critical CSS and markup, no
+extra request — and is dismissed by the `data-game-state` attribute the DOM UI
+already sets, so no script is needed to remove it. It replaces the blank dark
+screen during whatever initialisation time remains.
+
+### Measurements
+
+Chromium, latency injected server-side so service-worker fetches are throttled
+too (CDP page throttling does not apply to them). "Dashboard usable" is when the
+menu has painted real localised content.
+
+| Scenario | FCP before | FCP after | Dashboard usable before | after |
+|---|---|---|---|---|
+| First visit, 0 ms RTT | 1432 ms | 84 ms | 1389 ms | 136 ms |
+| First visit, 300 ms RTT | 6316 ms | 692 ms | 6138 ms | 2877 ms |
+| Repeat visit, 0 ms RTT | 532 ms | 204 ms | 440 ms | 303 ms |
+| **Repeat visit, 300 ms RTT** | **5892 ms** | **196 ms** | **5815 ms** | **272 ms** |
+
+The warm repeat visit on a slow link — the case the report described — improved
+about 21×. First visit on a slow link is still ~2.9 s to interactive; that is
+request count against latency and would need bundling, which the project's
+no-build-step constraint rules out.
+
+### Verification
+
+- `npm run verify`: passed, **121/121** Node tests.
+- Full Playwright matrix (desktop Chromium, mobile landscape, Firefox, WebKit)
+  via `npx playwright test --workers=1`.
+- Screenshot review at 1440×900, 1280×720, and 740×360 mobile landscape, each in
+  English and Arabic and in both fresh-run and checkpoint states. No clipping,
+  overflow, or layout jumps. The RTL sector counter needed a fix: it carried
+  `dir="ltr"`, which made `margin-inline-start: auto` resolve against the
+  element's own direction and stop reaching the far edge.
 
 ## Enemy AI reliability pass - 2026-08-11
 

@@ -4,9 +4,11 @@
   --font-ui-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
   --font-ui: var(--font-ui-latin);
 
-  --bg-0: #02070c;
-  --bg-1: #041019;
-  --bg-2: #071722;
+  /* Backgrounds track the arena floor gradient drawn in world-2d-runtime so
+     the menu reads as the same place as the play field, not a separate app. */
+  --bg-0: #050a16;
+  --bg-1: #0b1428;
+  --bg-2: #121e35;
   --surface-0: rgba(3, 12, 19, 0.72);
   --surface-1: rgba(6, 18, 27, 0.78);
   --surface-2: rgba(9, 25, 36, 0.84);
@@ -21,11 +23,15 @@
   --text-soft: #9fb5bf;
   --text-muted: #738c98;
 
-  --cyan: #6dd7f2;
+  /* Cyan and gold are the canvas ART constants verbatim. --bullet is the live
+     bullet colour and is reserved for the bullet motif and the primary action;
+     --amber stays for incidental UI accents so the bullet keeps its meaning. */
+  --cyan: #62d5f3;
   --cyan-strong: #8ce5fb;
-  --cyan-soft: rgba(109, 215, 242, 0.14);
-  --amber: #e7b84d;
-  --amber-strong: #f4cf78;
+  --cyan-soft: rgba(98, 213, 243, 0.14);
+  --bullet: #ffd441;
+  --amber: #e8bc45;
+  --amber-strong: #f5d878;
   --amber-soft: rgba(231, 184, 77, 0.14);
   --green: #58d79c;
   --green-soft: rgba(88, 215, 156, 0.14);

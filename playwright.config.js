@@ -5,6 +5,11 @@ export default defineConfig({
   testMatch: '**/*.spec.js',
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
+  // CI runs the full matrix through verify:all. At the default worker count the
+  // runner saturates and tests time out waiting for the runtime to boot, which
+  // fails the deploy gate on a flake rather than a defect. One worker is the
+  // remedy this repository already documents.
+  workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',

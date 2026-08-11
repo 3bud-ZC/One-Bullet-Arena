@@ -76,8 +76,7 @@ jobs:
             icons/app-icon.svg
             src/release-config.js
             src/release.js
-            src/i18n.js
-            src/ui-system.js
+            src/i18n.js
             src/performance/frame-pacer.js
             src/performance/quality-manager.js
             src/ui/icons.js

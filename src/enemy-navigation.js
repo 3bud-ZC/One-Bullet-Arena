@@ -248,7 +248,26 @@ export function navigationTargetForEnemy(enemy, target, context, dt = 0) {
     nav.waypoints.shift();
   }
 
-  if (nav.waypoints.length === 0 || nav.replanIn <= 0 || targetMoved || stuck || nav.blockedTime > 0.42) {
+  const wantsReplan = nav.waypoints.length === 0
+    || nav.replanIn <= 0
+    || targetMoved
+    || stuck
+    || nav.blockedTime > 0.42;
+
+  // `targetMoved` compares against the same player position for every enemy, so
+  // the whole wave crossed the threshold on one tick and ran Dijkstra together —
+  // measured at 10.2ms in a single 8.33ms step, felt as a hitch while moving.
+  // A shared per-tick budget spreads those replans over consecutive ticks.
+  // Only a stuck enemy skips the budget. An enemy that has merely consumed its
+  // route still steers straight at the target in the meantime (see the return
+  // below), so deferring it by a tick or two costs nothing but removes the
+  // bunching — several enemies exhaust their waypoints on the same tick.
+  const mustReplan = stuck;
+  const budget = context.replanBudget;
+  const allowed = mustReplan || !budget || budget.remaining > 0;
+
+  if (wantsReplan && allowed) {
+    if (budget && !mustReplan) budget.remaining -= 1;
     const path = findNavigationPath({
       start: current,
       target,
@@ -267,6 +286,9 @@ export function navigationTargetForEnemy(enemy, target, context, dt = 0) {
     } else {
       nav.replanIn = 0.16;
     }
+  } else if (wantsReplan) {
+    // Deferred: retry next tick rather than waiting out the full interval.
+    nav.replanIn = 0;
   }
 
   const waypoint = nav.waypoints[0];
@@ -278,6 +300,10 @@ export function navigationTargetForEnemy(enemy, target, context, dt = 0) {
   };
 }
 
+// How many surviving candidates get a full route solve. Each solve is an
+// O(n^2) Dijkstra, so this is the term that decides the whole function's cost.
+const RANGED_ROUTE_SOLVES = 6;
+
 export function findRangedAttackPoint({
   start,
   player,
@@ -287,8 +313,14 @@ export function findRangedAttackPoint({
   minRange = 285,
   maxRange = 530,
   idealRange = 390,
+  waypoints = null,
 }) {
-  const candidates = buildNavigationWaypoints(obstacles, bounds, radius);
+  // Reuse the caller's cached graph. Building it here, and then again inside
+  // every per-candidate findNavigationPath call, made this function cost ~137ms
+  // — about 73x a single path solve — and it ran whenever a sniper's lane was
+  // blocked, which is a visible freeze rather than a slow frame.
+  const navPoints = waypoints || buildNavigationWaypoints(obstacles, bounds, radius);
+  const candidates = [...navPoints];
   const angles = [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4, Math.PI, 5 * Math.PI / 4, 3 * Math.PI / 2, 7 * Math.PI / 4];
   for (const range of [idealRange, minRange, maxRange]) {
     for (const angle of angles) {
@@ -304,18 +336,33 @@ export function findRangedAttackPoint({
     }
   }
 
-  let best = null;
-  let bestScore = Infinity;
+  // Cheap filters and a straight-line heuristic first, so the expensive route
+  // solve only runs on the few candidates that could plausibly win.
+  const viable = [];
   for (const candidate of candidates) {
     if (!isNavigationPointClear(candidate, obstacles, bounds, radius)) continue;
     const range = distance(candidate, player);
     if (range < minRange || range > maxRange) continue;
     if (!hasClearPath(candidate, player, obstacles, radius * 0.45, 4)) continue;
-    const route = findNavigationPath({ start, target: candidate, obstacles, bounds, radius });
+    viable.push({ candidate, heuristic: distance(start, candidate) + Math.abs(range - idealRange) * 0.85, range });
+  }
+  viable.sort((a, b) => a.heuristic - b.heuristic);
+
+  let best = null;
+  let bestScore = Infinity;
+  for (const entry of viable.slice(0, RANGED_ROUTE_SOLVES)) {
+    const route = findNavigationPath({
+      start,
+      target: entry.candidate,
+      obstacles,
+      bounds,
+      radius,
+      waypoints: navPoints,
+    });
     if (!route) continue;
-    const score = route.distance + Math.abs(range - idealRange) * 0.85;
+    const score = route.distance + Math.abs(entry.range - idealRange) * 0.85;
     if (score >= bestScore) continue;
-    best = candidate;
+    best = entry.candidate;
     bestScore = score;
   }
   return best;

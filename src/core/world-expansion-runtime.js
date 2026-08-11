@@ -16,6 +16,9 @@ import { OneBulletDashboardPolishRuntime } from './dashboard-polish-runtime.js';
 export const WORLD_EXPANSION_RUNTIME_VERSION = '3.4.0-expanding-world';
 
 const CAMERA_ZOOMS = Object.freeze([1, 1, 1, 0.98, 0.94, 0.9, 0.86, 0.82]);
+// Exponential follow rate. 5.5 gave a ~180ms time constant; 12 gives ~83ms,
+// which keeps the camera under the player during direction changes.
+export const CAMERA_FOLLOW_RESPONSE = 12;
 const HUD = Object.freeze({
   surface: 'rgba(4, 17, 30, 0.9)',
   border: 'rgba(77, 164, 202, 0.38)',
@@ -210,7 +213,13 @@ export class OneBulletWorldExpansionRuntime extends OneBulletDashboardPolishRunt
     camera.targetZoom = cameraZoomForStage(this.arenaStage.id);
     camera.zoom = smooth(camera.zoom, camera.targetZoom, dt, 3.2);
 
-    const leadScale = 80 + this.arenaStage.id * 9;
+    // Lead was 80-143px applied to an already-smoothed direction and then
+    // chased at response 5.5 (a ~180ms time constant). The two filters
+    // compounded: a direction reversal moved the target ~166px and took 133ms
+    // to settle, which reads as dragging a heavy camera rather than as
+    // anticipation. Lead is halved and the follow is roughly twice as stiff,
+    // which keeps the look-ahead benefit while staying under the player.
+    const leadScale = 40 + this.arenaStage.id * 4;
     const targetX = this.player.x + (this.visualDirection?.x || 0) * leadScale;
     const targetY = this.player.y + (this.visualDirection?.y || 0) * leadScale * 0.72;
     const viewportW = WIDTH / Math.max(0.01, camera.zoom);
@@ -218,8 +227,8 @@ export class OneBulletWorldExpansionRuntime extends OneBulletDashboardPolishRunt
     const clampedX = cameraClampAxis(targetX, bounds.x, bounds.w, viewportW);
     const clampedY = cameraClampAxis(targetY, bounds.y, bounds.h, viewportH);
 
-    camera.x = smooth(camera.x, clampedX, dt, 5.5);
-    camera.y = smooth(camera.y, clampedY, dt, 5.5);
+    camera.x = smooth(camera.x, clampedX, dt, CAMERA_FOLLOW_RESPONSE);
+    camera.y = smooth(camera.y, clampedY, dt, CAMERA_FOLLOW_RESPONSE);
   }
 
   recordExplorationPoint() {

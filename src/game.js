@@ -5,6 +5,7 @@ import {
   GAME_VERSION,
   GAME_WIDTH as WIDTH,
   MAX_ACTIVE_ENEMIES,
+  UPGRADE_WAVE_INTERVAL,
   buildWaveComposition,
   enemyScaleForWave,
   pickUpgradeChoices,
@@ -163,6 +164,8 @@ export class OneBulletGame {
   }
 
   resetRun() {
+    // Catch-up rewards belong to a resumed checkpoint; a fresh run owes none.
+    this.owedUpgrades = 0;
     this.player = {
       x: WIDTH / 2,
       y: HEIGHT / 2,
@@ -661,7 +664,7 @@ export class OneBulletGame {
   }
 
   shouldOfferUpgrade() {
-    return this.wave > 0 && this.wave % 5 === 0;
+    return this.wave > 0 && this.wave % UPGRADE_WAVE_INTERVAL === 0;
   }
 
   pushEnemy(enemy, origin, strength, stagger = 0.1) {
@@ -783,6 +786,7 @@ export class OneBulletGame {
         bounds: context.bounds,
         obstacles: context.obstacles,
         waypoints: context.waypointsForRadius(enemy.radius),
+        replanBudget: this.navReplanBudget,
       }, dt);
       if (!navigation.direct) {
         const routed = normalize(navigation.target.x - enemy.x, navigation.target.y - enemy.y);
@@ -968,19 +972,22 @@ export class OneBulletGame {
     writeNumber(STORAGE.highWave, this.highWave);
   }
 
-  openUpgradeSelection() {
-    if (this.state !== 'playing') return;
+  // `chained` re-opens the panel straight after a pick while settling owed
+  // catch-up rewards, where the state is still 'upgrade' rather than 'playing'.
+  openUpgradeSelection(chained = false) {
+    if (!chained && this.state !== 'playing') return false;
     this.upgradeChoices = pickUpgradeChoices(this.upgradeStacks, 3, Math.random, this.previousUpgradeChoices);
     if (this.upgradeChoices.length === 0) {
       this.score += 750;
       this.player.health = Math.min(this.player.maxHealth, this.player.health + 1);
-      this.startNextWave();
-      return;
+      if (!chained) this.startNextWave();
+      return false;
     }
     this.previousUpgradeChoices = this.upgradeChoices.map((upgrade) => upgrade.id);
     this.setState('upgrade');
     this.audio.setScene('menu');
     this.audio.play('upgrade');
+    return true;
   }
 
   chooseUpgrade(index) {
@@ -996,6 +1003,16 @@ export class OneBulletGame {
     if (upgrade.id === 'wave-shield') this.player.shield = Math.max(this.stack('wave-shield'), this.player.shield);
     this.stats.upgrades += 1;
     this.upgradeChoices = [];
+
+    // Owed catch-up rewards are taken one at a time through this same flow, so
+    // the player always chooses. Only once the debt is clear does the wave start.
+    if (this.owedUpgrades > 0) {
+      this.owedUpgrades -= 1;
+      this.persistOwedUpgrades?.();
+      // If no upgrade remains to offer, fall through and start the wave.
+      if (this.openUpgradeSelection(true)) return true;
+    }
+
     this.setState('playing');
     this.audio.setScene('combat');
     this.startNextWave();

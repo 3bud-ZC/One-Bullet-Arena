@@ -202,6 +202,7 @@ export class OneBulletRuntime extends OneBulletGame {
           obstacles: this.arenaStage.obstacles,
           bounds: this.arenaStage.bounds,
           radius: enemy.radius,
+          waypoints: this.enemyNavigationContext().waypointsForRadius(enemy.radius),
         });
       if (enemy.rangedTarget) {
         target = enemy.rangedTarget;

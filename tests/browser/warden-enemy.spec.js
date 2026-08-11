@@ -31,7 +31,7 @@ test('warden runtime boots beneath global UI and wave seven introduces the enemy
     game.startNextWave();
     return { menu, wave: game.getSnapshot() };
   });
-  expect(result.menu.releaseVersion).toBe('3.10.0-arena-identity');
+  expect(result.menu.releaseVersion).toBe('3.11.0-responsive-arena');
   expect(result.menu.globalUiActive).toBe(true);
   expect(result.menu.wardenRuntimeVersion).toBe('3.1.0-a-warden');
   expect(result.menu.wardenEnemyActive).toBe(true);

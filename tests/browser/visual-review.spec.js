@@ -35,9 +35,9 @@ test('captures v3.8 dashboard and representative game-feel states', async ({ pag
   await loadGame(page, 'en');
 
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.10.0-arena-identity');
+  expect(menu.releaseVersion).toBe('3.11.0-responsive-arena');
   expect(menu.releaseChannel).toBe('smooth-runtime');
-  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.10.0-arena-identity');
+  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.11.0-responsive-arena');
   expect(menu.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(menu.combatDepthActive).toBe(true);
   expect(menu.checkpointProgressionActive).toBe(true);
@@ -140,7 +140,7 @@ test('captures v3.8 dashboard and representative game-feel states', async ({ pag
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.resume();
-    game.wave = 5;
+    game.wave = 6;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 1;

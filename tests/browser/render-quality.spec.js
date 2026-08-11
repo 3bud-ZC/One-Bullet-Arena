@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const RELEASE = '3.10.0-arena-identity';
+const RELEASE = '3.11.0-responsive-arena';
 
 async function loadGame(page, locale = 'en') {
   await page.addInitScript((value) => localStorage.setItem('one-bullet-language', value), locale);
@@ -242,7 +242,7 @@ test('required visual QA captures crisp DOM dashboard and active states at produ
     const game = window.__ONE_BULLET_ARENA__;
     game.player.health = game.player.maxHealth;
     game.setState('playing');
-    game.wave = 5;
+    game.wave = 6;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;

@@ -245,7 +245,7 @@ export class OneBulletEventRuntime extends OneBulletUiLayoutRuntime {
     return result;
   }
 
-  openUpgradeSelection() {
+  openUpgradeSelection(chained = false) {
     if (this.state === 'playing' && this.enemies.length === 0 && !this.clearedEventWaves.has(this.wave)) {
       this.clearedEventWaves.add(this.wave);
       this.emitGameEvent(GAME_EVENTS.WAVE_CLEARED, {
@@ -256,8 +256,10 @@ export class OneBulletEventRuntime extends OneBulletUiLayoutRuntime {
     }
 
     const previousState = this.state;
-    const result = super.openUpgradeSelection();
-    if (previousState === 'playing' && this.state === 'upgrade') {
+    // Forward `chained`: catch-up rewards re-open the panel from the 'upgrade'
+    // state, and dropping the flag here made the base call bail out.
+    const result = super.openUpgradeSelection(chained);
+    if ((previousState === 'playing' || chained) && this.state === 'upgrade') {
       this.emitGameEvent(GAME_EVENTS.UPGRADE_OFFERED, {
         choices: this.upgradeChoices.map((upgrade) => upgrade.id),
       });

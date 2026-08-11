@@ -26,8 +26,8 @@ test('v3.8 canonical presentation preserves DOM + HiDPI architecture and adds sm
   await loadGame(page, 'en');
   await seedCheckpoint(page, 64);
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.10.0-arena-identity');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.10.0-arena-identity');
+  expect(snapshot.releaseVersion).toBe('3.11.0-responsive-arena');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.11.0-responsive-arena');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.renderingArchitecture).toBe('canvas-world+dom-ui');
@@ -64,7 +64,7 @@ test('Pause, Upgrade Selection, and Game Over remain DOM surfaces rather than Ca
   await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
     game.resume();
-    game.wave = 5;
+    game.wave = 6;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.waveClearTimer = 0.95;

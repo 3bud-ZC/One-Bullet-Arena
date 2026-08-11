@@ -13,6 +13,9 @@ import { TOUCH_LAYOUT } from './ui-renderer.js';
 
 export const MOVEMENT_HOTFIX_VERSION = '2.5.1-controls';
 
+// Discretionary route replans allowed per simulation tick. A stuck enemy
+// bypasses this, so the cap smooths cost without stalling anyone.
+const NAV_REPLANS_PER_TICK = 4;
 const TOUCH_DEAD_ZONE = 10;
 const TOUCH_MAX_RADIUS = 72;
 const OVERLAP_EPSILON = 0.0001;
@@ -102,6 +105,9 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
 
   updateEnemies(dt) {
     const scale = enemyScaleForWave(this.wave);
+    // Shared per-tick pathfinding budget, reset once here so it is spent across
+    // the whole wave rather than by whichever enemies update first.
+    this.navReplanBudget = { remaining: NAV_REPLANS_PER_TICK };
     const enemies = this.enemies;
     for (let index = 0; index < enemies.length; index += 1) {
       const enemy = enemies[index];

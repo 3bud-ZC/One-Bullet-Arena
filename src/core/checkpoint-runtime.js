@@ -69,7 +69,18 @@ export class OneBulletCheckpointRuntime extends OneBulletCombatDepthRuntime {
     this.savedCheckpoint = checkpoint;
     this.pendingCheckpoint = checkpoint;
     super.startRun();
+    // Carried after startRun, which resets run state. Spent through the normal
+    // upgrade panel as waves complete, so the player always picks.
+    this.owedUpgrades = Math.max(0, Math.trunc(Number(checkpoint.owedUpgrades) || 0));
     return true;
+  }
+
+  // Persist the remaining debt immediately after one is spent so a reload
+  // mid-run cannot hand out the same catch-up reward twice.
+  persistOwedUpgrades() {
+    if (!this.savedCheckpoint) return;
+    this.savedCheckpoint.owedUpgrades = Math.max(0, Math.trunc(Number(this.owedUpgrades) || 0));
+    this.checkpointStore?.save?.(this.savedCheckpoint);
   }
 
   startNextWave() {

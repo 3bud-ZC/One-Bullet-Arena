@@ -17,7 +17,7 @@ async function seedCheckpoint(page) {
     game.player.maxHealth = 4;
     game.player.health = 3;
     game.player.shield = 1;
-    game.wave = 5;
+    game.wave = 6;
     game.startNextWave();
     game.goToMenu();
     game.draw();
@@ -29,9 +29,9 @@ test('checkpoint dashboard uses v3.8 DOM presentation without changing saved-run
   await loadGame(page);
   await seedCheckpoint(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.10.0-arena-identity');
+  expect(snapshot.releaseVersion).toBe('3.11.0-responsive-arena');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
-  expect(snapshot.checkpointWave).toBe(6);
+  expect(snapshot.checkpointWave).toBe(7);
   expect(snapshot.checkpointAvailable).toBe(true);
   expect(snapshot.domUiActive).toBe(true);
   await expect(page.locator('[data-screen="menu"]')).toBeVisible();

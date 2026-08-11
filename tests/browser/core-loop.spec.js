@@ -55,7 +55,7 @@ test('one action starts wave one, and only wave five offers an upgrade', async (
 
   snapshot = await page.evaluate(() => {
     const game = window.__ONE_BULLET_ARENA__;
-    game.wave = 5;
+    game.wave = 6;
     game.enemies = [];
     game.resetBulletToPlayer();
     game.update(1);
@@ -70,7 +70,7 @@ test('one action starts wave one, and only wave five offers an upgrade', async (
     return game.getSnapshot();
   });
   expect(snapshot.state).toBe('playing');
-  expect(snapshot.wave).toBe(6);
+  expect(snapshot.wave).toBe(7);
   expect(snapshot.upgrades).toBe(1);
 });
 

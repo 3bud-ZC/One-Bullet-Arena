@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.10.0-arena-identity';
+  const version = '3.11.0-responsive-arena';
   const release = Object.freeze({
     version,
     label: `v${version}`,

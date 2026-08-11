@@ -67,6 +67,18 @@ export function sanitizeWave(value) {
   return Math.max(1, Math.trunc(Number(value) || 1));
 }
 
+// Waves between upgrade rewards. Independent of the 5-wave sector cadence.
+export const UPGRADE_WAVE_INTERVAL = 3;
+// What the cadence was before v3.11, used only to work out what an existing
+// checkpoint is owed.
+export const LEGACY_UPGRADE_WAVE_INTERVAL = 5;
+
+export function upgradesEarnedByWave(wave, interval = UPGRADE_WAVE_INTERVAL) {
+  const safeWave = Math.max(0, Math.trunc(Number(wave) || 0));
+  const safeInterval = Math.max(1, Math.trunc(Number(interval) || 1));
+  return Math.floor(safeWave / safeInterval);
+}
+
 export function waveEncounterForWave(wave) {
   const safeWave = sanitizeWave(wave);
   if (safeWave < 10) return EARLY_ENCOUNTER;

@@ -5,15 +5,107 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.10.0 — Arena Identity**
-- Canonical version: `3.10.0-arena-identity`
-- Canonical label: `v3.10.0-arena-identity`
+- Release: **v3.11.0 — Responsive Arena**
+- Canonical version: `3.11.0-responsive-arena`
+- Canonical label: `v3.11.0-responsive-arena`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.10.0-arena-identity`
+- Service Worker cache: `one-bullet-arena-v3.11.0-responsive-arena`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Responsiveness and upgrade economy - 2026-08-11 (v3.11.0)
+
+Scope was performance/responsiveness and the upgrade economy. The v3.9 dashboard
+and the v3.10 map, enemy, and encounter identity work are untouched.
+
+### The heaviness was two separate faults, neither of them frame rate
+
+Measured before changing anything, with a harness that drives real fixed-step
+simulation rather than staged scenes.
+
+1. **`findRangedAttackPoint` cost ~137ms per call** — about 73x a full path
+   solve (1.9ms). It rebuilt the 112-point waypoint graph on entry, and then
+   called `findNavigationPath` per candidate *without* passing waypoints, so the
+   graph was rebuilt again inside each of ~136 Dijkstra solves. It runs whenever
+   a sniper's firing lane is blocked, so it presented as a hard freeze rather
+   than a slow frame. It now reuses the caller's cached graph and only route-
+   solves the six best candidates after cheap filtering: **137ms → 5.4ms**.
+2. **Route replans bunched onto single ticks.** `targetMoved` compares against
+   the same player position for every enemy, so the whole wave crossed the 92px
+   threshold together and ran Dijkstra on one tick. A shared per-tick replan
+   budget spreads them; only a stuck enemy bypasses it, and an enemy that has
+   merely consumed its route still steers straight at the target meanwhile.
+
+The camera was a third, separate contributor to the *feel*: lead of 80-143px was
+applied to an already-smoothed direction and then chased at response 5.5 (a
+~180ms time constant). The two filters compounded. Lead is halved and the follow
+roughly doubled in stiffness, which keeps anticipation while staying under the
+player.
+
+Player movement itself was never the problem — it is direct position
+integration with no inertia.
+
+### Measurements
+
+Dense wave 32, 18 enemies, Chromium. Simulation budget at 120Hz is 8.33ms.
+
+| Metric | Before | After |
+|---|---|---|
+| Simulation tick, median | 0.1 ms | 0.1 ms |
+| Simulation tick, p95 | 0.7 ms | 1.2 ms |
+| Simulation tick, max | 20.3 ms | 6.2 ms |
+| Ticks over the 8.33ms budget (of 600) | 1 | **0** |
+| `findRangedAttackPoint` per call | 136.9 ms | 5.4 ms |
+| Camera offset while moving | 83 px | 41 px |
+| Camera settle after reversal | 133 ms | 50 ms |
+
+Heap growth over 5s of dense combat was 0 MB before and after, so allocation
+churn was never a factor.
+
+Note on methodology: a first harness reported a 656px camera offset and no
+settle. That was measurement error — it drove the player into the arena wall,
+where the camera legitimately stops following. The numbers above oscillate
+around the arena centre instead.
+
+### Upgrade cadence
+
+- Rewards moved from every 5 completed waves to every 3: waves 3, 6, 9, 12, 15,
+  18. Sector unlocks are unchanged at every 5 waves; the two cadences are now
+  deliberately independent.
+- A wave-15 run now has 5 selections instead of 3.
+- No upgrade values, stack caps, or enemy scaling were changed in this pass. The
+  cadence change alone roughly doubles build development rate, and altering
+  power at the same time would make the result impossible to read.
+
+### Existing checkpoint catch-up
+
+Checkpoints written before this release earned rewards at the old rate. On
+resume, the difference is granted as a debt spent through the real upgrade
+panel, one selection at a time — nothing is auto-picked and no saved stack is
+modified.
+
+- `schemaVersion` stays at 1 on purpose. Bumping it would make
+  `sanitizeCheckpoint` reject every existing save, which is the outcome to
+  avoid. `cadenceVersion` is a new optional field, absent on old saves.
+- The debt is computed once from the checkpoint's completed waves, then
+  recorded. Afterwards the stored value wins, including when it is zero, so a
+  reload cannot re-grant it. It is persisted immediately after each selection.
+- Verified end to end on a synthetic v3.10 wave-15 save: resumes owing 2, shows
+  three upgrade panels on the next wave clear (one earned, two owed), and
+  persists `owedUpgrades: 0`.
+
+Two overrides had to be found for this to work at all, both cases of a subclass
+silently shadowing the method being edited: `updateEnemies` is overridden in
+`movement-hotfix-runtime.js`, and `event-runtime.js` overrode
+`openUpgradeSelection()` without forwarding arguments, which dropped the flag
+that re-opens the panel for a chained catch-up reward.
+
+### Not done in this pass
+
+The player/bullet lifecycle game-feel work and the combat-effects quality pass
+were not completed. They remain the largest outstanding gameplay work.
 
 ## Arena identity pass - 2026-08-11 (v3.10.0)
 

@@ -5,15 +5,97 @@ Last updated: 2026-08-11
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.11.0 — Responsive Arena**
-- Canonical version: `3.11.0-responsive-arena`
-- Canonical label: `v3.11.0-responsive-arena`
+- Release: **v3.12.0 — Guardian Arena**
+- Canonical version: `3.12.0-guardian-arena`
+- Canonical label: `v3.12.0-guardian-arena`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.11.0-responsive-arena`
+- Service Worker cache: `one-bullet-arena-v3.12.0-guardian-arena`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Sector Guardians, combat audio, readability - 2026-08-11 (v3.12.0)
+
+### Scan findings
+
+Played waves 1/3/6/10/15/20/25/30+ through `?qa=1`. Two defects stood out.
+
+1. **The two most important combat sounds were never played.** `hit` and `kill`
+   were fully defined in the AudioEngine's sound table and nothing in the
+   codebase ever called them, so landing a shot and killing an enemy — the
+   events the player most needs confirmation of — were silent.
+2. **Every enemy above 1 HP carried a permanent detached health bar**, so a
+   dense wave was a field of floating stripes overlapping each other and the
+   enemies they described.
+
+### Sector Guardians
+
+Milestone encounters at waves 10, 20 and 30 — where a sector opens, which is a
+beat the player already recognises. A Guardian is a normal enemy with a larger
+body, a phase machine and a guard arc, so it reuses the existing navigation,
+collision, spawn, damage and render paths wholesale. No new runtime class, no
+boss framework, no change to the inheritance chain.
+
+Each is a different answer to the one-bullet loop rather than a bigger health
+pool:
+
+- **Sentinel** — rotating guard arc; read the rotation and hit the open side.
+- **Bastion** — refuses direct damage entirely; only a ricochet hurts it, which
+  forces arena geometry into the fight.
+- **Harrier** — fast and evasive; punished by recall timing rather than by aim.
+
+The phase loop is stalk → wind → strike. Stalk is the vulnerability window and
+is deliberately the longest phase (65% of the cycle), so the encounter is mostly
+an opportunity rather than mostly waiting. The wind-up is a 0.95s telegraph with
+a contracting ring, and the lane is locked when the telegraph begins so the
+attack is dodged by reading it, not by reacting at the last instant. Guardians
+scale with the run through phase pressure and escort composition, with health
+scaling capped at 1.6x so a late Guardian is not simply a longer version of the
+same fight. Waves carry a thinned five-enemy escort so the Guardian is the
+fight rather than a large enemy hidden inside a crowd.
+
+### Audio
+
+Rate limiting per cue and a hard 14-voice ceiling, plus a dynamics compressor on
+the master bus, because dense combat could previously stack a dozen voices in a
+few milliseconds. The vocabulary was rebuilt so pitch direction carries meaning:
+the bullet leaving the player rises, the bullet returning falls and resolves
+upward on the catch, and enemy events sit lower and drier so the single bullet
+stays the most audible object in a wave. New cues for recall, catch, perfect
+catch, precision, overdrive, milestone, and the three Guardian events.
+
+### Readability
+
+Health bars now appear only once an enemy has actually been damaged, and are
+drawn as a segmented arc hugging the body rather than a detached rectangle, so
+the information sits on the thing it describes. Guardians always show theirs,
+because their health is the encounter's clock.
+
+### Upgrade balance
+
+v3.11 doubled reward frequency without touching power, so by wave 20 a build
+carried roughly twice the upgrades the curve was tuned against. Enemy health now
+carries a term driven by **upgrades actually earned** rather than by a hard-coded
+assumption about cadence, which keeps the two in step at any interval. Speed and
+shot speed are deliberately untouched — those govern the player's reaction time,
+and tightening them is how an arcade game stops being fair. No individual
+upgrade was nerfed.
+
+### Verification note
+
+`npm run verify` passed while the Guardian spawn path was still broken: a phase
+constant lived in `movement-hotfix-runtime.js` but was referenced from
+`game.js`, and no Node test spawns a Guardian. Actually playing a Guardian wave
+surfaced the `ReferenceError` immediately. The constants moved to `game-data.js`.
+
+### Not done in this pass
+
+The full combat-VFX language (directional streaks, ricochet marks, controlled
+fragments, silhouette deformation) was not built. Game-feel work landed on the
+audio and impact-weight side — escalating bank-chain shake, weighted catch and
+perfect-catch response, Guardian defeat impulse — but the particle and streak
+system was not rewritten. See the report for why.
 
 ## Responsiveness and upgrade economy - 2026-08-11 (v3.11.0)
 

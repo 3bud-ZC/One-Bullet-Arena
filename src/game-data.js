@@ -12,6 +12,66 @@ export const ENEMY_TYPES = Object.freeze({
   splitter: Object.freeze({ id: 'splitter', radius: 24, speed: 72, health: 3, score: 310, color: '#ff79d1', unlockWave: 8 }),
 });
 
+/*
+ * Sector Guardians.
+ *
+ * Milestone encounters, not a boss framework. A Guardian is a normal enemy with
+ * a larger body, a phase machine, and a guard arc, so it reuses the existing
+ * navigation, collision, spawn, damage, and render paths wholesale — nothing
+ * about the runtime architecture changes to support it.
+ *
+ * They appear when a sector opens (waves 10, 20, 30), which is a milestone the
+ * player already recognises, rather than on an invented cadence.
+ *
+ * Each is built around a different answer to the one-bullet loop:
+ *   - Sentinel: a rotating guard arc. Read the rotation, shoot the open side.
+ *   - Bastion:  immune head-on, so the answer is a ricochet from behind cover.
+ *   - Harrier:  fast and evasive, punished by recall timing rather than aim.
+ */
+export const GUARDIAN_WAVES = Object.freeze([10, 20, 30]);
+
+// Phase loop, shared by the spawner and the behaviour update. Stalk is the
+// vulnerability window and is the longest, so the encounter is mostly an
+// opportunity rather than mostly a wait.
+export const GUARDIAN_PHASE_ORDER = Object.freeze(['stalk', 'wind', 'strike']);
+export const GUARDIAN_PHASE_SECONDS = Object.freeze({ stalk: 3.2, wind: 0.95, strike: 0.85 });
+
+export const GUARDIAN_TYPES = Object.freeze({
+  sentinel: Object.freeze({
+    id: 'sentinel', guardian: true, radius: 46, speed: 46, health: 26, score: 4200,
+    color: '#67ddff', guardSpin: 0.75, contactDamage: true,
+  }),
+  bastion: Object.freeze({
+    id: 'bastion', guardian: true, radius: 54, speed: 34, health: 34, score: 5200,
+    color: '#ff9f43', guardSpin: 0.22, requiresBank: true, contactDamage: true,
+  }),
+  harrier: Object.freeze({
+    id: 'harrier', guardian: true, radius: 38, speed: 96, health: 22, score: 6000,
+    color: '#ff79d1', guardSpin: 1.35, evasive: true, contactDamage: true,
+  }),
+});
+
+export function guardianForWave(wave) {
+  const safeWave = sanitizeWave(wave);
+  const index = GUARDIAN_WAVES.indexOf(safeWave);
+  if (index < 0) return null;
+  return Object.values(GUARDIAN_TYPES)[index % 3];
+}
+
+export function isGuardianWave(wave) {
+  return GUARDIAN_WAVES.includes(sanitizeWave(wave));
+}
+
+// Guardians scale with the run, but through phase speed and escort pressure
+// rather than raw health, so they never become a sponge.
+export function guardianScaleForWave(wave) {
+  const safeWave = sanitizeWave(wave);
+  return Object.freeze({
+    health: 1 + Math.min(0.6, Math.max(0, safeWave - 10) * 0.02),
+    speed: 1 + Math.min(0.35, Math.max(0, safeWave - 10) * 0.012),
+  });
+}
+
 export const UPGRADES = Object.freeze([
   Object.freeze({ id: 'heavy-shot', name: 'طلقة ثقيلة', tag: 'ضرر', description: 'يزيد ضرر الطلقة بنسبة 55%.', maxStacks: 8 }),
   Object.freeze({ id: 'bullet-velocity', name: 'سرعة الطلقة', tag: 'طلقة', description: 'يزيد سرعة الطلقة عند الإطلاق بنسبة 12%.', maxStacks: 7 }),
@@ -153,11 +213,22 @@ export function enemyScaleForWave(wave) {
   const safeWave = sanitizeWave(wave);
   const encounter = waveEncounterForWave(safeWave);
   const latePressure = Math.max(0, safeWave - 15);
-  const baseHealth = 1 + Math.min(1.4, (safeWave - 1) * 0.048 + latePressure * 0.004);
+  // Health tracks the upgrade curve rather than the wave number.
+  //
+  // v3.11 doubled reward frequency (every 3 waves instead of 5) without
+  // touching power, so by wave 20 a build carries roughly twice the upgrades
+  // the old curve was tuned against and the back half went soft. Enemy health
+  // now scales with upgrades actually earned, which keeps the two in step at
+  // any cadence instead of hard-coding an assumption about it.
+  const earnedUpgrades = upgradesEarnedByWave(safeWave, UPGRADE_WAVE_INTERVAL);
+  const buildPressure = Math.min(0.7, earnedUpgrades * 0.055);
+  const baseHealth = 1 + Math.min(1.4, (safeWave - 1) * 0.048 + latePressure * 0.004) + buildPressure;
+  // Speed and shot speed are left alone: they govern how much reaction time the
+  // player gets, and tightening those is how an arcade game stops being fair.
   const baseSpeed = 1 + Math.min(0.42, (safeWave - 1) * 0.011 + latePressure * 0.0018);
   const baseShotSpeed = 1 + Math.min(0.5, (safeWave - 1) * 0.015 + latePressure * 0.0022);
   return Object.freeze({
-    health: Math.min(2.8, baseHealth * encounter.health),
+    health: Math.min(3.4, baseHealth * encounter.health),
     speed: Math.min(1.58, baseSpeed * encounter.speed),
     shotSpeed: Math.min(1.72, baseShotSpeed * encounter.shotSpeed),
     encounterId: encounter.id,

@@ -7,7 +7,7 @@ import { DomUiController } from '../ui/dom-ui.js';
 import { installDomPerformanceBridge } from '../ui/dom-performance-bridge.js';
 import { OneBulletProductionArtRuntime } from './production-art-runtime.js';
 
-export const GLOBAL_UI_RUNTIME_VERSION = '3.11.0-responsive-arena';
+export const GLOBAL_UI_RUNTIME_VERSION = '3.12.0-guardian-arena';
 export const GLOBAL_UI_REVISION = 'smooth-fixedstep-presentation-v1';
 export const UI_REPAIR_RUNTIME_VERSION = GLOBAL_UI_RUNTIME_VERSION;
 export const UI_REPAIR_REVISION = GLOBAL_UI_REVISION;
@@ -574,7 +574,22 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     this.resetInterpolation();
     this.lastDomSignature = '';
     this.domUi?.sync(true);
-    this.announce(`${i18n.t('wave.incoming', { wave: this.wave })}. ${i18n.t('hud.enemiesLeft', { count: this.enemies.length })}.`);
+
+    // Milestone presentation. Concise on purpose: a banner and a cue, no modal,
+    // so arcade flow is never interrupted.
+    const guardian = this.enemies?.find((enemy) => enemy.guardian) || null;
+    if (guardian) {
+      this.audio?.play?.('guardian-spawn');
+      this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 9);
+      this.banner = {
+        title: i18n.t('guardian.incoming'),
+        subtitle: i18n.t(`guardian.${guardian.guardianId}`),
+        time: 2.6,
+      };
+      this.announce(`${i18n.t('guardian.incoming')}. ${i18n.t(`guardian.${guardian.guardianId}`)}.`);
+    } else {
+      this.announce(`${i18n.t('wave.incoming', { wave: this.wave })}. ${i18n.t('hud.enemiesLeft', { count: this.enemies.length })}.`);
+    }
     return result;
   }
 
@@ -611,21 +626,79 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   recallBullet() {
     const recalled = super.recallBullet();
-    if (recalled) this.recallVisual = 1;
+    if (recalled) {
+      this.recallVisual = 1;
+      this.audio?.play?.('recall');
+    }
     return recalled;
   }
 
   onRicochet() {
+    const banks = Number(this.bullet?.bounces) || 0;
     super.onRicochet();
     this.ricochetVisual = 1;
     this.lastRicochetPoint = { x: this.bullet.x, y: this.bullet.y, life: 0.16 };
-    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.8);
+    // Bank chains escalate: each ricochet in a chain lands slightly harder, so
+    // a long bank reads as building pressure rather than a flat repeat.
+    const chain = Math.min(4, banks);
+    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.8 + chain * 0.45);
+    this.audio?.play?.('ricochet');
   }
 
   catchBullet() {
+    // Read the authoritative counter rather than re-deriving eligibility, which
+    // lives in combat-depth-runtime and would drift if duplicated here.
+    const before = this.combatDepthStats?.perfectCatches ?? 0;
+    const wasReturning = Boolean(this.bullet?.recalling);
     super.catchBullet();
-    this.catchVisual = 0.45;
-    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 0.7);
+    const perfect = (this.combatDepthStats?.perfectCatches ?? 0) > before;
+    this.catchVisual = perfect ? 0.8 : 0.45;
+    this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : (perfect ? 3.2 : 0.7));
+    if (wasReturning) this.audio?.play?.(perfect ? 'perfect-catch' : 'catch');
+  }
+
+  /*
+   * Combat audio hooks live here, at the terminal runtime, because every
+   * intermediate class overrides these methods and an edit further down the
+   * chain would be shadowed. `hit` and `kill` were defined in the AudioEngine
+   * but never triggered by anything, so landing and killing — the two events
+   * the player most needs confirmation of — were silent.
+   */
+  damageEnemy(enemy, damage, fromBullet = false) {
+    // Guardian vulnerability rules. These are the encounter: a Guardian is not
+    // a health sponge, it is a shape you have to solve with the one bullet.
+    if (enemy?.guardian && fromBullet) {
+      // Sealed while telegraphing or committed, open while stalking.
+      if (enemy.phaseName !== 'stalk') {
+        this.audio?.play?.('ricochet');
+        this.addFloatingText?.(enemy.x, enemy.y - enemy.radius - 12, 'SEALED', '#8fa6b8');
+        return undefined;
+      }
+      // Bastion answers only to a ricochet, which forces the arena geometry to
+      // be used rather than a straight-line duel.
+      if (enemy.requiresBank && (Number(this.bullet?.bounces) || 0) < 1) {
+        this.audio?.play?.('ricochet');
+        this.addFloatingText?.(enemy.x, enemy.y - enemy.radius - 12, 'BANK REQUIRED', '#ffb45f');
+        return undefined;
+      }
+    }
+
+    const before = Number(enemy?.health) || 0;
+    const result = super.damageEnemy(enemy, damage, fromBullet);
+    const after = Number(enemy?.health) || 0;
+    if (fromBullet && after < before && after > 0) this.audio?.play?.('hit');
+    return result;
+  }
+
+  killEnemy(enemy) {
+    const existed = this.enemies?.includes(enemy);
+    const guardian = Boolean(enemy?.guardian);
+    const result = super.killEnemy(enemy);
+    if (existed && !this.enemies?.includes(enemy)) {
+      this.audio?.play?.(guardian ? 'guardian-down' : 'kill');
+      if (guardian) this.shake = Math.max(this.shake || 0, this.reducedMotion ? 0 : 16);
+    }
+    return result;
   }
 
   damagePlayer(sourceX, sourceY) {

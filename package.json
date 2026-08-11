@@ -1,6 +1,6 @@
 {
   "name": "one-bullet-arena",
-  "version": "3.11.0-responsive-arena",
+  "version": "3.12.0-guardian-arena",
   "private": true,
   "type": "module",
   "description": "A smooth one-bullet tactical arcade game with fixed-step simulation, adaptive HiDPI Canvas rendering, and semantic DOM/SVG UI.",

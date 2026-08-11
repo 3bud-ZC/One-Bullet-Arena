@@ -5,9 +5,13 @@ import {
   GAME_VERSION,
   GAME_WIDTH as WIDTH,
   MAX_ACTIVE_ENEMIES,
+  GUARDIAN_PHASE_SECONDS,
+  GUARDIAN_TYPES,
   UPGRADE_WAVE_INTERVAL,
   buildWaveComposition,
   enemyScaleForWave,
+  guardianForWave,
+  guardianScaleForWave,
   pickUpgradeChoices,
 } from './game-data.js';
 import {
@@ -55,6 +59,8 @@ const COLORS = Object.freeze({
 });
 const BASE_PLAYER_SPEED = 285;
 const DASH_SPEED = 760;
+// Escort size on a Guardian wave. Small enough that the Guardian is the fight.
+const GUARDIAN_ESCORT_COUNT = 5;
 const BASE_BULLET_SPEED = 900;
 const BULLET_STEP = 9;
 
@@ -282,8 +288,15 @@ export class OneBulletGame {
     resolveCircleAgainstRects(this.player, this.arenaStage.obstacles);
     this.resetBulletToPlayer();
 
-    const composition = buildWaveComposition(this.wave);
-    composition.forEach((type, index) => this.spawnEnemy(type, index));
+    // A Guardian wave is the Guardian plus a thinned escort, so the encounter
+    // reads as a duel with pressure rather than another crowd with a big enemy
+    // hidden inside it.
+    const guardian = guardianForWave(this.wave);
+    const composition = guardian
+      ? buildWaveComposition(this.wave).slice(0, GUARDIAN_ESCORT_COUNT)
+      : buildWaveComposition(this.wave);
+    if (guardian) this.spawnEnemy(guardian.id, 0, { guardian: true });
+    composition.forEach((type, index) => this.spawnEnemy(type, index + 1));
     const expanded = this.arenaStage.id > previousStageId;
     this.banner = {
       title: `الموجة ${this.wave}`,
@@ -297,8 +310,11 @@ export class OneBulletGame {
 
   spawnEnemy(type, index = 0, options = {}) {
     if (this.enemies.length >= MAX_ACTIVE_ENEMIES && !options.mini) return null;
-    const definition = ENEMY_TYPES[type] || ENEMY_TYPES.scout;
-    const scale = enemyScaleForWave(this.wave);
+    // Guardians come from their own table but are otherwise ordinary enemies,
+    // so they inherit spawn placement, navigation, collision, and damage.
+    const guardianDefinition = GUARDIAN_TYPES[type];
+    const definition = guardianDefinition || ENEMY_TYPES[type] || ENEMY_TYPES.scout;
+    const scale = guardianDefinition ? guardianScaleForWave(this.wave) : enemyScaleForWave(this.wave);
     const point = options.point ? this.sanitizeSpawnPoint(options.point, 34) : this.findSpawnPoint(index);
     const miniScale = options.mini ? 0.66 : 1;
     const health = definition.health * scale.health * (options.mini ? 0.62 : 1);
@@ -327,6 +343,23 @@ export class OneBulletGame {
       mini: Boolean(options.mini),
       nav: null,
     };
+
+    if (guardianDefinition) {
+      enemy.guardian = true;
+      enemy.guardianId = guardianDefinition.id;
+      // Phase machine: 'stalk' closes and is the vulnerable window, 'wind' is
+      // the telegraph, 'strike' is the committed attack. Timers are simulation
+      // state so behaviour never depends on render cadence.
+      enemy.phaseName = 'stalk';
+      enemy.phaseTimer = GUARDIAN_PHASE_SECONDS.stalk;
+      enemy.phaseIndex = 0;
+      enemy.guardAngle = 0;
+      enemy.guardSpin = guardianDefinition.guardSpin;
+      enemy.requiresBank = Boolean(guardianDefinition.requiresBank);
+      enemy.evasive = Boolean(guardianDefinition.evasive);
+      enemy.spawnTime = 1.15;
+    }
+
     ensureEnemyNavigationState(enemy);
     this.enemies.push(enemy);
     return enemy;

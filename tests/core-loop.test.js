@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   GAME_VERSION, MAX_ACTIVE_ENEMIES, UPGRADES, buildWaveComposition,
   enemyCountForWave, enemyPoolForWave, enemyScaleForWave, normalizedStacks, pickUpgradeChoices,
-  waveEncounterForWave,
+  upgradesEarnedByWave, waveEncounterForWave,
 } from '../src/game-data.js';
 import {
   ARENA_STAGE_COUNT, arenaStageForWave, circleRectOverlap, combatSafeZones,
@@ -99,8 +99,23 @@ test('enemy scaling keeps growing while staying inside hard safety caps', () => 
   const tenth = enemyScaleForWave(10);
   const hundredth = enemyScaleForWave(100);
   assert.ok(tenth.health > first.health && tenth.speed > first.speed);
-  assert.ok(hundredth.health <= 2.8 && hundredth.speed <= 1.58 && hundredth.shotSpeed <= 1.72);
+  // Health ceiling was raised from 2.8 to 3.4 when enemy health began tracking
+  // earned upgrades; speed and shot speed are deliberately unchanged, because
+  // those govern the player's reaction time.
+  assert.ok(hundredth.health <= 3.4 && hundredth.speed <= 1.58 && hundredth.shotSpeed <= 1.72);
   assert.ok(enemyScaleForWave(40).health > enemyScaleForWave(10).health);
+});
+
+test('enemy health tracks the upgrade curve so the 3-wave cadence stays balanced', () => {
+  // Doubling reward frequency without touching enemy scaling made the back half
+  // soft. Health now carries a term driven by upgrades actually earned.
+  const ratio = (wave) => enemyScaleForWave(wave).health / Math.max(1, upgradesEarnedByWave(wave, 3));
+  assert.ok(ratio(30) < ratio(6), 'the player must still outscale enemies over a run');
+  assert.ok(ratio(30) > 0.15, 'but not so far that late waves stop being a fight');
+
+  for (const wave of [1, 10, 20, 30, 60, 100]) {
+    assert.ok(Number.isFinite(enemyScaleForWave(wave).health));
+  }
 });
 
 test('all upgrade stacks have a real effect boundary', () => {

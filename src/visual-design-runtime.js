@@ -470,6 +470,10 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
   }
 
   drawEnemyBody(enemy) {
+    if (enemy.guardian) {
+      this.drawGuardianBody(enemy);
+      return;
+    }
     const ctx = this.ctx;
     const style = ENEMY_STYLE[enemy.type] || ENEMY_STYLE.scout;
     const hit = enemy.hitFlash > 0;
@@ -579,14 +583,107 @@ export class OneBulletVisualDesignRuntime extends OneBulletMovementHotfixRuntime
     ctx.restore();
   }
 
+  /*
+   * Health readability.
+   *
+   * Every enemy above 1 HP used to carry a permanent bar, so a dense wave was a
+   * field of floating stripes that overlapped each other and the enemies. Bars
+   * now appear only once an enemy has actually been damaged — an undamaged
+   * enemy tells you nothing you cannot read from its silhouette — and they are
+   * drawn as a segmented arc hugging the body instead of a detached rectangle,
+   * so the information sits on the thing it describes.
+   *
+   * Guardians are the exception and always show their state, because their
+   * health is the encounter's clock.
+   */
+  /*
+   * Guardian silhouette.
+   *
+   * Deliberately heavier than any regular archetype: a double hull, a phase
+   * ring that closes as the telegraph completes, and a guard arc that is drawn
+   * only while it is actually sealing damage. The player should be able to
+   * read "can I hurt it right now" from the shape alone, without a HUD.
+   */
+  drawGuardianBody(enemy) {
+    const ctx = this.ctx;
+    const colour = enemy.color || '#67ddff';
+    const hit = enemy.hitFlash > 0;
+    const spawn = Math.max(0.25, 1 - enemy.spawnTime * 0.75);
+    const open = enemy.phaseName === 'stalk';
+
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
+    ctx.scale(spawn, spawn);
+
+    // Outer hull.
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = hit ? UI_COLORS.text : colour;
+    ctx.fillStyle = 'rgba(6, 14, 28, 0.92)';
+    polygon(ctx, 6, enemy.radius, enemy.phase * 0.12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner core: bright and open while vulnerable, dim while sealed.
+    ctx.globalAlpha = open ? 0.95 : 0.34;
+    ctx.fillStyle = colour;
+    ctx.beginPath();
+    ctx.arc(0, 0, enemy.radius * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Guard arc, shown only when it is genuinely blocking.
+    if (!open) {
+      ctx.save();
+      ctx.rotate(enemy.guardAngle || 0);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = UI_COLORS.danger;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.arc(0, 0, enemy.radius + 9, -0.85, 0.85);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Wind-up ring: contracts onto the hull as the strike approaches, giving a
+    // countdown that is readable at a glance in a crowded frame.
+    if (enemy.phaseName === 'wind' && enemy.chargeTelegraph > 0) {
+      const progress = 1 - Math.min(1, enemy.chargeTelegraph / 0.95);
+      ctx.strokeStyle = UI_COLORS.danger;
+      ctx.globalAlpha = 0.35 + progress * 0.5;
+      ctx.lineWidth = 2 + progress * 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, enemy.radius + 46 - progress * 40, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
   drawEnemyHealth(enemy) {
     if (enemy.maxHealth <= 1.1) return;
+    const ratio = Math.max(0, Math.min(1, enemy.health / enemy.maxHealth));
+    if (ratio >= 0.999 && !enemy.guardian) return;
+
     const ctx = this.ctx;
     const style = ENEMY_STYLE[enemy.type] || ENEMY_STYLE.scout;
-    const width = enemy.radius * 2.2;
-    const x = enemy.x - width / 2;
-    const y = enemy.y + enemy.radius + 12;
-    progressBar(ctx, x, y, width, 5, Math.max(0, enemy.health / enemy.maxHealth), style.core, 'rgba(0,0,0,0.58)');
+    const radius = enemy.radius + (enemy.guardian ? 12 : 7);
+    const span = enemy.guardian ? Math.PI * 1.5 : Math.PI * 0.9;
+    const start = -Math.PI / 2 - span / 2;
+
+    ctx.save();
+    ctx.lineCap = 'butt';
+    ctx.lineWidth = enemy.guardian ? 5 : 3;
+    ctx.strokeStyle = 'rgba(2, 8, 16, 0.72)';
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, radius, start, start + span);
+    ctx.stroke();
+
+    ctx.strokeStyle = ratio <= 0.34 ? UI_COLORS.danger : style.core;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, radius, start, start + span * ratio);
+    ctx.stroke();
+    ctx.restore();
   }
 
   drawEnemyTelegraph(enemy) {

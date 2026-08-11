@@ -7,7 +7,11 @@ import {
   pointInsideBounds,
 } from './arena.js';
 import { markEnemyNavigationBlocked } from './enemy-navigation.js';
-import { enemyScaleForWave } from './game-data.js';
+import {
+  GUARDIAN_PHASE_ORDER,
+  GUARDIAN_PHASE_SECONDS,
+  enemyScaleForWave,
+} from './game-data.js';
 import { OneBulletPolishRuntime } from './polish-runtime.js';
 import { TOUCH_LAYOUT } from './ui-renderer.js';
 
@@ -137,7 +141,8 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       enemy.phase += dt * 2;
       const toPlayer = normalize(this.player.x - enemy.x, this.player.y - enemy.y);
 
-      if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
+      if (enemy.guardian) this.updateGuardian(enemy, toPlayer, scale, dt);
+      else if (enemy.type === 'sniper') this.updateSniper(enemy, toPlayer, scale, dt);
       else if (enemy.type === 'charger') this.updateCharger(enemy, toPlayer, dt);
       else {
         const currentDistance = distance(enemy, this.player);
@@ -164,6 +169,57 @@ export class OneBulletMovementHotfixRuntime extends OneBulletPolishRuntime {
       }
     }
     this.separateEnemies();
+  }
+
+  /*
+   * Sector Guardian behaviour.
+   *
+   * A three-state loop the player can learn: stalk (approach, guard open, the
+   * window to punish) -> wind (stop, telegraph, guard sealed) -> strike (commit
+   * along the telegraphed lane). Movement goes through steerEnemy and
+   * moveEnemyWithCollision like every other enemy, so navigation and collision
+   * are the proven ones, not a parallel implementation.
+   */
+  updateGuardian(enemy, toPlayer, scale, dt) {
+    enemy.guardAngle = (enemy.guardAngle || 0) + (enemy.guardSpin || 0) * dt;
+    enemy.phaseTimer = Math.max(0, (enemy.phaseTimer || 0) - dt);
+
+    if (enemy.phaseTimer <= 0) {
+      const next = GUARDIAN_PHASE_ORDER[
+        (GUARDIAN_PHASE_ORDER.indexOf(enemy.phaseName) + 1) % GUARDIAN_PHASE_ORDER.length
+      ];
+      enemy.phaseName = next;
+      enemy.phaseTimer = GUARDIAN_PHASE_SECONDS[next];
+      if (next === 'wind') {
+        // Lock the lane at the start of the telegraph so the attack is
+        // dodgeable by reading it, not by reacting at the last instant.
+        enemy.chargeDirection = { x: toPlayer.x, y: toPlayer.y };
+        enemy.chargeTelegraph = GUARDIAN_PHASE_SECONDS.wind;
+        this.audio?.play?.('guardian-phase');
+      }
+      if (next === 'strike') enemy.chargeTelegraph = 0;
+      if (next === 'stalk') enemy.staggerTime = Math.max(enemy.staggerTime || 0, 0.35);
+    }
+
+    if (enemy.phaseName === 'wind') {
+      enemy.chargeTelegraph = enemy.phaseTimer;
+      return; // Planted: the telegraph is the whole point of this phase.
+    }
+
+    if (enemy.phaseName === 'strike') {
+      const lane = enemy.chargeDirection?.x || enemy.chargeDirection?.y
+        ? enemy.chargeDirection
+        : toPlayer;
+      this.steerEnemy(enemy, lane, dt, 2.4, { behavior: 'direct', target: this.player });
+      return;
+    }
+
+    // Stalk. Evasive guardians strafe hard so they cannot simply be led.
+    const strafe = enemy.evasive ? Math.sin(enemy.phase * 1.6) * 0.85 : 0.25;
+    this.steerEnemy(enemy, {
+      x: toPlayer.x - toPlayer.y * strafe,
+      y: toPlayer.y + toPlayer.x * strafe,
+    }, dt, 1, { behavior: 'pursuit', target: this.player });
   }
 
   separateEnemies() {

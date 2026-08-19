@@ -1,6 +1,6 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-11
+Last updated: 2026-08-19
 
 ## Current release
 
@@ -14,6 +14,49 @@ Last updated: 2026-08-11
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Gameplay feel pass - 2026-08-19
+
+Scope: first execution slice from the gameplay-improvement suggestions, focused
+on adding more reasons to play each wave differently without changing the
+accepted runtime architecture.
+
+- Added `src/game-feel.js` as the pure rules module for optional wave
+  directives and upgrade synergies.
+- Wave directives now rotate through standard pressure, priority target,
+  ricochet-kill bonus, and recall-kill bonus. They are optional score/pressure
+  goals, so they add variety without blocking normal wave completion.
+- Priority waves mark one high-pressure enemy deterministically. Killing that
+  target grants a larger score reward and briefly relieves nearby enemy attack
+  pressure, creating a readable tactical moment.
+- Ability synergies now have real effects:
+  - extended ricochet + hot ricochet boosts bank-chain damage;
+  - magnetic recall + quick dash refunds dash cooldown on a good catch;
+  - magnetic recall + kinetic catch strengthens the catch impulse field;
+  - shock impact + hot ricochet strengthens banked shock chains.
+- Added lightweight production-path threat indicators in
+  `OneBulletGlobalUiRuntime`: priority targets get a clear marker, and enemies
+  close to attack readiness/telegraphing get a restrained warning outline.
+- Service-worker app shell and `npm run check` now include the new module.
+
+Verification:
+
+- `npm run check`: passed.
+- `npm test`: passed, **156/156 Node tests**.
+- `npm run verify`: passed.
+- Targeted browser gameplay coverage:
+  - `npx playwright test tests/browser/game-feel.spec.js tests/browser/combat-depth.spec.js --workers=1`: passed, **24/24** across configured projects.
+  - `npx playwright test tests/browser/smooth-runtime.spec.js --project=desktop-chromium --workers=1`: passed, **7/7**; dense-wave diagnostics stayed finite and capped at 18 enemies.
+- Full browser matrix:
+  - default `npm run verify:all` reached the browser phase but saturated the
+    local runner at 10 workers, producing startup timeouts, so it was stopped
+    and rerun serialized as the repository recommends;
+  - `npm run test:browser -- --workers=1`: **212 passed, 51 skipped**, with one
+    Chromium context-closed runner failure before test execution;
+  - the affected test was rerun directly with
+    `npx playwright test tests/browser/enemy-navigation.spec.js:9 --project=desktop-chromium --workers=1` and passed.
+
+Publication status: published by the commit containing this section once it lands on `main`.
 
 ## Combat VFX - 2026-08-12 (v3.13.0)
 

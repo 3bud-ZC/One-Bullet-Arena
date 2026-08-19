@@ -957,6 +957,43 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
 
   drawEnemies() {
     super.drawEnemies();
+    this.drawEnemyThreatIndicators();
+  }
+
+  drawEnemyThreatIndicators() {
+    if (this.state !== 'playing') return;
+    const ctx = this.ctx;
+    ctx.save();
+    for (const enemy of this.enemies || []) {
+      const priority = Boolean(enemy.priorityTarget);
+      const ready = enemy.spawnTime <= 0 && (Number(enemy.attackCooldown) || 0) <= 0.22;
+      const telegraphing = enemy.shotTelegraph > 0 || enemy.chargeTelegraph > 0 || enemy.phaseName === 'wind';
+      if (!priority && !ready && !telegraphing) continue;
+
+      const pulse = 0.5 + Math.sin(this.elapsed * (priority ? 5.2 : 7.4) + enemy.id) * 0.18;
+      const radius = enemy.radius + (priority ? 10 : 6) + (telegraphing ? 5 : 0);
+      ctx.globalAlpha = priority ? 0.74 : telegraphing ? 0.58 : 0.34;
+      ctx.strokeStyle = priority ? '#ffe66d' : telegraphing ? '#ff526a' : '#ff9f43';
+      ctx.lineWidth = priority ? 2.4 : 1.6;
+      ctx.setLineDash(priority ? [2, 7] : [7, 8]);
+      ctx.lineDashOffset = -this.elapsed * (priority ? 34 : 48);
+      ctx.beginPath();
+      ctx.arc(enemy.x, enemy.y, radius + pulse * 3, 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (priority) {
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 0.82;
+        ctx.fillStyle = '#ffe66d';
+        ctx.beginPath();
+        ctx.moveTo(enemy.x, enemy.y - radius - 13);
+        ctx.lineTo(enemy.x - 6, enemy.y - radius - 2);
+        ctx.lineTo(enemy.x + 6, enemy.y - radius - 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.restore();
   }
 
   drawEnemyShots() {

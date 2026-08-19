@@ -1,5 +1,10 @@
 import { clamp, normalize } from '../arena.js';
 import { comboFeedbackRank } from '../combat-feedback-runtime.js';
+import {
+  abilitySynergyDamageMultiplier,
+  activeAbilitySynergies,
+  dashRefundForCatch,
+} from '../game-feel.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
 import { RELEASE_VERSION } from '../release.js';
 import { UI_COLORS, label, progressBar, roundedRect } from '../ui-renderer.js';
@@ -176,6 +181,12 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
 
     if (!wasReturning) return result;
 
+    const dashRefund = dashRefundForCatch(this.upgradeStacks, { recallDistance, perfect });
+    if (dashRefund > 0) {
+      this.player.dashCooldown = Math.max(0, this.player.dashCooldown - dashRefund);
+      this.skillPulse = Math.max(this.skillPulse, 0.38);
+    }
+
     if (perfect) {
       this.precisionCharge = 1;
       this.combatDepthStats.perfectCatches += 1;
@@ -223,12 +234,18 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
     const recallSeconds = this.bullet.recalling && this.recallStartedAt !== null
       ? Math.max(0, this.runTime - this.recallStartedAt)
       : 0;
-    return base * skillDamageMultiplier({
+    const combatMultiplier = skillDamageMultiplier({
       precision: this.precisionShotActive,
       bankLevel: this.bankLevel,
       overdrive: this.overdriveTimer > 0,
       recallSeconds,
     });
+    const synergyMultiplier = abilitySynergyDamageMultiplier(this.upgradeStacks, {
+      bankLevel: this.bankLevel,
+      bounceCount: this.bullet.bounceCount,
+      recalling: this.bullet.recalling,
+    });
+    return base * combatMultiplier * synergyMultiplier;
   }
 
   damageEnemy(enemy, damage, fromBullet = false) {
@@ -430,6 +447,10 @@ export class OneBulletCombatDepthRuntime extends OneBulletEventRuntime {
       precisionKills: this.combatDepthStats.precisionKills,
       bankKills: this.combatDepthStats.bankKills,
       overdrives: this.combatDepthStats.overdrives,
+      activeSynergies: activeAbilitySynergies(this.upgradeStacks).map((synergy) => ({
+        id: synergy.id,
+        name: synergy.name,
+      })),
       perfectCatchEnabled: true,
       bankShotDamageEnabled: true,
       momentumOverdriveEnabled: true,

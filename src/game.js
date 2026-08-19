@@ -15,6 +15,13 @@ import {
   pickUpgradeChoices,
 } from './game-data.js';
 import {
+  catchImpulseSynergyScale,
+  createWaveDirectiveState,
+  resolveWaveDirectiveKill,
+  selectPriorityTarget,
+  shockImpactSynergyScale,
+} from './game-feel.js';
+import {
   ARENA_STAGE_COUNT,
   arenaStageForWave,
   circleOverlap,
@@ -221,6 +228,7 @@ export class OneBulletGame {
     this.shake = 0;
     this.flash = 0;
     this.stats = { shots: 0, hits: 0, kills: 0, upgrades: 0, damageTaken: 0 };
+    this.waveDirective = createWaveDirectiveState(1);
   }
 
   startRun() {
@@ -275,6 +283,7 @@ export class OneBulletGame {
 
   startNextWave() {
     this.wave += 1;
+    this.waveDirective = createWaveDirectiveState(this.wave);
     const previousStageId = this.arenaStage.id;
     this.arenaStage = arenaStageForWave(this.wave);
     this.enemyNavigationCache = null;
@@ -297,15 +306,23 @@ export class OneBulletGame {
       : buildWaveComposition(this.wave);
     if (guardian) this.spawnEnemy(guardian.id, 0, { guardian: true });
     composition.forEach((type, index) => this.spawnEnemy(type, index + 1));
+    if (this.waveDirective.id === 'priority') {
+      const priority = selectPriorityTarget(this.enemies);
+      if (priority) {
+        priority.priorityTarget = true;
+        this.waveDirective.targetEnemyId = priority.id;
+        this.waveDirective.completed = false;
+      }
+    }
     const expanded = this.arenaStage.id > previousStageId;
     this.banner = {
       title: `الموجة ${this.wave}`,
-      subtitle: expanded ? `${this.arenaStage.name} — مساحة جديدة اتفتحت` : 'استمر واضغط عليهم',
+      subtitle: expanded ? `${this.arenaStage.name} — مساحة جديدة اتفتحت` : this.waveDirective.banner,
       time: expanded ? 2.2 : 1.45,
     };
     if (expanded) this.createRing(WIDTH / 2, HEIGHT / 2, COLORS.player, 220);
     this.createBurst(this.player.x, this.player.y, COLORS.player, 18, 220);
-    this.announce(`بدأت الموجة ${this.wave}. ${composition.length} أعداء.`);
+    this.announce(`بدأت الموجة ${this.wave}. ${composition.length} أعداء. ${this.waveDirective.hint}`);
   }
 
   spawnEnemy(type, index = 0, options = {}) {
@@ -650,19 +667,27 @@ export class OneBulletGame {
 
   damageEnemy(enemy, damage, fromBullet = false) {
     if (!this.enemies.includes(enemy)) return;
+    if (fromBullet) {
+      enemy.lastHitContext = {
+        banked: (Number(this.bullet.bounceCount) || 0) > 0 || (Number(this.bankLevel) || 0) > 0,
+        recalling: Boolean(this.bullet.recalling),
+        precision: Boolean(this.precisionShotActive),
+      };
+    }
     enemy.health -= damage;
     enemy.hitFlash = 0.14;
     if (fromBullet) this.stats.hits += 1;
     this.audio.play(enemy.health <= 0 ? 'kill' : 'hit');
     this.createBurst(enemy.x, enemy.y, enemy.color, enemy.health <= 0 ? 5 : 2, enemy.health <= 0 ? 145 : 90);
     this.addFloatingText(enemy.x, enemy.y - enemy.radius - 12, `-${formatDamage(damage)}`, COLORS.text);
-    if (fromBullet && this.stack('shock-impact') > 0) this.applyShock(enemy);
+    if (fromBullet && this.stack('shock-impact') > 0) this.applyShock(enemy, enemy.lastHitContext);
     if (enemy.health <= 0) this.killEnemy(enemy);
   }
 
-  applyShock(origin) {
-    const radius = 96 + this.stack('shock-impact') * 32;
-    const damage = 0.28 + this.stack('shock-impact') * 0.35;
+  applyShock(origin, context = {}) {
+    const scale = shockImpactSynergyScale(this.upgradeStacks, context);
+    const radius = (96 + this.stack('shock-impact') * 32) * scale.radius;
+    const damage = (0.28 + this.stack('shock-impact') * 0.35) * scale.damage;
     for (const enemy of [...this.enemies]) {
       if (enemy.id === origin.id || distance(enemy, origin) > radius) continue;
       enemy.health -= damage;
@@ -677,9 +702,24 @@ export class OneBulletGame {
     this.enemies = this.enemies.filter((candidate) => candidate.id !== enemy.id);
     this.combo += 1;
     this.comboTimer = 2.15;
-    const gained = Math.round(enemy.score * Math.max(1, Math.min(8, this.combo)));
+    const directiveKill = resolveWaveDirectiveKill(this.waveDirective, enemy, enemy.lastHitContext);
+    const gained = Math.round(
+      enemy.score * Math.max(1, Math.min(8, this.combo)) * directiveKill.scoreMultiplier
+      + directiveKill.scoreBonus,
+    );
     this.score += gained;
     this.stats.kills += 1;
+    if (directiveKill.matched) {
+      this.waveDirective.bonuses += 1;
+      this.waveDirective.completed = this.waveDirective.completed || directiveKill.completesDirective;
+      this.addFloatingText(enemy.x, enemy.y - enemy.radius - 30, directiveKill.label, COLORS.success);
+      if (enemy.priorityTarget) {
+        for (const other of this.enemies) {
+          other.attackCooldown = Math.max(other.attackCooldown || 0, 0.45);
+          other.staggerTime = Math.max(other.staggerTime || 0, 0.12);
+        }
+      }
+    }
     this.highScore = Math.max(this.highScore, this.score);
     writeNumber(STORAGE.highScore, this.highScore);
     this.addFloatingText(enemy.x, enemy.y, `+${gained}`, COLORS.bullet);
@@ -712,8 +752,9 @@ export class OneBulletGame {
 
   applyCatchImpulse(recallDistance = 0) {
     const stacks = this.stack('kinetic-catch');
-    const radius = Math.min(210, 90 + recallDistance * 0.13 + stacks * 24);
-    const strength = Math.min(310, 95 + recallDistance * 0.16 + stacks * 38);
+    const scale = catchImpulseSynergyScale(this.upgradeStacks);
+    const radius = Math.min(240, (90 + recallDistance * 0.13 + stacks * 24) * scale.radius);
+    const strength = Math.min(360, (95 + recallDistance * 0.16 + stacks * 38) * scale.strength);
     for (const enemy of [...this.enemies]) {
       const gap = distance(enemy, this.player);
       if (gap > radius + enemy.radius) continue;
@@ -1538,6 +1579,14 @@ export class OneBulletGame {
       arenaFullyUnlocked: this.arenaStage.id === ARENA_STAGE_COUNT - 1,
       arenaProgressionAutomatic: true,
       puzzleObjectivesPresent: false,
+      waveDirective: this.waveDirective ? {
+        id: this.waveDirective.id,
+        name: this.waveDirective.name,
+        hint: this.waveDirective.hint,
+        targetEnemyId: this.waveDirective.targetEnemyId,
+        completed: Boolean(this.waveDirective.completed),
+        bonuses: this.waveDirective.bonuses,
+      } : null,
       removedSystemsPresent: false,
       touchSafeZones: this.touchMode ? mobileSafeZones() : [],
     };

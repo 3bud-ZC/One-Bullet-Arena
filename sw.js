@@ -11,7 +11,7 @@ const APP_SHELL = [
   './src/release-config.js', './src/release.js', './src/i18n.js', './src/main.js', './src/game.js',
   './src/performance/frame-pacer.js', './src/performance/quality-manager.js',
   './src/render/canvas-viewport.js', './src/render/combat-vfx.js', './src/ui/icons.js', './src/ui/dom-ui.js', './src/ui/dom-performance-bridge.js',
-  './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js', './src/enemy-navigation.js',
+  './src/game-runtime.js', './src/polish-runtime.js', './src/movement-hotfix-runtime.js', './src/enemy-navigation.js', './src/game-feel.js',
   './src/visual-design-runtime.js', './src/combat-feedback-runtime.js', './src/ui-layout-runtime.js',
   './src/core/game-events.js', './src/core/event-bus.js', './src/core/game-states.js',
   './src/core/event-runtime.js', './src/core/combat-depth-runtime.js',

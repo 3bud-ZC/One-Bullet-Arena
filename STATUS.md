@@ -44,6 +44,8 @@ accepted runtime architecture.
   `--with-deps`; broad runner-side dependency installs repeatedly hung before
   reaching verification, while a browser-only install lacked WebKit libraries
   on the default Ubuntu runner.
+- The Playwright run steps set `HOME=/root` in that container so Firefox can
+  launch under GitHub Actions instead of rejecting `/github/home` ownership.
 
 Verification:
 

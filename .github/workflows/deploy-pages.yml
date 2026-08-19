@@ -32,9 +32,13 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
 
       - name: Install Playwright browsers
+        env:
+          HOME: /root
         run: npx playwright install chromium firefox webkit
 
       - name: Verify source and browser contracts
+        env:
+          HOME: /root
         run: npm run verify:all
 
       - name: Upload browser verification evidence

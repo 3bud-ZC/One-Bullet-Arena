@@ -24,8 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Install Playwright browsers
+        env:
+          HOME: /root
         run: npx playwright install chromium firefox webkit
       - name: Run browser smoke tests
+        env:
+          HOME: /root
         run: npm run test:browser
       - name: Upload screenshots and report
         if: always()

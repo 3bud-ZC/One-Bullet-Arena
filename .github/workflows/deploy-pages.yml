@@ -31,7 +31,7 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install chromium firefox webkit
 
       - name: Verify source and browser contracts
         run: npm run verify:all

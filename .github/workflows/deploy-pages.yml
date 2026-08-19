@@ -13,6 +13,7 @@ jobs:
   build:
     name: Build verified Pages artifact
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.62.0-noble
     permissions:
       contents: read
       pages: write
@@ -29,15 +30,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
-
-      - name: Install Playwright system libraries
-        run: |
-          sudo apt-get update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            libgtk-4-1 \
-            libgraphene-1.0-0 \
-            libevent-2.1-7t64 \
-            libx264-164
 
       - name: Install Playwright browsers
         run: npx playwright install chromium firefox webkit

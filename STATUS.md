@@ -39,10 +39,11 @@ accepted runtime architecture.
   close to attack readiness/telegraphing get a restrained warning outline.
 - Service-worker app shell, `npm run check`, and the Pages artifact gate now
   include the new module.
-- GitHub Pages/Browser Smoke now install the specific Ubuntu runner libraries
-  WebKit reported as missing (`libgtk-4-1`, `libgraphene-1.0-0`,
-  `libevent-2.1-7t64`, `libx264-164`) before installing Playwright browsers;
-  the broad `--with-deps` install repeatedly hung before reaching verification.
+- GitHub Pages/Browser Smoke now run their Playwright verification jobs inside
+  the official Playwright Noble container and install browsers without
+  `--with-deps`; broad runner-side dependency installs repeatedly hung before
+  reaching verification, while a browser-only install lacked WebKit libraries
+  on the default Ubuntu runner.
 
 Verification:
 

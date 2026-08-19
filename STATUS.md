@@ -37,7 +37,8 @@ accepted runtime architecture.
 - Added lightweight production-path threat indicators in
   `OneBulletGlobalUiRuntime`: priority targets get a clear marker, and enemies
   close to attack readiness/telegraphing get a restrained warning outline.
-- Service-worker app shell and `npm run check` now include the new module.
+- Service-worker app shell, `npm run check`, and the Pages artifact gate now
+  include the new module.
 
 Verification:
 

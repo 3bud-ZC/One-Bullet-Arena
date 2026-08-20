@@ -4,12 +4,13 @@ import { AdaptiveQualityManager, QUALITY_MODES } from '../performance/quality-ma
 import { FixedStepClock, FramePacer, lerp } from '../performance/frame-pacer.js';
 import { RELEASE_VERSION } from '../release.js';
 import { CanvasViewport } from '../render/canvas-viewport.js';
+import { CINEMATIC_COMBAT_ART_VERSION, CinematicCombatArt, cinematicCombatTokens } from '../render/cinematic-combat-art.js';
 import { CombatVfx } from '../render/combat-vfx.js';
 import { DomUiController } from '../ui/dom-ui.js';
 import { installDomPerformanceBridge } from '../ui/dom-performance-bridge.js';
 import { OneBulletProductionArtRuntime } from './production-art-runtime.js';
 
-export const GLOBAL_UI_RUNTIME_VERSION = '3.13.0-combat-vfx';
+export const GLOBAL_UI_RUNTIME_VERSION = '3.14.0-cinematic-combat';
 export const GLOBAL_UI_REVISION = 'smooth-fixedstep-presentation-v1';
 export const UI_REPAIR_RUNTIME_VERSION = GLOBAL_UI_RUNTIME_VERSION;
 export const UI_REPAIR_REVISION = GLOBAL_UI_REVISION;
@@ -88,6 +89,8 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
     // further down would be shadowed.
     this.combatVfx = new CombatVfx();
     this.combatVfx.reducedMotion = this.reducedMotion;
+    this.cinematicCombatArt = new CinematicCombatArt();
+    this.cinematicCombatArtVersion = CINEMATIC_COMBAT_ART_VERSION;
     this.boundSmoothLoop = (time) => this.loop(time);
 
     this.installQualityControls();
@@ -175,6 +178,15 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       refreshIndependentParticles: true,
       timeBasedCameraShake: true,
       domWaveBanner: true,
+      cinematicCombatArtActive: true,
+      cinematicCombatArtVersion: CINEMATIC_COMBAT_ART_VERSION,
+      cinematicCombatArt: cinematicCombatTokens(),
+      replacesGeometricCombatShapes: true,
+      animatedCombatEffects: true,
+      silhouetteDrivenEnemies: true,
+      combatArtRenderOnly: true,
+      combatArtGameplayGeometryChanged: false,
+      combatArtCollisionGeometryChanged: false,
     };
   }
 
@@ -654,7 +666,7 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
   // Drawn inside the world transform by the base draw pipeline, after the
   // existing particle layer so effects sit above the floor but below the HUD.
   drawParticles() {
-    super.drawParticles();
+    this.cinematicCombatArt?.drawParticles(this.ctx, this);
     this.combatVfx?.setQuality(this.qualityManager?.snapshot?.()?.tier || 'HIGH');
     this.combatVfx?.draw(this.ctx);
   }
@@ -893,70 +905,23 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       ctx.scale(1 + dash * 0.09, 1 - dash * 0.055);
       ctx.rotate(-angle);
       ctx.translate(-this.player.x, -this.player.y);
-      super.drawPlayer();
+      this.cinematicCombatArt?.drawPlayer(ctx, this);
       ctx.restore();
     } else {
-      super.drawPlayer();
+      this.cinematicCombatArt?.drawPlayer(ctx, this);
     }
   }
 
   drawBullet() {
-    super.drawBullet();
-    if (!this.bullet?.held && !this.bullet?.recalling) {
-      const ctx = this.ctx;
-      const dx = this.bullet.x - this.player.x;
-      const dy = this.bullet.y - this.player.y;
-      const length = Math.hypot(dx, dy);
-      if (length > 250) {
-        const direction = normalize(dx, dy);
-        const x = this.player.x + direction.x * 58;
-        const y = this.player.y + direction.y * 58;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(Math.atan2(direction.y, direction.x));
-        ctx.globalAlpha = 0.72;
-        ctx.fillStyle = '#f4cf78';
-        ctx.strokeStyle = 'rgba(255,255,255,0.72)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(12, 0);
-        ctx.lineTo(-8, -7);
-        ctx.lineTo(-4, 0);
-        ctx.lineTo(-8, 7);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-    if (this.bullet?.recalling && !this.bullet?.held) {
-      const ctx = this.ctx;
-      const dx = this.player.x - this.bullet.x;
-      const dy = this.player.y - this.bullet.y;
-      const length = Math.hypot(dx, dy);
-      if (length > 38) {
-        const direction = normalize(dx, dy);
-        const normal = { x: -direction.y, y: direction.x };
-        const bend = Math.min(26, length * 0.06) * Math.sin(this.elapsed * 7.5);
-        const cx = (this.player.x + this.bullet.x) * 0.5 + normal.x * bend;
-        const cy = (this.player.y + this.bullet.y) * 0.5 + normal.y * bend;
-        ctx.save();
-        ctx.globalAlpha = 0.28 + clamp01(this.recallVisual) * 0.18;
-        ctx.strokeStyle = '#6dd7f2';
-        ctx.lineWidth = 1.4;
-        ctx.setLineDash([5, 10]);
-        ctx.lineDashOffset = -(this.elapsed * 85) % 15;
-        ctx.beginPath();
-        ctx.moveTo(this.bullet.x, this.bullet.y);
-        ctx.quadraticCurveTo(cx, cy, this.player.x, this.player.y);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
+    this.cinematicCombatArt?.drawBullet(this.ctx, this);
   }
 
   drawEnemies() {
-    super.drawEnemies();
+    for (const enemy of this.enemies || []) {
+      this.cinematicCombatArt?.drawEnemy(this.ctx, this, enemy);
+      this.drawEnemyHealth(enemy);
+      this.drawEnemyTelegraph(enemy);
+    }
     this.drawEnemyThreatIndicators();
   }
 
@@ -970,46 +935,13 @@ export class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime {
       const telegraphing = enemy.shotTelegraph > 0 || enemy.chargeTelegraph > 0 || enemy.phaseName === 'wind';
       if (!priority && !ready && !telegraphing) continue;
 
-      const pulse = 0.5 + Math.sin(this.elapsed * (priority ? 5.2 : 7.4) + enemy.id) * 0.18;
-      const radius = enemy.radius + (priority ? 10 : 6) + (telegraphing ? 5 : 0);
-      ctx.globalAlpha = priority ? 0.74 : telegraphing ? 0.58 : 0.34;
-      ctx.strokeStyle = priority ? '#ffe66d' : telegraphing ? '#ff526a' : '#ff9f43';
-      ctx.lineWidth = priority ? 2.4 : 1.6;
-      ctx.setLineDash(priority ? [2, 7] : [7, 8]);
-      ctx.lineDashOffset = -this.elapsed * (priority ? 34 : 48);
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, radius + pulse * 3, 0, Math.PI * 2);
-      ctx.stroke();
-
-      if (priority) {
-        ctx.setLineDash([]);
-        ctx.globalAlpha = 0.82;
-        ctx.fillStyle = '#ffe66d';
-        ctx.beginPath();
-        ctx.moveTo(enemy.x, enemy.y - radius - 13);
-        ctx.lineTo(enemy.x - 6, enemy.y - radius - 2);
-        ctx.lineTo(enemy.x + 6, enemy.y - radius - 2);
-        ctx.closePath();
-        ctx.fill();
-      }
+      this.cinematicCombatArt?.drawThreat(ctx, this, enemy, priority, ready, telegraphing);
     }
     ctx.restore();
   }
 
   drawEnemyShots() {
-    const ctx = this.ctx;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 128, 153, 0.68)';
-    ctx.lineWidth = 2.2;
-    for (const shot of this.enemyShots || []) {
-      const direction = normalize(shot.vx, shot.vy);
-      ctx.beginPath();
-      ctx.moveTo(shot.x, shot.y);
-      ctx.lineTo(shot.x - direction.x * 18, shot.y - direction.y * 18);
-      ctx.stroke();
-    }
-    ctx.restore();
-    super.drawEnemyShots();
+    for (const shot of this.enemyShots || []) this.cinematicCombatArt?.drawEnemyShot(this.ctx, shot, this);
   }
 
   drawWorldLighting() {

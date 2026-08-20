@@ -28,16 +28,19 @@ async function seedWave(page, wave) {
   }, wave);
 }
 
-test('captures v3.8 dashboard and representative game-feel states', async ({ page }, testInfo) => {
+test('captures cinematic dashboard and representative game-feel states', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Visual review is captured in desktop Chromium.');
   test.setTimeout(300_000);
   await page.setViewportSize({ width: 1920, height: 1080 });
   await loadGame(page, 'en');
 
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.13.0-combat-vfx');
+  expect(menu.releaseVersion).toBe('3.14.0-cinematic-combat');
   expect(menu.releaseChannel).toBe('smooth-runtime');
-  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.13.0-combat-vfx');
+  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.14.0-cinematic-combat');
+  expect(menu.cinematicCombatArtActive).toBe(true);
+  expect(menu.replacesGeometricCombatShapes).toBe(true);
+  expect(menu.animatedCombatEffects).toBe(true);
   expect(menu.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(menu.combatDepthActive).toBe(true);
   expect(menu.checkpointProgressionActive).toBe(true);

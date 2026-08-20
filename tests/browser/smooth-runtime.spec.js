@@ -77,10 +77,10 @@ async function sampleRaf(page, durationMs = 1400) {
   }), durationMs);
 }
 
-test('v3.8 owns native rAF rendering, 120 Hz fixed simulation, interpolation, and adaptive quality', async ({ page }) => {
+test('cinematic runtime owns native rAF rendering, 120 Hz fixed simulation, interpolation, and adaptive quality', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.13.0-combat-vfx');
+  expect(snapshot.releaseVersion).toBe('3.14.0-cinematic-combat');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.nativeRafRendering).toBe(true);
   expect(snapshot.artificialRenderFpsCap).toBe(false);
@@ -301,7 +301,7 @@ test('dense wave performance diagnostics remain finite and gameplay stays capped
   expect(raf.p95FrameMs).toBeGreaterThan(0);
 });
 
-test('Chromium records same-runner v3.7 baseline versus v3.8 candidate frame pacing', async ({ page }, testInfo) => {
+test('Chromium records same-runner baseline versus cinematic candidate frame pacing', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Same-runner baseline comparison is recorded once in Chromium.');
   test.setTimeout(90_000);
 
@@ -322,7 +322,7 @@ test('Chromium records same-runner v3.7 baseline versus v3.8 candidate frame pac
   await page.waitForTimeout(700);
   const candidate = await sampleRaf(page, 1500);
   const internal = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getPerformanceSnapshot());
-  console.log('PERF_COMPARE_V37_V38', JSON.stringify({ baseline, candidate, internal }));
+  console.log('PERF_COMPARE_BASELINE_CINEMATIC', JSON.stringify({ baseline, candidate, internal }));
   expect(internal.sampleCount).toBeGreaterThan(0);
   expect(Number.isFinite(internal.p95FrameMs)).toBe(true);
   expect(internal.p95FrameMs).toBeGreaterThan(0);

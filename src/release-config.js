@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.13.0-combat-vfx';
+  const version = '3.14.0-cinematic-combat';
   const release = Object.freeze({
     version,
     label: `v${version}`,

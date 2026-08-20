@@ -26,6 +26,13 @@ test('visual overhaul remains active inside the expanding world across major sta
   expect(snapshot.visualOverhaulActive).toBe(true);
   expect(snapshot.visualOverhaulRuntimeVersion).toBe('3.3.0-visual-overhaul');
   expect(snapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
+  expect(snapshot.cinematicCombatArtActive).toBe(true);
+  expect(snapshot.cinematicCombatArtVersion).toBe('3.14.0-cinematic-combat-art');
+  expect(snapshot.replacesGeometricCombatShapes).toBe(true);
+  expect(snapshot.animatedCombatEffects).toBe(true);
+  expect(snapshot.combatArtRenderOnly).toBe(true);
+  expect(snapshot.combatArtGameplayGeometryChanged).toBe(false);
+  expect(snapshot.combatArtCollisionGeometryChanged).toBe(false);
   expect(snapshot.expandingWorldActive).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(true);
   expect(snapshot.collisionGeometryChanged).toBe(true);
@@ -58,6 +65,7 @@ test('visual overhaul remains active inside the expanding world across major sta
   expect(snapshot.enhancedArenaDepth).toBe(true);
   expect(snapshot.enhancedHudChrome).toBe(true);
   expect(snapshot.unifiedCombatHud).toBe(true);
+  expect(snapshot.silhouetteDrivenEnemies).toBe(true);
   await attachCanvas(page, testInfo, 'visual-overhaul-combat');
 
   snapshot = await page.evaluate(() => {

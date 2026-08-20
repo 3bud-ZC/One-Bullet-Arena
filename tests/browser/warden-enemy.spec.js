@@ -31,7 +31,7 @@ test('warden runtime boots beneath global UI and wave seven introduces the enemy
     game.startNextWave();
     return { menu, wave: game.getSnapshot() };
   });
-  expect(result.menu.releaseVersion).toBe('3.13.0-combat-vfx');
+  expect(result.menu.releaseVersion).toBe('3.14.0-cinematic-combat');
   expect(result.menu.globalUiActive).toBe(true);
   expect(result.menu.wardenRuntimeVersion).toBe('3.1.0-a-warden');
   expect(result.menu.wardenEnemyActive).toBe(true);

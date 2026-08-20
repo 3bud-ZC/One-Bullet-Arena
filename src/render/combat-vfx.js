@@ -9,9 +9,8 @@
  * - Directional, not radial. Sparks and shards inherit a vector from the event
  *   that produced them, so the player reads incoming and outgoing direction
  *   instead of a symmetric puff.
- * - Geometric, not glowing. Effects are short line segments and thin triangles.
- *   There are no radial gradients and no shadowBlur anywhere in here; both are
- *   per-draw allocations that showed up as dense-combat cost previously.
+ * - Animated, not diagrammatic. Events use soft embers, ribbons, and fragments
+ *   with short lifetimes, so impact reads as motion instead of static geometry.
  * - Bounded. Every effect class is a fixed-size pool allocated once. Emitting
  *   past capacity overwrites the oldest entry rather than growing an array, so
  *   dense combat cannot produce an allocation spike or an unbounded filter.
@@ -86,7 +85,7 @@ export class CombatVfx {
 
   // ---------------------------------------------------------------- emitters
 
-  // Muzzle: a tight directional wedge plus a departure streak. No circle.
+  // Muzzle: a tight directional flare plus a departure ribbon.
   fire(x, y, dx, dy) {
     this.streak(x + dx * 14, y + dy * 14, dx, dy, 46, 0.1, GOLD, 3);
     const n = this.count(5);
@@ -171,8 +170,8 @@ export class CombatVfx {
     this.streak(x - dx * 10, y - dy * 10, dx, dy, 16 + urgency * 14, 0.12, '#62d5f3', 1.6 + urgency);
   }
 
-  // Normal catch closes the loop quietly; perfect catch is a sharp, rare,
-  // four-point geometric confirmation rather than a radial explosion.
+  // Normal catch closes the loop quietly; perfect catch blooms as four quick
+  // ribbons around the player.
   catchLoop(x, y, perfect) {
     if (!perfect) {
       const n = this.count(4);
@@ -260,7 +259,8 @@ export class CombatVfx {
     this.liveCount = live;
   }
 
-  // One save/restore for the whole system, and no gradient or shadow work.
+  // One save/restore for the whole system. Glow is only enabled while live
+  // effects exist, and pool sizes keep dense combat bounded.
   draw(ctx) {
     // Skip the whole layer, including its save/restore, when nothing is live.
     // Most frames in a normal wave emit nothing at all.
@@ -268,16 +268,24 @@ export class CombatVfx {
 
     ctx.save();
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     for (const m of this.marks.items) {
       if (m.life <= 0) continue;
       const t = m.life / m.max;
-      ctx.globalAlpha = t * 0.5;
+      ctx.globalAlpha = t * 0.38;
       ctx.strokeStyle = m.color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2.4;
+      ctx.shadowColor = m.color;
+      ctx.shadowBlur = 5;
       ctx.beginPath();
       ctx.moveTo(m.x - m.ny * m.size, m.y + m.nx * m.size);
-      ctx.lineTo(m.x + m.ny * m.size, m.y - m.nx * m.size);
+      ctx.quadraticCurveTo(
+        m.x + m.nx * m.size * 0.32,
+        m.y + m.ny * m.size * 0.32,
+        m.x + m.ny * m.size,
+        m.y - m.nx * m.size,
+      );
       ctx.stroke();
     }
 
@@ -286,10 +294,20 @@ export class CombatVfx {
       const t = s.life / s.max;
       ctx.globalAlpha = t;
       ctx.strokeStyle = s.color;
-      ctx.lineWidth = s.width * t;
+      ctx.lineWidth = Math.max(0.8, s.width * (0.45 + t));
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 7 * t;
+      const normalX = -s.dy;
+      const normalY = s.dx;
+      const wave = Math.sin((1 - t) * Math.PI) * s.len * 0.1;
       ctx.beginPath();
       ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x + s.dx * s.len * t, s.y + s.dy * s.len * t);
+      ctx.quadraticCurveTo(
+        s.x + s.dx * s.len * 0.5 * t + normalX * wave,
+        s.y + s.dy * s.len * 0.5 * t + normalY * wave,
+        s.x + s.dx * s.len * t,
+        s.y + s.dy * s.len * t,
+      );
       ctx.stroke();
     }
 
@@ -299,29 +317,58 @@ export class CombatVfx {
       const speed = Math.hypot(s.vx, s.vy) || 1;
       const ux = s.vx / speed;
       const uy = s.vy / speed;
-      ctx.globalAlpha = t;
+      ctx.globalAlpha = t * 0.82;
       ctx.strokeStyle = s.color;
-      ctx.lineWidth = Math.max(0.6, s.width * t);
+      ctx.lineWidth = Math.max(0.8, s.width * (0.4 + t));
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 5 * t;
       ctx.beginPath();
       ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - ux * s.len * t, s.y - uy * s.len * t);
+      ctx.quadraticCurveTo(
+        s.x - ux * s.len * 0.44 * t - uy * 2,
+        s.y - uy * s.len * 0.44 * t + ux * 2,
+        s.x - ux * s.len * t,
+        s.y - uy * s.len * t,
+      );
       ctx.stroke();
+      ctx.globalAlpha = t * 0.45;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, Math.max(0.9, s.width * t), Math.max(0.7, s.width * t * 0.72), 0, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     for (const s of this.shards.items) {
       if (s.life <= 0) continue;
       const t = s.life / s.max;
-      ctx.globalAlpha = t;
+      ctx.globalAlpha = t * 0.8;
+      ctx.fillStyle = s.color;
       ctx.strokeStyle = s.color;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 4 * t;
       const size = s.size * (0.4 + t * 0.6);
       const cos = Math.cos(s.angle);
       const sin = Math.sin(s.angle);
       ctx.beginPath();
       ctx.moveTo(s.x + cos * size, s.y + sin * size);
-      ctx.lineTo(s.x - sin * size * 0.5, s.y + cos * size * 0.5);
-      ctx.lineTo(s.x - cos * size, s.y - sin * size);
-      ctx.stroke();
+      ctx.bezierCurveTo(
+        s.x - sin * size * 0.55,
+        s.y + cos * size * 0.55,
+        s.x - cos * size * 0.35,
+        s.y - sin * size * 0.35,
+        s.x - cos * size * 0.86,
+        s.y - sin * size * 0.86,
+      );
+      ctx.bezierCurveTo(
+        s.x + sin * size * 0.25,
+        s.y - cos * size * 0.25,
+        s.x + cos * size * 0.72,
+        s.y + sin * size * 0.72,
+        s.x + cos * size,
+        s.y + sin * size,
+      );
+      ctx.fill();
     }
 
     ctx.restore();

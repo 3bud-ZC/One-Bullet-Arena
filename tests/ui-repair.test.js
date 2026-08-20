@@ -8,8 +8,8 @@ import {
   UI_REPAIR_RUNTIME_VERSION,
 } from '../src/core/ui-repair-runtime.js';
 
-test('canonical UI runtime exposes the v3.8 smooth presentation contract', () => {
-  assert.equal(GLOBAL_UI_RUNTIME_VERSION, '3.13.0-combat-vfx');
+test('canonical UI runtime exposes the cinematic smooth presentation contract', () => {
+  assert.equal(GLOBAL_UI_RUNTIME_VERSION, '3.14.0-cinematic-combat');
   assert.equal(UI_REPAIR_RUNTIME_VERSION, GLOBAL_UI_RUNTIME_VERSION);
   assert.equal(GLOBAL_UI_REVISION, 'smooth-fixedstep-presentation-v1');
   assert.equal(FIXED_SIMULATION_HZ, 120);
@@ -18,6 +18,7 @@ test('canonical UI runtime exposes the v3.8 smooth presentation contract', () =>
 test('global UI runtime remains canonical while owning pacing, quality, and DOM presentation', async () => {
   const source = await readFile(new URL('../src/core/ui-repair-runtime.js', import.meta.url), 'utf8');
   assert.match(source, /class OneBulletGlobalUiRuntime extends OneBulletProductionArtRuntime/);
+  assert.match(source, /new CinematicCombatArt/);
   assert.match(source, /new CanvasViewport/);
   assert.match(source, /new DomUiController/);
   assert.match(source, /new FixedStepClock/);
@@ -27,6 +28,8 @@ test('global UI runtime remains canonical while owning pacing, quality, and DOM 
   assert.match(source, /artificialRenderFpsCap: false/);
   assert.match(source, /fixedSimulationHz: FIXED_SIMULATION_HZ/);
   assert.match(source, /interpolatedRendering: true/);
+  assert.match(source, /cinematicCombatArtActive: true/);
+  assert.match(source, /combatArtRenderOnly: true/);
   assert.match(source, /drawMenu\(\) \{\}/);
   assert.match(source, /drawHud\(\) \{\}/);
   assert.match(source, /drawPause\(\) \{\}/);

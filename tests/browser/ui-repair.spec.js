@@ -20,14 +20,14 @@ async function seedCheckpoint(page, wave = 18) {
   }, wave);
 }
 
-test('v3.8 canonical presentation preserves DOM + HiDPI architecture and adds smooth runtime ownership', async ({ page }, testInfo) => {
+test('canonical presentation preserves DOM + HiDPI architecture and adds cinematic runtime ownership', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'Canonical UI contract runs once in Chromium.');
   await page.setViewportSize({ width: 1920, height: 1080 });
   await loadGame(page, 'en');
   await seedCheckpoint(page, 64);
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.13.0-combat-vfx');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.13.0-combat-vfx');
+  expect(snapshot.releaseVersion).toBe('3.14.0-cinematic-combat');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.14.0-cinematic-combat');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.renderingArchitecture).toBe('canvas-world+dom-ui');

@@ -1,19 +1,75 @@
 # One Bullet Arena — Status
 
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.13.0 — Combat VFX**
-- Canonical version: `3.13.0-combat-vfx`
-- Canonical label: `v3.13.0-combat-vfx`
+- Release: **v3.14.0 — Cinematic Combat Art**
+- Canonical version: `3.14.0-cinematic-combat`
+- Canonical label: `v3.14.0-cinematic-combat`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.13.0-combat-vfx`
+- Service Worker cache: `one-bullet-arena-v3.14.0-cinematic-combat`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Cinematic combat art pass - 2026-08-20
+
+Scope: comprehensive visual/feel pass for the live combat layer, focused on
+replacing hard geometric enemy/player/effect presentation with animated
+silhouettes and motion-rich combat feedback while preserving gameplay logic.
+
+- Added `src/render/cinematic-combat-art.js` as a render-only combat art layer
+  owned by `OneBulletGlobalUiRuntime`.
+- Replaced the terminal runtime's final player, bullet, enemy, enemy-shot,
+  threat-marker, and legacy particle drawing with cinematic silhouettes and
+  animated ribbons/embers.
+- Preserved the accepted DOM/SVG UI architecture, HiDPI canvas, fixed-step
+  simulation, adaptive quality controls, world expansion, checkpoints, Arabic
+  RTL support, Warden guard mechanics, one-bullet physics, and the 1280x720
+  logical coordinate system.
+- Enemy archetype readability:
+  - Scout: fast moth/needle silhouette with fluttering fins.
+  - Brute: heavier rounded armored body with slow breathing motion.
+  - Splitter and mini children: unstable divided organic core.
+  - Sniper: long ranged silhouette with visible barrel/core direction.
+  - Charger: horned ram/comet silhouette that heats during telegraph.
+  - Warden/Guardian: shielded sentry forms that keep guard direction visible.
+- Updated `src/render/combat-vfx.js` from line/triangle fragments to bounded
+  ember, ribbon, and fragment animation while retaining fixed-size pools.
+- Bumped the release to `3.14.0-cinematic-combat`; updated cache-busting,
+  release metadata, service worker app shell, module preload, `npm run check`,
+  package lock metadata, and Pages artifact required files.
+- Added `tests/cinematic-combat-art.test.js` and browser snapshot assertions for
+  the new render-only contract.
+
+Verification:
+
+- `npm run check`: passed.
+- `npm test`: passed, **159/159 Node tests**.
+- `npm run verify`: passed.
+- Targeted browser QA:
+  - Chromium visual/render-quality suite: **7 passed, 1 skipped**.
+  - Mobile landscape visual/render QA: **2 passed, 5 skipped**.
+  - Chromium smooth-runtime + enemy-navigation suite: **11 passed**.
+- Full browser matrix:
+  - default `npm run verify:all` reached the browser phase but produced broad
+    local startup timeouts under 10 workers, so it was stopped and rerun with
+    the repository's documented deterministic worker setting;
+  - `npm run test:browser -- --workers=1`: **213 passed, 51 skipped**.
+- Performance validation: dense-wave diagnostics stayed finite, enemy cap
+  stayed at 18, gameplay population was unchanged by quality tier, and the
+  same-runner Chromium pacing comparison reported the cinematic candidate ahead
+  of the baseline run in the local browser runner.
+- Browser visual QA: Playwright screenshots were reviewed for dashboard and
+  dense combat; the UI remained intact and combat actors rendered as animated
+  silhouettes instead of the prior hard geometric shapes.
+
+Publication status: committed locally; push and Pages verification pending.
+Final commit: the pushed commit containing this section; exact SHA is reported
+after publication verification.
 
 ## Gameplay feel pass - 2026-08-19
 

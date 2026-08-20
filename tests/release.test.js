@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { RELEASE_CACHE_NAME, RELEASE_INFO, RELEASE_LABEL, RELEASE_VERSION } from '../src/release.js';
 
 test('release metadata exposes the canonical smooth runtime identity', () => {
-  assert.equal(RELEASE_VERSION, '3.15.1-facing-fix');
-  assert.equal(RELEASE_LABEL, 'v3.15.1-facing-fix');
-  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.15.1-facing-fix');
+  assert.equal(RELEASE_VERSION, '3.16.0-mobile-combat');
+  assert.equal(RELEASE_LABEL, 'v3.16.0-mobile-combat');
+  assert.equal(RELEASE_CACHE_NAME, 'one-bullet-arena-v3.16.0-mobile-combat');
   assert.equal(RELEASE_INFO.schemaVersion, 1);
   assert.equal(RELEASE_INFO.channel, 'smooth-runtime');
   assert.ok(Object.isFrozen(RELEASE_INFO));

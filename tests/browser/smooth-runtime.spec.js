@@ -80,7 +80,7 @@ async function sampleRaf(page, durationMs = 1400) {
 test('cinematic runtime owns native rAF rendering, 120 Hz fixed simulation, interpolation, and adaptive quality', async ({ page }) => {
   await loadGame(page);
   const snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.15.1-facing-fix');
+  expect(snapshot.releaseVersion).toBe('3.16.0-mobile-combat');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.nativeRafRendering).toBe(true);
   expect(snapshot.artificialRenderFpsCap).toBe(false);

@@ -5,9 +5,11 @@ import {
   analogMovementVector,
   separateOverlappingEnemies,
 } from '../src/movement-hotfix-runtime.js';
+import { MOBILE_COMBAT_CONTROLS_VERSION as INPUT_MOBILE_COMBAT_CONTROLS_VERSION } from '../src/input-controller.js';
 
 test('movement hotfix exposes its release identifier', () => {
   assert.equal(MOVEMENT_HOTFIX_VERSION, '2.5.1-controls');
+  assert.equal(INPUT_MOBILE_COMBAT_CONTROLS_VERSION, '3.16.0-mobile-combat-controls');
 });
 
 test('keyboard movement is normalized and opposite keys cancel', () => {

@@ -1,6 +1,8 @@
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from './game-data.js';
 import { TOUCH_LAYOUT, pointInsideCircle } from './ui-renderer.js';
 
+export const MOBILE_COMBAT_CONTROLS_VERSION = '3.16.0-mobile-combat-controls';
+
 const PHYSICAL_KEY_MAP = Object.freeze({
   KeyW: 'w',
   KeyA: 'a',
@@ -40,6 +42,8 @@ export class InputController {
   constructor(game) {
     this.game = game;
     this.bound = false;
+    this.game.touchAim = this.game.touchAim || null;
+    this.game.mobileCombatControlsVersion = MOBILE_COMBAT_CONTROLS_VERSION;
   }
 
   bind() {
@@ -109,6 +113,13 @@ export class InputController {
         game.touchMove.y = point.y;
         return;
       }
+      if (game.touchAim?.id === event.pointerId) {
+        event.preventDefault();
+        game.touchAim.x = point.x;
+        game.touchAim.y = point.y;
+        Object.assign(game.pointer, point);
+        return;
+      }
       if (event.pointerType !== 'touch') Object.assign(game.pointer, point);
     });
 
@@ -119,12 +130,12 @@ export class InputController {
       game.pointer.down = true;
       game.audio.ensure();
       game.canvas.setPointerCapture?.(event.pointerId);
+      if (event.pointerType === 'touch') game.touchMode = true;
 
       if (game.handleUiClick(point.x, point.y)) return;
       if (game.state !== 'playing') return;
 
       if (event.pointerType === 'touch') {
-        game.touchMode = true;
         if (!game.touchMove && pointInsideCircle(point, {
           ...TOUCH_LAYOUT.move,
           radius: TOUCH_LAYOUT.move.activationRadius,
@@ -138,6 +149,16 @@ export class InputController {
           };
           return;
         }
+        game.touchAim = {
+          id: event.pointerId,
+          originX: point.x,
+          originY: point.y,
+          x: point.x,
+          y: point.y,
+        };
+        Object.assign(game.pointer, point);
+        game.fireBullet();
+        return;
       }
 
       Object.assign(game.pointer, point);
@@ -146,7 +167,8 @@ export class InputController {
 
     const releasePointer = (event) => {
       if (game.touchMove?.id === event.pointerId) game.touchMove = null;
-      game.pointer.down = false;
+      if (game.touchAim?.id === event.pointerId) game.touchAim = null;
+      game.pointer.down = Boolean(game.touchMove || game.touchAim);
     };
     game.canvas.addEventListener('pointerup', releasePointer);
     game.canvas.addEventListener('pointercancel', releasePointer);
@@ -155,6 +177,7 @@ export class InputController {
     window.addEventListener('blur', () => {
       game.keys.clear();
       game.touchMove = null;
+      game.touchAim = null;
       if (game.state === 'playing') game.pause();
     });
   }

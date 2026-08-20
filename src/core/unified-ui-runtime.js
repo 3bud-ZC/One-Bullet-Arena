@@ -1,5 +1,6 @@
 import { combatSafeZones, resolveCombatCircle } from '../arena.js';
 import { GAME_HEIGHT as HEIGHT, GAME_WIDTH as WIDTH } from '../game-data.js';
+import { i18n } from '../i18n.js';
 import {
   TOUCH_LAYOUT,
   UI_FONT,
@@ -539,44 +540,115 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
     const origin = this.touchMove
       ? { x: this.touchMove.originX, y: this.touchMove.originY }
       : { x: TOUCH_LAYOUT.move.x, y: TOUCH_LAYOUT.move.y };
+    const touchVector = this.touchMove
+      ? {
+        x: Math.max(-72, Math.min(72, this.touchMove.x - this.touchMove.originX)),
+        y: Math.max(-72, Math.min(72, this.touchMove.y - this.touchMove.originY)),
+      }
+      : { x: 0, y: 0 };
+    const touchMagnitude = Math.min(1, Math.hypot(touchVector.x, touchVector.y) / 72);
 
     ctx.save();
-    ctx.globalAlpha = 0.66;
-    ctx.fillStyle = 'rgba(6, 25, 40, 0.5)';
-    ctx.strokeStyle = 'rgba(99, 204, 233, 0.62)';
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = 'rgba(4, 16, 29, 0.58)';
+    ctx.strokeStyle = this.touchMove ? 'rgba(120, 221, 243, 0.92)' : 'rgba(99, 204, 233, 0.58)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(origin.x, origin.y, TOUCH_LAYOUT.move.radius, 0, Math.PI * 2);
+    ctx.arc(origin.x, origin.y, TOUCH_LAYOUT.move.radius + 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    const knob = this.touchMove ? {
-      x: origin.x + Math.max(-47, Math.min(47, this.touchMove.x - origin.x)),
-      y: origin.y + Math.max(-47, Math.min(47, this.touchMove.y - origin.y)),
-    } : origin;
-    ctx.fillStyle = 'rgba(99, 204, 233, 0.34)';
+    ctx.globalAlpha = 0.32 + touchMagnitude * 0.36;
+    ctx.strokeStyle = THEME.gold;
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.arc(knob.x, knob.y, 22, 0, Math.PI * 2);
+    ctx.arc(origin.x, origin.y, TOUCH_LAYOUT.move.radius + 13, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * touchMagnitude);
+    ctx.stroke();
+    const knob = this.touchMove ? {
+      x: origin.x + Math.max(-47, Math.min(47, this.touchMove.x - this.touchMove.originX)),
+      y: origin.y + Math.max(-47, Math.min(47, this.touchMove.y - this.touchMove.originY)),
+    } : origin;
+    ctx.globalAlpha = 0.86;
+    ctx.fillStyle = this.touchMove ? 'rgba(120, 221, 243, 0.62)' : 'rgba(99, 204, 233, 0.34)';
+    ctx.beginPath();
+    ctx.arc(knob.x, knob.y, this.touchMove ? 25 : 21, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    this.drawUnifiedTouchButton(TOUCH_LAYOUT.dash.x, TOUCH_LAYOUT.dash.y, TOUCH_LAYOUT.dash.radius, 'DASH', THEME.cyan, () => { this.dashRequested = true; });
-    this.drawUnifiedTouchButton(TOUCH_LAYOUT.recall.x, TOUCH_LAYOUT.recall.y, TOUCH_LAYOUT.recall.radius, 'RECALL', '#6fa7ff', () => this.recallBullet());
-    this.drawUnifiedTouchButton(TOUCH_LAYOUT.pause.x, TOUCH_LAYOUT.pause.y, TOUCH_LAYOUT.pause.radius, 'II', THEME.muted, () => this.pause());
+    if (this.touchAim) this.drawTouchAimIndicator();
+
+    const dashReady = this.player.dashCooldown <= 0;
+    const recallReady = this.bullet.held || this.bullet.recallCooldown <= 0;
+    this.drawUnifiedTouchButton(
+      TOUCH_LAYOUT.dash.x,
+      TOUCH_LAYOUT.dash.y,
+      TOUCH_LAYOUT.dash.radius,
+      dashReady ? i18n.t('touch.dash') : this.player.dashCooldown.toFixed(1),
+      THEME.cyan,
+      () => { this.dashRequested = true; },
+      dashReady,
+    );
+    this.drawUnifiedTouchButton(
+      TOUCH_LAYOUT.recall.x,
+      TOUCH_LAYOUT.recall.y,
+      TOUCH_LAYOUT.recall.radius,
+      i18n.t('touch.recall'),
+      '#6fa7ff',
+      () => this.recallBullet(),
+      recallReady,
+    );
+    this.drawUnifiedTouchButton(TOUCH_LAYOUT.pause.x, TOUCH_LAYOUT.pause.y, TOUCH_LAYOUT.pause.radius, 'II', THEME.muted, () => this.pause(), true);
   }
 
-  drawUnifiedTouchButton(x, y, radius, text, color, action) {
+  drawTouchAimIndicator() {
+    const ctx = this.ctx;
+    const aimX = Math.max(18, Math.min(WIDTH - 18, this.pointer.x));
+    const aimY = Math.max(18, Math.min(HEIGHT - 18, this.pointer.y));
+    const player = this.player || { x: WIDTH / 2, y: HEIGHT / 2 };
+    ctx.save();
+    ctx.globalAlpha = 0.58;
+    ctx.strokeStyle = 'rgba(245, 223, 136, 0.72)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(aimX, aimY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.82;
+    ctx.strokeStyle = THEME.goldText;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(aimX, aimY, 23, 0, Math.PI * 2);
+    ctx.moveTo(aimX - 34, aimY);
+    ctx.lineTo(aimX - 12, aimY);
+    ctx.moveTo(aimX + 12, aimY);
+    ctx.lineTo(aimX + 34, aimY);
+    ctx.moveTo(aimX, aimY - 34);
+    ctx.lineTo(aimX, aimY - 12);
+    ctx.moveTo(aimX, aimY + 12);
+    ctx.lineTo(aimX, aimY + 34);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawUnifiedTouchButton(x, y, radius, text, color, action, ready = true) {
     const ctx = this.ctx;
     ctx.save();
-    ctx.fillStyle = 'rgba(4, 18, 31, 0.72)';
-    ctx.strokeStyle = color;
-    ctx.globalAlpha = 0.76;
-    ctx.lineWidth = 2;
+    ctx.fillStyle = ready ? 'rgba(4, 18, 31, 0.82)' : 'rgba(4, 18, 31, 0.52)';
+    ctx.strokeStyle = ready ? color : 'rgba(120, 150, 165, 0.55)';
+    ctx.globalAlpha = ready ? 0.86 : 0.62;
+    ctx.lineWidth = ready ? 2.4 : 1.8;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    ctx.globalAlpha *= 0.24;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x - radius * 0.18, y - radius * 0.18, radius * 0.58, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = 1;
-    drawText(ctx, text, x, y + 4, text.length > 4 ? 7 : 9, color, 900, 'center', 'ltr');
+    drawText(ctx, text, x, y + 4, String(text).length > 5 ? 8 : 10, ready ? color : THEME.muted, 900, 'center', i18n.isRtl ? 'rtl' : 'ltr');
     ctx.restore();
     this.addUiRegion(x - radius, y - radius, radius * 2, radius * 2, action);
   }
@@ -590,6 +662,7 @@ export class OneBulletUnifiedUiRuntime extends OneBulletWorldExpansionRuntime {
       unifiedPauseOverlay: true,
       unifiedGameOverOverlay: true,
       unifiedTouchControls: true,
+      mobileCombatTouchHud: true,
       cleanCameraRunTransitions: true,
       sectorVisualIdentity: true,
       cameraSafeZonesActive: true,

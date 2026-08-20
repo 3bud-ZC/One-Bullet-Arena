@@ -12,6 +12,7 @@ test('boots with the movement hotfix enabled', async ({ page }) => {
   expect(snapshot.movementHotfix).toBe('2.5.1-controls');
   expect(snapshot.analogTouchMovement).toBe(true);
   expect(snapshot.responsiveMovementDuringHitStop).toBe(true);
+  expect(snapshot.mobileCombatControlsVersion).toBe('3.16.0-mobile-combat-controls');
 });
 
 test('player movement remains responsive during hit-stop', async ({ page }) => {
@@ -95,4 +96,77 @@ test('touch movement starts neutral and scales with drag distance', async ({ pag
   expect(result.partial.x).toBeLessThan(0.5);
   expect(result.full.x).toBeGreaterThan(0.99);
   expect(result.released).toBe(true);
+});
+
+test('dual-touch mobile controls keep movement and aim independent', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-landscape', 'Dual-touch QA runs in the mobile browser project.');
+  await loadGame(page);
+  const result = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.keys.clear();
+    game.canvas.setPointerCapture = () => {};
+    game.draw();
+
+    const rect = game.canvas.getBoundingClientRect();
+    const logicalWidth = game.canvasViewport?.logicalWidth || 1280;
+    const logicalHeight = game.canvasViewport?.logicalHeight || 720;
+    const toClient = (x, y) => ({
+      clientX: rect.left + (x / logicalWidth) * rect.width,
+      clientY: rect.top + (y / logicalHeight) * rect.height,
+    });
+    const dispatch = (type, pointerId, x, y) => {
+      const point = toClient(x, y);
+      game.canvas.dispatchEvent(new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        pointerId,
+        pointerType: 'touch',
+        clientX: point.clientX,
+        clientY: point.clientY,
+      }));
+    };
+
+    dispatch('pointerdown', 41, 118, 608);
+    dispatch('pointermove', 41, 190, 608);
+    const moveWhileHeld = game.movementDirection();
+
+    dispatch('pointerdown', 42, 1010, 360);
+    const shotsAfterAimDown = game.stats.shots;
+    dispatch('pointermove', 42, 1040, 270);
+    const aimWhileMoving = { x: game.pointer.x, y: game.pointer.y };
+    const snapshotWhileActive = game.getSnapshot();
+
+    dispatch('pointerup', 42, 1040, 270);
+    const movementAfterAimRelease = game.movementDirection();
+    const stillMoving = Boolean(game.touchMove);
+    const aimReleased = game.touchAim === null;
+    const pointerDownAfterAimRelease = game.pointer.down;
+
+    dispatch('pointerup', 41, 190, 608);
+    return {
+      moveWhileHeld,
+      shotsAfterAimDown,
+      aimWhileMoving,
+      snapshotWhileActive,
+      movementAfterAimRelease,
+      stillMoving,
+      aimReleased,
+      pointerDownAfterAimRelease,
+      allReleased: game.touchMove === null && game.touchAim === null && game.pointer.down === false,
+    };
+  });
+
+  expect(result.moveWhileHeld.x).toBeGreaterThan(0.99);
+  expect(result.shotsAfterAimDown).toBe(1);
+  expect(result.aimWhileMoving.x).toBeCloseTo(1040, 0);
+  expect(result.aimWhileMoving.y).toBeCloseTo(270, 0);
+  expect(result.snapshotWhileActive.dualTouchAimActive).toBe(true);
+  expect(result.snapshotWhileActive.touchMoveActive).toBe(true);
+  expect(result.snapshotWhileActive.mobileCombatTouchHud).toBe(true);
+  expect(result.movementAfterAimRelease.x).toBeGreaterThan(0.99);
+  expect(result.stillMoving).toBe(true);
+  expect(result.aimReleased).toBe(true);
+  expect(result.pointerDownAfterAimRelease).toBe(true);
+  expect(result.allReleased).toBe(true);
 });

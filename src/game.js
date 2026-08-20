@@ -1589,6 +1589,9 @@ export class OneBulletGame {
       } : null,
       removedSystemsPresent: false,
       touchSafeZones: this.touchMode ? mobileSafeZones() : [],
+      mobileCombatControlsVersion: this.mobileCombatControlsVersion || null,
+      dualTouchAimActive: Boolean(this.touchAim),
+      touchMoveActive: Boolean(this.touchMove),
     };
   }
 }

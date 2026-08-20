@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.15.1-facing-fix';
+  const version = '3.16.0-mobile-combat';
   const release = Object.freeze({
     version,
     label: `v${version}`,

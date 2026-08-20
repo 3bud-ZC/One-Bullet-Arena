@@ -5,15 +5,59 @@ Last updated: 2026-08-20
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.15.1 — Enemy Facing Fix**
-- Canonical version: `3.15.1-facing-fix`
-- Canonical label: `v3.15.1-facing-fix`
+- Release: **v3.16.0 — Mobile Combat Controls**
+- Canonical version: `3.16.0-mobile-combat`
+- Canonical label: `v3.16.0-mobile-combat`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.15.1-facing-fix`
+- Service Worker cache: `one-bullet-arena-v3.16.0-mobile-combat`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Mobile combat controls - 2026-08-20
+
+Scope: mobile gameplay pass focused on making landscape phone play feel more
+controlled during real combat without changing desktop controls, core combat,
+world geometry, DOM/SVG UI ownership, or the 1280x720 simulation space.
+
+- Added independent right-side touch aiming through `touchAim`, so a player can
+  keep the left movement stick held while dragging the right thumb to aim.
+- Touch aim now updates the gameplay pointer continuously during the gesture
+  instead of locking the player facing to the first tap point.
+- Touch release handling now preserves movement if the aim finger lifts before
+  the movement finger.
+- Improved the Canvas touch HUD with a clearer movement stick, active movement
+  feedback, ready/cooldown action button states, localized action labels, and a
+  render-only aim reticle/ray during right-side aiming.
+- Exposed `3.16.0-mobile-combat-controls` in snapshots for regression tests.
+- Bumped the release to `3.16.0-mobile-combat` so mobile browsers and the
+  service worker fetch the updated runtime assets.
+
+Verification:
+
+- `npm run check`: passed.
+- `npm test`: passed, **161/161 Node tests**.
+- `npm run verify`: passed.
+- Targeted mobile browser QA:
+  - Mobile controls/responsive/touch-safe suite:
+    **7 passed, 1 skipped**.
+  - Mobile render-quality/visual-overhaul/smooth-runtime suite:
+    **7 passed, 8 skipped**.
+- Desktop input regression QA:
+  - Desktop Chromium core/keyboard/movement suite:
+    **15 passed, 1 skipped**.
+- Full browser matrix:
+  - Direct serial run with `npx playwright test --workers=1`:
+    **218 passed, 54 skipped**.
+- Visual QA: inspected a mobile landscape combat frame with active left-stick
+  movement and right-side aim; no UI/control overlap or browser console/page
+  errors were observed.
+- Performance QA: mobile dense smooth-runtime diagnostics remained finite at
+  120 Hz simulation with the current 18-enemy cap intact; AUTO selected the
+  mobile performance tier and gameplay counts stayed unchanged.
+- Publication status: final commit for this section is pushed to `origin/main`
+  and verified in the final execution report.
 
 ## Enemy facing fix - 2026-08-20
 

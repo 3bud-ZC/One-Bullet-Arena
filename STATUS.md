@@ -60,8 +60,14 @@ Verification:
   navigation passed, and the same-runner Chromium pacing comparison still
   reported the cinematic candidate ahead of baseline in the local runner.
 
-Publication status: pending final commit and push; final published SHA is the
-commit containing this section.
+Publication status: implementation commit
+`915a303f6581aef3332f9b466343cf45607012ba` was pushed to `origin/main`;
+GitHub `Verify` run `32360807807` passed, GitHub Pages run `32360807778`
+passed, and the live `release.json` reported version
+`3.15.0-arena-polish`, channel `smooth-runtime`, and SHA
+`915a303f6581aef3332f9b466343cf45607012ba`. This status-only publication
+update is the final `main` commit for the pass and is verified in the final
+execution report.
 
 ## Cinematic combat art pass - 2026-08-20
 

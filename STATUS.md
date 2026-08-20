@@ -67,9 +67,12 @@ Verification:
   dense combat; the UI remained intact and combat actors rendered as animated
   silhouettes instead of the prior hard geometric shapes.
 
-Publication status: committed locally; push and Pages verification pending.
-Final commit: the pushed commit containing this section; exact SHA is reported
-after publication verification.
+Publication status: pushed to `origin/main`; GitHub Pages run `32329693246`
+passed and verified the live release metadata.
+Published implementation commit: `3b33e02c174f132f5f86e1b20e5a08322538d32a`.
+Live release check: `https://onebulletarena.abud.fun/release.json` reported
+version `3.14.0-cinematic-combat`, channel `smooth-runtime`, and SHA
+`3b33e02c174f132f5f86e1b20e5a08322538d32a`.
 
 ## Gameplay feel pass - 2026-08-19
 

@@ -5,15 +5,53 @@ Last updated: 2026-08-20
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.15.0 — Arena Polish**
-- Canonical version: `3.15.0-arena-polish`
-- Canonical label: `v3.15.0-arena-polish`
+- Release: **v3.15.1 — Enemy Facing Fix**
+- Canonical version: `3.15.1-facing-fix`
+- Canonical label: `v3.15.1-facing-fix`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.15.0-arena-polish`
+- Service Worker cache: `one-bullet-arena-v3.15.1-facing-fix`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Enemy facing fix - 2026-08-20
+
+Scope: targeted live visual correction after screenshot review showed enemies
+could appear to look away from the player during combat.
+
+- Fixed non-symmetric enemy body orientation in
+  `src/render/cinematic-combat-art.js`.
+- Brutes and Splitters now rotate their body silhouettes toward the player
+  instead of keeping a fixed world-facing pose.
+- Chargers now use their locked `chargeDirection` only while telegraphing or
+  actively charging; outside that attack state their body faces the player.
+- Warden guard orientation remains untouched so guard direction, blocking,
+  guard break, flank damage, and reflection semantics stay preserved.
+- Bumped the release to `3.15.1-facing-fix` so the service worker cache and
+  browser asset URLs pick up the correction immediately.
+- Added Node/browser assertions for the render-only facing correction contract.
+
+Verification:
+
+- `npm run check`: passed.
+- `npm test`: passed, **161/161 Node tests**.
+- `npm run verify`: passed.
+- Targeted Chromium visual QA:
+  - `tests/browser/visual-overhaul.spec.js`: **2 passed**.
+  - `tests/browser/visual-overhaul.spec.js`,
+    `tests/browser/visual-review.spec.js`,
+    `tests/browser/smooth-runtime.spec.js`: **9 passed**.
+- Full browser matrix:
+  - Default `verify:all` browser phase was stopped after reproducing
+    runner-concurrency timeouts under 10 workers.
+  - Direct serial rerun with `npx playwright test --workers=1`: **217 passed,
+    51 skipped**.
+- Performance QA: dense smooth-runtime diagnostics remained finite at 120 Hz
+  simulation with the current 18-enemy cap intact; adaptive quality remained
+  visual-only.
+- Publication status: final commit for this section is pushed to `origin/main`
+  and verified in the final execution report.
 
 ## Arena art polish pass - 2026-08-20
 

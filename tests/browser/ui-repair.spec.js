@@ -26,8 +26,8 @@ test('canonical presentation preserves DOM + HiDPI architecture and adds cinemat
   await loadGame(page, 'en');
   await seedCheckpoint(page, 64);
   let snapshot = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(snapshot.releaseVersion).toBe('3.15.0-arena-polish');
-  expect(snapshot.globalUiRuntimeVersion).toBe('3.15.0-arena-polish');
+  expect(snapshot.releaseVersion).toBe('3.15.1-facing-fix');
+  expect(snapshot.globalUiRuntimeVersion).toBe('3.15.1-facing-fix');
   expect(snapshot.globalUiRevision).toBe('smooth-fixedstep-presentation-v1');
   expect(snapshot.presentationOwner).toBe('OneBulletGlobalUiRuntime');
   expect(snapshot.renderingArchitecture).toBe('canvas-world+dom-ui');

@@ -1,6 +1,6 @@
 import { UI_COLORS } from '../ui-renderer.js';
 
-export const CINEMATIC_COMBAT_ART_VERSION = '3.15.0-cinematic-combat-art';
+export const CINEMATIC_COMBAT_ART_VERSION = '3.15.1-cinematic-combat-art';
 
 const STYLE = Object.freeze({
   scout: { core: '#ff6b7f', fill: '#2a1020', accent: '#ffb1bd', glow: 'rgba(255,107,127,0.34)' },
@@ -27,6 +27,7 @@ export function cinematicCombatTokens() {
     groundedEntityShadows: true,
     creatureDetailPass: true,
     archetypeSurfaceDetails: true,
+    combatFacingCorrection: true,
     runtimeOwner: 'OneBulletGlobalUiRuntime',
   });
 }
@@ -43,6 +44,17 @@ function normalize(x, y) {
 function enemyStyle(enemy) {
   if (enemy?.guardian) return STYLE.guardian;
   return STYLE[enemy?.type] || DEFAULT_STYLE;
+}
+
+function directionToPlayer(runtime, enemy) {
+  return normalize(runtime.player.x - enemy.x, runtime.player.y - enemy.y);
+}
+
+function lockedChargeDirection(enemy) {
+  const direction = enemy?.chargeDirection;
+  if (!direction?.x && !direction?.y) return null;
+  if ((Number(enemy.chargeTelegraph) || 0) <= 0 && (Number(enemy.chargeRemaining) || 0) <= 0) return null;
+  return normalize(direction.x, direction.y);
 }
 
 function drawSoftEllipse(ctx, x, y, rx, ry, color, alpha = 1) {
@@ -377,7 +389,7 @@ export class CinematicCombatArt {
   drawScout(ctx, runtime, enemy) {
     const style = enemyStyle(enemy);
     const radius = this.beginEnemy(ctx, runtime, enemy, style, 0.15);
-    const toPlayer = normalize(runtime.player.x - enemy.x, runtime.player.y - enemy.y);
+    const toPlayer = directionToPlayer(runtime, enemy);
     ctx.rotate(Math.atan2(toPlayer.y, toPlayer.x));
     const wing = runtime.reducedMotion ? 0 : Math.sin(enemy.phase * 9.5) * radius * 0.12;
     drawTeardrop(ctx, radius, enemy.mini ? 1.12 : 1.24, 0.58, 0.52);
@@ -401,7 +413,9 @@ export class CinematicCombatArt {
   drawBrute(ctx, runtime, enemy) {
     const style = enemyStyle(enemy);
     const radius = this.beginEnemy(ctx, runtime, enemy, style, 0.08);
+    const toPlayer = directionToPlayer(runtime, enemy);
     const breath = runtime.reducedMotion ? 0 : Math.sin(enemy.phase * 3.2) * radius * 0.04;
+    ctx.rotate(Math.atan2(toPlayer.y, toPlayer.x));
     ctx.scale(1 + breath / radius, 1 - breath / radius * 0.45);
     ctx.beginPath();
     ctx.moveTo(radius * 0.82, -radius * 0.2);
@@ -430,7 +444,7 @@ export class CinematicCombatArt {
   drawSniper(ctx, runtime, enemy) {
     const style = enemyStyle(enemy);
     const radius = this.beginEnemy(ctx, runtime, enemy, style, 0.12);
-    const toPlayer = normalize(runtime.player.x - enemy.x, runtime.player.y - enemy.y);
+    const toPlayer = directionToPlayer(runtime, enemy);
     ctx.rotate(Math.atan2(toPlayer.y, toPlayer.x));
     ctx.scale(1.2, 0.82);
     drawTeardrop(ctx, radius, 1.48, 0.5, 0.4);
@@ -461,9 +475,7 @@ export class CinematicCombatArt {
     const style = enemyStyle(enemy);
     const heat = clamp01(enemy.chargeTelegraph ? 1 - enemy.chargeTelegraph / 0.62 : 0);
     const radius = this.beginEnemy(ctx, runtime, enemy, style, heat);
-    const direction = enemy.chargeDirection?.x || enemy.chargeDirection?.y
-      ? enemy.chargeDirection
-      : normalize(runtime.player.x - enemy.x, runtime.player.y - enemy.y);
+    const direction = lockedChargeDirection(enemy) || directionToPlayer(runtime, enemy);
     ctx.rotate(Math.atan2(direction.y, direction.x));
     ctx.scale(1 + heat * 0.18, 1 - heat * 0.08);
     drawTeardrop(ctx, radius, 1.42, 0.7, 0.54);
@@ -495,8 +507,9 @@ export class CinematicCombatArt {
   drawSplitter(ctx, runtime, enemy) {
     const style = enemyStyle(enemy);
     const radius = this.beginEnemy(ctx, runtime, enemy, style, 0.2);
+    const toPlayer = directionToPlayer(runtime, enemy);
     const wobble = runtime.reducedMotion ? 0 : Math.sin(enemy.phase * 8.8) * radius * 0.08;
-    ctx.rotate(Math.sin(enemy.phase * 2.2) * 0.18);
+    ctx.rotate(Math.atan2(toPlayer.y, toPlayer.x) + Math.sin(enemy.phase * 2.2) * 0.18);
     ctx.beginPath();
     ctx.moveTo(radius * 0.9, 0);
     ctx.bezierCurveTo(radius * 0.72, -radius * 0.78, radius * 0.05 + wobble, -radius * 1.05, -radius * 0.36, -radius * 0.52);

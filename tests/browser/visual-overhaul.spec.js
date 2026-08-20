@@ -28,7 +28,7 @@ test('visual overhaul remains active inside the expanding world across major sta
   expect(snapshot.arenaArtPolishVersion).toBe('3.15.0-arena-polish');
   expect(snapshot.visualOverhaulStyle).toBe('cinematic-industrial-2d');
   expect(snapshot.cinematicCombatArtActive).toBe(true);
-  expect(snapshot.cinematicCombatArtVersion).toBe('3.15.0-cinematic-combat-art');
+  expect(snapshot.cinematicCombatArtVersion).toBe('3.15.1-cinematic-combat-art');
   expect(snapshot.replacesGeometricCombatShapes).toBe(true);
   expect(snapshot.animatedCombatEffects).toBe(true);
   expect(snapshot.combatArtRenderOnly).toBe(true);
@@ -42,6 +42,7 @@ test('visual overhaul remains active inside the expanding world across major sta
   expect(snapshot.mapCollisionGeometryChanged).toBe(false);
   expect(snapshot.cinematicCombatArt.groundedEntityShadows).toBe(true);
   expect(snapshot.cinematicCombatArt.creatureDetailPass).toBe(true);
+  expect(snapshot.cinematicCombatArt.combatFacingCorrection).toBe(true);
   expect(snapshot.expandingWorldActive).toBe(true);
   expect(snapshot.gameplayGeometryChanged).toBe(true);
   expect(snapshot.collisionGeometryChanged).toBe(true);
@@ -107,4 +108,68 @@ test('visual overhaul remains active inside the expanding world across major sta
   });
   await page.waitForFunction(() => window.__ONE_BULLET_ARENA__.state === 'upgrade');
   await attachCanvas(page, testInfo, 'visual-overhaul-upgrade');
+});
+
+test('enemy combat silhouettes face the player and ignore stale charge directions', async ({ page }) => {
+  await loadGame(page);
+
+  const rotations = await page.evaluate(() => {
+    const game = window.__ONE_BULLET_ARENA__;
+    game.startRun();
+    game.banner = null;
+    game.player.x = 640;
+    game.player.y = 360;
+    game.enemies = [];
+    game.enemyShots = [];
+    game.reducedMotion = true;
+
+    const brute = game.spawnEnemy('brute', 0, { point: { x: 660, y: 360 } });
+    const splitter = game.spawnEnemy('splitter', 1, { point: { x: 640, y: 540 } });
+    const charger = game.spawnEnemy('charger', 2, { point: { x: 700, y: 360 } });
+    Object.assign(brute, { x: 660, y: 360 });
+    Object.assign(splitter, { x: 640, y: 540 });
+    Object.assign(charger, { x: 700, y: 360 });
+    for (const enemy of [brute, splitter, charger]) {
+      enemy.spawnTime = 0;
+      enemy.phase = 0;
+      enemy.hitSquash = 0;
+    }
+    charger.chargeDirection = { x: 1, y: 0 };
+    charger.chargeTelegraph = 0;
+    charger.chargeRemaining = 0;
+
+    const art = game.cinematicCombatArt;
+    const originalBegin = art.beginEnemy.bind(art);
+    const originalRotate = CanvasRenderingContext2D.prototype.rotate;
+    const seen = new Set();
+    const samples = [];
+    let activeType = null;
+
+    art.beginEnemy = function patchedBeginEnemy(ctx, runtime, enemy, ...rest) {
+      const radius = originalBegin(ctx, runtime, enemy, ...rest);
+      activeType = enemy?.type || null;
+      return radius;
+    };
+    CanvasRenderingContext2D.prototype.rotate = function patchedRotate(angle) {
+      if (activeType && ['brute', 'splitter', 'charger'].includes(activeType) && !seen.has(activeType)) {
+        seen.add(activeType);
+        samples.push({ type: activeType, angle });
+      }
+      return originalRotate.call(this, angle);
+    };
+
+    try {
+      game.draw();
+    } finally {
+      art.beginEnemy = originalBegin;
+      CanvasRenderingContext2D.prototype.rotate = originalRotate;
+    }
+
+    return samples;
+  });
+
+  const byType = new Map(rotations.map((sample) => [sample.type, sample.angle]));
+  expect(byType.get('brute')).toBeCloseTo(Math.PI, 3);
+  expect(byType.get('splitter')).toBeCloseTo(-Math.PI / 2, 3);
+  expect(byType.get('charger')).toBeCloseTo(Math.PI, 3);
 });

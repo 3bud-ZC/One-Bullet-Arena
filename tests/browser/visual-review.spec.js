@@ -35,9 +35,9 @@ test('captures cinematic dashboard and representative game-feel states', async (
   await loadGame(page, 'en');
 
   const menu = await page.evaluate(() => window.__ONE_BULLET_ARENA__.getSnapshot());
-  expect(menu.releaseVersion).toBe('3.15.0-arena-polish');
+  expect(menu.releaseVersion).toBe('3.15.1-facing-fix');
   expect(menu.releaseChannel).toBe('smooth-runtime');
-  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.15.0-arena-polish');
+  expect(menu.releaseCacheName).toBe('one-bullet-arena-v3.15.1-facing-fix');
   expect(menu.cinematicCombatArtActive).toBe(true);
   expect(menu.replacesGeometricCombatShapes).toBe(true);
   expect(menu.animatedCombatEffects).toBe(true);

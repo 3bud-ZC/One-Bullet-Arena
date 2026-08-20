@@ -1,6 +1,6 @@
 {
   "name": "one-bullet-arena",
-  "version": "3.15.0-arena-polish",
+  "version": "3.15.1-facing-fix",
   "private": true,
   "type": "module",
   "description": "A smooth one-bullet tactical arcade game with fixed-step simulation, adaptive HiDPI Canvas rendering, and semantic DOM/SVG UI.",

@@ -5,7 +5,7 @@ import { CINEMATIC_COMBAT_ART_VERSION, cinematicCombatTokens } from '../src/rend
 
 test('cinematic combat art is a render-only replacement for geometric combat shapes', () => {
   const tokens = cinematicCombatTokens();
-  assert.equal(CINEMATIC_COMBAT_ART_VERSION, '3.15.0-cinematic-combat-art');
+  assert.equal(CINEMATIC_COMBAT_ART_VERSION, '3.15.1-cinematic-combat-art');
   assert.equal(tokens.version, CINEMATIC_COMBAT_ART_VERSION);
   assert.equal(tokens.renderOnly, true);
   assert.equal(tokens.gameplayGeometryChanged, false);
@@ -16,6 +16,7 @@ test('cinematic combat art is a render-only replacement for geometric combat sha
   assert.equal(tokens.groundedEntityShadows, true);
   assert.equal(tokens.creatureDetailPass, true);
   assert.equal(tokens.archetypeSurfaceDetails, true);
+  assert.equal(tokens.combatFacingCorrection, true);
   assert.equal(tokens.runtimeOwner, 'OneBulletGlobalUiRuntime');
 });
 
@@ -31,6 +32,15 @@ test('terminal runtime owns the cinematic combat renderer and bypasses legacy ge
   assert.doesNotMatch(runtimeSource, /drawBullet\(\) \{\s*super\.drawBullet\(\)/);
   assert.doesNotMatch(runtimeSource, /drawEnemies\(\) \{\s*super\.drawEnemies\(\)/);
   assert.doesNotMatch(runtimeSource, /drawEnemyShots\(\) \{\s*[\s\S]{0,140}super\.drawEnemyShots\(\)/);
+});
+
+test('enemy body facing follows the player except during locked charge telegraphs', async () => {
+  const source = await readFile(new URL('../src/render/cinematic-combat-art.js', import.meta.url), 'utf8');
+  assert.match(source, /function directionToPlayer/);
+  assert.match(source, /function lockedChargeDirection/);
+  assert.match(source, /lockedChargeDirection\(enemy\) \|\| directionToPlayer\(runtime, enemy\)/);
+  assert.match(source, /drawBrute[\s\S]*ctx\.rotate\(Math\.atan2\(toPlayer\.y, toPlayer\.x\)\)/);
+  assert.match(source, /drawSplitter[\s\S]*Math\.atan2\(toPlayer\.y, toPlayer\.x\)/);
 });
 
 test('combat effects now use animated ember and ribbon primitives instead of triangle fragments', async () => {

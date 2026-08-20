@@ -1,6 +1,6 @@
 import { UI_COLORS } from '../ui-renderer.js';
 
-export const CINEMATIC_COMBAT_ART_VERSION = '3.14.0-cinematic-combat-art';
+export const CINEMATIC_COMBAT_ART_VERSION = '3.15.0-cinematic-combat-art';
 
 const STYLE = Object.freeze({
   scout: { core: '#ff6b7f', fill: '#2a1020', accent: '#ffb1bd', glow: 'rgba(255,107,127,0.34)' },
@@ -24,6 +24,9 @@ export function cinematicCombatTokens() {
     replacesGeometricCombatShapes: true,
     animatedEffects: true,
     silhouetteDrivenEnemies: true,
+    groundedEntityShadows: true,
+    creatureDetailPass: true,
+    archetypeSurfaceDetails: true,
     runtimeOwner: 'OneBulletGlobalUiRuntime',
   });
 }
@@ -48,6 +51,24 @@ function drawSoftEllipse(ctx, x, y, rx, ry, color, alpha = 1) {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawEnemyGroundShadow(ctx, enemy, style, heat = 0) {
+  const radius = enemy.radius || 16;
+  const spawnScale = Math.max(0.2, 1 - (Number(enemy.spawnTime) || 0) * 0.65);
+  ctx.save();
+  ctx.globalAlpha = (enemy.spawnTime > 0 ? 0.12 + spawnScale * 0.12 : 0.22) + heat * 0.07;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+  ctx.beginPath();
+  ctx.ellipse(enemy.x + radius * 0.16, enemy.y + radius * 0.5, radius * 0.92 * spawnScale, radius * 0.31 * spawnScale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha *= 0.55;
+  ctx.fillStyle = style.core;
+  ctx.beginPath();
+  ctx.ellipse(enemy.x, enemy.y + radius * 0.42, radius * 0.62 * spawnScale, radius * 0.18 * spawnScale, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -81,6 +102,41 @@ function strokeFeather(ctx, radius, side, color, phase, alpha = 0.48) {
   ctx.moveTo(-radius * 0.18, side * radius * 0.18);
   ctx.bezierCurveTo(-radius * 0.44, side * (radius * 0.52 + lift), -radius * 1.08, side * radius * 0.78, -radius * 1.54, side * radius * 0.5);
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawForwardEye(ctx, radius, style, x = 0.28, alert = 0.35) {
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha *= 0.82;
+  ctx.fillStyle = style.accent;
+  ctx.beginPath();
+  ctx.ellipse(radius * x, 0, Math.max(2.2, radius * 0.12 + alert), Math.max(1.6, radius * 0.055 + alert * 0.2), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = style.core;
+  ctx.beginPath();
+  ctx.ellipse(radius * (x + 0.06), 0, Math.max(1.2, radius * 0.045), Math.max(0.9, radius * 0.03), 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBackSpines(ctx, radius, style, count, phase = 0) {
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = style.accent;
+  ctx.fillStyle = style.core;
+  ctx.globalAlpha *= 0.58;
+  for (let index = 0; index < count; index += 1) {
+    const side = index % 2 ? 1 : -1;
+    const t = count <= 1 ? 0.5 : index / (count - 1);
+    const x = -radius * (0.7 - t * 0.55);
+    const y = side * radius * (0.38 + Math.sin(phase + index) * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x - radius * 0.24, y + side * radius * 0.2, x - radius * 0.44, y + side * radius * 0.06);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -286,6 +342,7 @@ export class CinematicCombatArt {
     const spawnScale = Math.max(0.2, 1 - (Number(enemy.spawnTime) || 0) * 0.65);
     const hit = enemy.hitFlash > 0;
     const squash = clamp01(enemy.hitSquash);
+    drawEnemyGroundShadow(ctx, enemy, style, heat);
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
     if (squash > 0) {
@@ -337,6 +394,7 @@ export class CinematicCombatArt {
     ctx.quadraticCurveTo(radius * 0.05, radius * 0.18, radius * 0.62, 0);
     ctx.stroke();
     this.drawCore(ctx, radius, style, radius * 0.16, 0);
+    drawForwardEye(ctx, radius, style, enemy.mini ? 0.38 : 0.32, enemy.mini ? 0.15 : 0.35);
     ctx.restore();
   }
 
@@ -363,7 +421,9 @@ export class CinematicCombatArt {
     ctx.moveTo(-radius * 0.5, radius * 0.2);
     ctx.quadraticCurveTo(0, radius * 0.5, radius * 0.56, radius * 0.1);
     ctx.stroke();
+    drawBackSpines(ctx, radius, style, 4, enemy.phase * 3.1);
     this.drawCore(ctx, radius, style, radius * 0.14, 0, 0.9);
+    drawForwardEye(ctx, radius, style, 0.31, 0.2);
     ctx.restore();
   }
 
@@ -393,6 +453,7 @@ export class CinematicCombatArt {
     ctx.quadraticCurveTo(0, radius * 0.12, radius * 0.56, radius * 0.24);
     ctx.stroke();
     this.drawCore(ctx, radius, style, radius * 0.25, 0);
+    drawForwardEye(ctx, radius, style, 0.5, 0.55);
     ctx.restore();
   }
 
@@ -427,6 +488,7 @@ export class CinematicCombatArt {
       ctx.stroke();
     }
     this.drawCore(ctx, radius, style, radius * 0.18, 0);
+    drawForwardEye(ctx, radius, style, 0.38, 0.45 + heat * 0.45);
     ctx.restore();
   }
 
@@ -454,6 +516,7 @@ export class CinematicCombatArt {
     ctx.stroke();
     this.drawCore(ctx, radius, style, -radius * 0.18, -radius * 0.14, 0.86);
     this.drawCore(ctx, radius, style, radius * 0.22, radius * 0.16, 0.68);
+    drawBackSpines(ctx, radius, style, 5, enemy.phase * 4.4);
     ctx.restore();
   }
 
@@ -473,6 +536,7 @@ export class CinematicCombatArt {
     ctx.stroke();
     ctx.shadowBlur = 0;
     this.drawCore(ctx, radius, style, -radius * 0.1, 0);
+    drawBackSpines(ctx, radius, style, 3, enemy.phase * 2.1);
 
     const guardAngle = Number(enemy.guardAngle);
     if (Number.isFinite(guardAngle)) {
@@ -514,6 +578,7 @@ export class CinematicCombatArt {
     ctx.ellipse(0, 0, radius * 0.58, radius * 0.34, enemy.phase * 0.1, 0, Math.PI * 2);
     ctx.stroke();
     this.drawCore(ctx, radius, style, 0, 0, open ? 1 : 0.38);
+    drawForwardEye(ctx, radius, style, 0.26, open ? 0.3 : 0.08);
 
     if (!open) {
       ctx.save();

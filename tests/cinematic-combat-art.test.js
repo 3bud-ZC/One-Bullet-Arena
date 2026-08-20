@@ -5,7 +5,7 @@ import { CINEMATIC_COMBAT_ART_VERSION, cinematicCombatTokens } from '../src/rend
 
 test('cinematic combat art is a render-only replacement for geometric combat shapes', () => {
   const tokens = cinematicCombatTokens();
-  assert.equal(CINEMATIC_COMBAT_ART_VERSION, '3.14.0-cinematic-combat-art');
+  assert.equal(CINEMATIC_COMBAT_ART_VERSION, '3.15.0-cinematic-combat-art');
   assert.equal(tokens.version, CINEMATIC_COMBAT_ART_VERSION);
   assert.equal(tokens.renderOnly, true);
   assert.equal(tokens.gameplayGeometryChanged, false);
@@ -13,6 +13,9 @@ test('cinematic combat art is a render-only replacement for geometric combat sha
   assert.equal(tokens.replacesGeometricCombatShapes, true);
   assert.equal(tokens.animatedEffects, true);
   assert.equal(tokens.silhouetteDrivenEnemies, true);
+  assert.equal(tokens.groundedEntityShadows, true);
+  assert.equal(tokens.creatureDetailPass, true);
+  assert.equal(tokens.archetypeSurfaceDetails, true);
   assert.equal(tokens.runtimeOwner, 'OneBulletGlobalUiRuntime');
 });
 
@@ -22,6 +25,7 @@ test('terminal runtime owns the cinematic combat renderer and bypasses legacy ge
   assert.match(runtimeSource, /cinematicCombatArtActive: true/);
   assert.match(runtimeSource, /combatArtGameplayGeometryChanged: false/);
   assert.match(runtimeSource, /combatArtCollisionGeometryChanged: false/);
+  assert.match(runtimeSource, /cinematicCombatArt: cinematicCombatTokens\(\)/);
   assert.match(runtimeSource, /cinematicCombatArt\?\.drawEnemy/);
   assert.match(runtimeSource, /cinematicCombatArt\?\.drawBullet/);
   assert.doesNotMatch(runtimeSource, /drawBullet\(\) \{\s*super\.drawBullet\(\)/);

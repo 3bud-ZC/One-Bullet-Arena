@@ -5,15 +5,63 @@ Last updated: 2026-08-20
 ## Current release
 
 - Product: **One Bullet Arena / حلبة الطلقة الواحدة**
-- Release: **v3.14.0 — Cinematic Combat Art**
-- Canonical version: `3.14.0-cinematic-combat`
-- Canonical label: `v3.14.0-cinematic-combat`
+- Release: **v3.15.0 — Arena Polish**
+- Canonical version: `3.15.0-arena-polish`
+- Canonical label: `v3.15.0-arena-polish`
 - Release channel: `smooth-runtime`
-- Service Worker cache: `one-bullet-arena-v3.14.0-cinematic-combat`
+- Service Worker cache: `one-bullet-arena-v3.15.0-arena-polish`
 - Canonical presentation/runtime owner: `OneBulletGlobalUiRuntime`
 - Production branch: `main`
 - Gameplay coordinate system: **1280×720 logical coordinates preserved**
 - Checkpoint schema: **1 — unchanged**
+
+## Arena art polish pass - 2026-08-20
+
+Scope: second visual execution pass focused on making the live map and enemy
+forms feel less like plain geometry while preserving the accepted gameplay,
+DOM/SVG UI, fixed-step simulation, HiDPI canvas, world expansion, checkpoints,
+Warden mechanics, and 1280x720 logical coordinate system.
+
+- Added a render-only arena polish contract inside
+  `src/core/visual-overhaul-runtime.js` with sector atmosphere, moving light
+  shafts, floor scars, dust motes, cable-like material strokes, and richer
+  obstacle dressing.
+- Added deterministic `obstacleMaterialVariant(...)` so obstacle decoration is
+  stable per stage and does not allocate random state or alter collision.
+- Improved `src/render/cinematic-combat-art.js` with grounded enemy shadows,
+  forward eye/core detail, and archetype-specific surface spines/details for
+  Scout, Brute, Sniper, Charger, Splitter, Warden, and Guardian forms.
+- Bumped the release to `3.15.0-arena-polish`; updated package metadata,
+  release metadata, cache-busting URLs, global UI runtime version, and browser
+  release assertions.
+- Added/updated Node and browser assertions for arena polish flags,
+  render-only map geometry, grounded combat shadows, and creature detail flags.
+
+Verification:
+
+- `npm run check`: passed.
+- `npm test`: passed, **160/160 Node tests**.
+- `npm run verify`: passed.
+- Targeted browser QA:
+  - Chromium visual/render-quality suite: **7 passed, 1 skipped**.
+  - Mobile landscape visual/render QA: **2 passed, 5 skipped**.
+  - Chromium smooth-runtime + enemy-navigation suite: **11 passed**.
+- Full browser matrix:
+  - default `npm run verify:all` completed Node verification but the 10-worker
+    browser phase hit local startup timeouts under runner saturation;
+  - `npm run test:browser -- --workers=1`: **213 passed, 51 skipped** across
+    desktop Chromium, mobile landscape Chromium, desktop Firefox, and desktop
+    WebKit.
+- Browser QA screenshot review: captured and inspected a wave-25 sector-5
+  combat scene with Scout, Brute, Sniper, Charger, Splitter, and Warden; no
+  browser console or page errors were observed.
+- Performance validation: dense-wave diagnostics stayed finite, enemy cap
+  stayed at 18, quality tier changes remained visual-only, desktop/mobile dense
+  navigation passed, and the same-runner Chromium pacing comparison still
+  reported the cinematic candidate ahead of baseline in the local runner.
+
+Publication status: pending final commit and push; final published SHA is the
+commit containing this section.
 
 ## Cinematic combat art pass - 2026-08-20
 

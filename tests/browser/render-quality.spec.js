@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const RELEASE = '3.14.0-cinematic-combat';
+const RELEASE = '3.15.0-arena-polish';
 
 async function loadGame(page, locale = 'en') {
   await page.addInitScript((value) => localStorage.setItem('one-bullet-language', value), locale);

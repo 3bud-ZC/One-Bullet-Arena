@@ -1,5 +1,5 @@
 (function initializeReleaseConfig(root) {
-  const version = '3.14.0-cinematic-combat';
+  const version = '3.15.0-arena-polish';
   const release = Object.freeze({
     version,
     label: `v${version}`,

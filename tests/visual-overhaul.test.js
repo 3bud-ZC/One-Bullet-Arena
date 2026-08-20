@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { VISUAL_OVERHAUL_RUNTIME_VERSION, ambientNodeVariant, visualOverhaulTokens } from '../src/core/visual-overhaul-runtime.js';
+import {
+  ARENA_ART_POLISH_VERSION,
+  VISUAL_OVERHAUL_RUNTIME_VERSION,
+  ambientNodeVariant,
+  obstacleMaterialVariant,
+  visualOverhaulTokens,
+} from '../src/core/visual-overhaul-runtime.js';
 
 test('visual overhaul runtime exposes a render-only contract', () => {
   const tokens = visualOverhaulTokens();
@@ -11,6 +17,12 @@ test('visual overhaul runtime exposes a render-only contract', () => {
   assert.equal(tokens.renderOnly, true);
   assert.equal(tokens.gameplayGeometryChanged, false);
   assert.equal(tokens.collisionGeometryChanged, false);
+  assert.equal(tokens.arenaArtPolishVersion, ARENA_ART_POLISH_VERSION);
+  assert.equal(tokens.sectorAtmosphere, true);
+  assert.equal(tokens.obstacleDressing, true);
+  assert.equal(tokens.animatedMapMaterials, true);
+  assert.equal(tokens.mapGeometryChanged, false);
+  assert.equal(tokens.mapCollisionGeometryChanged, false);
   assert.ok(Object.isFrozen(tokens));
 });
 
@@ -19,6 +31,14 @@ test('ambient node variants are deterministic and bounded', () => {
   const second = Array.from({ length: 30 }, (_, index) => ambientNodeVariant(index, 2));
   assert.deepEqual(first, second);
   assert.ok(first.every((value) => value >= 0 && value <= 4));
+});
+
+test('arena polish material variants are deterministic and bounded', () => {
+  const obstacle = { x: 340, y: 188, w: 88, h: 220 };
+  const first = Array.from({ length: 8 }, (_, stage) => obstacleMaterialVariant(obstacle, stage));
+  const second = Array.from({ length: 8 }, (_, stage) => obstacleMaterialVariant(obstacle, stage));
+  assert.deepEqual(first, second);
+  assert.ok(first.every((value) => value >= 0 && value <= 5));
 });
 
 test('legacy presentation layers remain below one canonical global UI owner', async () => {
